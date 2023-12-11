@@ -1,5 +1,8 @@
 using CodeBuggy.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using CodeBuggy.Data;
 
@@ -15,9 +18,15 @@ namespace CodeBuggy.Controllers
             _logger = logger;
             _context = context;
         }
-
+        
         public IActionResult Index()
         {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                List<Project> data = _context.Projects.ToList();
+                ViewBag.ProjectList = new SelectList(data, "Id", "Name");
+            }
+
             return View();
         }
 
