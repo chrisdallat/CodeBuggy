@@ -20,3 +20,25 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+h2 {
+    text-align: center;
+}
+
+.content-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+    .content-table thead th {
+        background-color: #f2f2f2;
+    }
+
+    .content-table th, .content-table td {
+        padding: 10px;
+        border-left: 0;
+        text-align: left;
+    }
+
+/* Add more styling as needed */
