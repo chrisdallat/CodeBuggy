@@ -1,0 +1,20 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using CodeBuggy.Data
+@using PagedList.Mvc
+
+@inject SignInManager<AppUser> SignInManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <h2>Your Projects</h2>
+
+    @Html.Raw(ViewBag.ProjectTable)
+
+    <div>
+        @Html.Raw(ViewBag.Pagination)
+    </div>
+}
+else
+{
+    <div>You have no access Malaka</div>
+}
