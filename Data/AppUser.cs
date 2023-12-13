@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Build.Evaluation;
 using Microsoft.EntityFrameworkCore;
+using PagedList;
 
 namespace CodeBuggy.Data;
 
@@ -14,4 +15,6 @@ public class AppUser : IdentityUser
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public int SelectedProjectId { get; set; }
+    public IPagedList<Project>? ProjectList { get; set; } = null;
+
 }
