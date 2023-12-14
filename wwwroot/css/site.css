@@ -53,6 +53,7 @@ h2 {
     text-align: center;
     overflow-x: hidden; /* Hide horizontal scrollbar */
     overflow-y: hidden;
+    -moz-appearance: textfield;
 }
 
 .page-link {
@@ -64,6 +65,13 @@ h2 {
     text-decoration: none;
     cursor: pointer;
     border-radius: 5px;
+}
+
+
+.page-input::-webkit-inner-spin-button,
+.page-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .page-link:hover {
@@ -93,25 +101,25 @@ h2 {
     max-height: 200px;
 }
 
-.container {
-    width: 100%;
-    overflow: hidden; /* Clear the float */
-    padding: unset;
-    display: flex;
-    margin-bottom: 10px;
-    align-items: center;
-}
-
 .left-div {
-    width: 50%; /* Adjust the width as needed */
-    margin: 1%; /* Add some margin for spacing */
-    float: left; /* Or use float: left; */
-    box-sizing: border-box; /* Include padding and border in the width */
+    width: 50%;  
+    margin: 1%;  
+    float: left;  
+    box-sizing: border-box;  
 }
 
 .right-div {
-    width: 50%; /* Adjust the width as needed */
-    margin: 1%; /* Add some margin for spacing */
-    float: right; /* Or use float: left; */
-    box-sizing: border-box; /* Include padding and border in the width */
+    width: 50%;  
+    margin: 1%;   
+    float: right; 
+    box-sizing: border-box;  
+}
+
+.project-link {
+    color:#258cfb;
+    text-decoration: none; 
+}
+
+.project-link:hover {
+    text-decoration: underline; 
 }

@@ -2,18 +2,19 @@
 using PagedList;
 using CodeBuggy.Data;
 using System.Web.Mvc;
-using System.Linq;
 using IHtmlHelper = Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper;
 using System.Text;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CodeBuggy.Helpers;
 public static class HtmlHelpers
 {
-    public static IHtmlContent RenderProjectTable(IEnumerable<Project> projects)
+    public static IHtmlContent RenderProjectTable(IEnumerable<Project> projects, IUrlHelper url)
     {
         var table = new TagBuilder("table");
         table.AddCssClass("content-table");
 
+        
         var thead = new TagBuilder("thead");
         thead.InnerHtml += "<tr><th>ID</th><th>Title</th><th>Description</th></tr>";
         table.InnerHtml += thead;
@@ -24,8 +25,7 @@ public static class HtmlHelpers
             var row = new TagBuilder("tr");
             row.AddCssClass("clickable-row");
             row.Attributes.Add("data-href", $"/Project/Details/{project.Id}");
-            // TODO: ADD A LINK LOADER FOR WHEN CLICKING A PROJECT NAME IT WILL REDIRECTS TO THE PAGE OF THE PROJECT
-            row.InnerHtml += $"<td>{project.Id}</td><td>{project.Name}</td><td>{project.AccessCode}</td>";
+            row.InnerHtml += $"<td>{project.Id}</td><td><a class='nav-link project-link' href='{url.Action("ProjectBoard", "Projects", new { id = project.Id })}'>{project.Name}</a></td><td>{project.AccessCode}</td>";
             tbody.InnerHtml += row;
         }
         table.InnerHtml += tbody;
@@ -43,7 +43,7 @@ public static class HtmlHelpers
         form.Attributes.Add("method", "get");
 
         var input = new TagBuilder("input");
-        //input.Attributes.Add("type", "number");
+        input.Attributes.Add("type", "number");
         input.Attributes.Add("min", "1");
         input.Attributes.Add("max", projectList.PageCount.ToString());
         input.Attributes.Add("value", projectList.PageNumber.ToString());
@@ -70,6 +70,22 @@ public static class HtmlHelpers
         form.InnerHtml += nextLink;
 
         div.InnerHtml += form;
+
+        var script = new TagBuilder("script");
+        script.InnerHtml += @"
+        function validatePageInput(input) {
+            var maxPage = parseInt(input.getAttribute('max'));
+            var enteredValue = parseInt(input.value);
+    
+            if (isNaN(enteredValue) || enteredValue < 1) {
+                input.value = 1;
+            } else if (enteredValue > maxPage) {
+                input.value = maxPage;
+            }
+        }
+        ";
+
+        div.InnerHtml += script;
 
         return new HtmlString(div.ToString());
     }

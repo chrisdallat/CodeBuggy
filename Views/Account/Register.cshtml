@@ -5,7 +5,18 @@
 }
 
 <h1>@ViewData["Title"]</h1>
+<style>
 
+.container {
+    width: 100%;
+    overflow: hidden; 
+    padding: unset;
+    display: flex;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+</style>
 <div>
     <div>
         <form id="registerForm" asp-route-returnUrl="ReturnUrl" method="post">
