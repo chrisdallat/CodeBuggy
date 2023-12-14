@@ -53,6 +53,7 @@ h2 {
     text-align: center;
     overflow-x: hidden; /* Hide horizontal scrollbar */
     overflow-y: hidden;
+    -moz-appearance: textfield;
 }
 
 .page-link {
@@ -64,6 +65,13 @@ h2 {
     text-decoration: none;
     cursor: pointer;
     border-radius: 5px;
+}
+
+
+.page-input::-webkit-inner-spin-button,
+.page-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .page-link:hover {
@@ -105,4 +113,13 @@ h2 {
     margin: 1%;   
     float: right; 
     box-sizing: border-box;  
+}
+
+.project-link {
+    color:#258cfb;
+    text-decoration: none; 
+}
+
+.project-link:hover {
+    text-decoration: underline; 
 }

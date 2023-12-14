@@ -2,12 +2,8 @@
 using CodeBuggy.Data;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using PagedList;
-using System.Drawing.Printing;
 using System.Security.Claims;
-using System.Security.Policy;
-using System.Web.Mvc;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -42,7 +38,7 @@ public class ProjectsModel
                 ProjectList = projectList
             };
 
-            viewBag.ProjectTable = HtmlHelpers.RenderProjectTable(projectList);
+            viewBag.ProjectTable = HtmlHelpers.RenderProjectTable(projectList, url);
             viewBag.Pagination = HtmlHelpers.RenderPagination(projectList, i => url.Action("ProjectsList", new { page = i }));
 
             return viewModel;
@@ -51,8 +47,9 @@ public class ProjectsModel
         return null;
     }
 
-    public List<Ticket> getTickets(ClaimsPrincipal user)
+    public List<Ticket> getTickets(ClaimsPrincipal user, int projectId)
     {
+        _logger.LogInformation("Khalil " + projectId);
         if (user.Identity != null && user.Identity.IsAuthenticated)
         {
             List<Ticket> tickets = new List<Ticket>

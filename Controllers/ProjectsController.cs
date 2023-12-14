@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using CodeBuggy.Data;
-using PagedList;
-using CodeBuggy.Helpers;
 using CodeBuggy.Models;
 using System.Diagnostics;
 using CodeBuggy.Models.Projects;
-using System.Dynamic;
 
 namespace CodeBuggy.Controllers;
 
@@ -31,9 +28,9 @@ public class ProjectsController : Controller
         return View();
     }
 
-    public IActionResult ProjectBoard()
+    public IActionResult ProjectBoard(int projectId)
     {
-        List<Ticket> tickets = _projectsModel.getTickets(User);
+        List<Ticket> tickets = _projectsModel.getTickets(User, projectId);
 
         if (tickets != null)
         {
