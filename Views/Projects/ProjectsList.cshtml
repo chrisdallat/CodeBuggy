@@ -6,7 +6,15 @@
 
 @if (SignInManager.IsSignedIn(User))
 {
-    <h2>Your Projects</h2>
+
+    <div style="display: grid; grid-template-columns: 1fr auto;">
+        <h2 style="text-align: center;">Your Projects</h2>
+
+        <a class="create-button" style="text-align: right;" onclick="togglePopup()">
+            <span class="gg-math-plus"></span>
+            <span style="margin-left: 5px">New project</span>
+        </a>
+    </div>
 
     @Html.Raw(ViewBag.ProjectTable)
 
@@ -18,3 +26,89 @@ else
 {
     <div>You have no access Malaka</div>
 }
+
+<div id="popupOverlay" class="overlay">
+    <div class="popup">
+        <div style="display: grid; grid-template-columns: 1fr auto;">
+            <span id="goBackButton" class="gg-arrow-left-r" style="position:fixed; margin-top: 8px; display: none" onclick="goBack()"></span>
+            <h2 id="PopupTitle" style="text-align: center;">Add Project</h2>
+            <span class="gg-close-r" style="top: unset; margin-top: 8px; right: 20px" onclick="togglePopup()"></span>
+        </div>
+        <div style="margin-top: 20px"></div>
+        <div id="ProjectButtons">
+            <a class="button-general mb-3" style="text-align: center; max-width: 380px" onclick="showExistingProject()">
+                <span>Add Exisiting Project</span>
+            </a>
+            <a class="button-general mb-3" style="text-align: center; max-width: 380px" onclick="showCreateProject()">
+                <span>Add New Project</span>
+            </a>
+        </div>
+        <form id="AddNewProject" asp-action="AddNewProject" style="display: none;" method="post">
+            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
+                <input class="form-control" autocomplete="ProjectName" aria-required="true" placeholder=""/> 
+                <label>Project name</label>
+            </div>
+            <a id="submitButton" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px" onclick="">
+                Add Project
+            </a>
+        </form>
+        <form id="AddExistingProject" asp-action="AddExistingProject" style="display: none;" method="post">
+            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
+                <input class="form-control" autocomplete="ProjectName" aria-required="true" placeholder="" />
+                <label>Project name</label>
+            </div>
+            <div id="projectAccessCode" class="form-floating mb-3" style="max-width: 380px">
+                <input class="form-control" autocomplete="ProjectAccessCode" aria-required="true" placeholder="" />
+                <label>Project Access Code</label>
+            </div>
+            <a id="submitButton" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px" onclick="">
+                Add Project
+            </a>
+        </form>
+    </div>     
+</div>
+
+<script>
+    const AddNewProject = document.getElementById('AddNewProject');
+    const AddExistingProject = document.getElementById('AddExistingProject');
+    const buttons = document.getElementById('ProjectButtons');
+    const goBackbutton = document.getElementById('goBackButton');
+    var popupTitle = document.getElementById('PopupTitle');
+
+    var defaultShowPopUp = function() {
+        AddNewProject.style.display = 'none';
+        AddExistingProject.style.display = 'none';
+        ProjectButtons.style.display = 'block';
+        goBackbutton.style.display = 'none';
+        PopupTitle.innerHTML = "Add Project";
+    }
+
+    var togglePopup = function () {
+        const popup = document.getElementById('popupOverlay');
+        popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+
+        if (popup.style.display === 'none') {
+            defaultShowPopUp();
+        }
+    }
+
+    var showExistingProject = function () {
+        AddExistingProject.style.display = 'block';
+        AddNewProject.style.display = 'none';
+        ProjectButtons.style.display = 'none';
+        goBackbutton.style.display = 'block';
+        PopupTitle.innerHTML = "Add Exisiting Project";
+    }
+
+    var showCreateProject = function () {
+        AddExistingProject.style.display = 'none';
+        AddNewProject.style.display = 'block';
+        ProjectButtons.style.display = 'none';
+        goBackbutton.style.display = 'block';
+        PopupTitle.innerHTML = "Add New Project";
+    }
+
+    var goBack = function () {
+        defaultShowPopUp();
+    }
+</script>

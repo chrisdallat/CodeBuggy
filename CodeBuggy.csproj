@@ -36,7 +36,4 @@
   <ItemGroup>
     <None Include="wwwroot\Images\CodeBuggyLogo.jpg" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Remove="appsettings.Development.json" />
-  </ItemGroup>
 </Project>

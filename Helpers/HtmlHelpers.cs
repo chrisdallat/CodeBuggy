@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CodeBuggy.Helpers;
+
 public static class HtmlHelpers
 {
     public static IHtmlContent RenderProjectTable(IEnumerable<Project> projects, IUrlHelper url)
@@ -51,14 +52,12 @@ public static class HtmlHelpers
         input.Attributes.Add("name", "page");
 
         var prevLink = new TagBuilder("a");
-        prevLink.AddCssClass("page-link");
+        prevLink.AddCssClass("page-link, gg-arrow-left-r");
         prevLink.Attributes.Add("href", projectList.HasPreviousPage ? pageUrl(projectList.PageNumber - 1) : "#");
-        prevLink.InnerHtml += "&lt;";
 
         var nextLink = new TagBuilder("a");
-        nextLink.AddCssClass("page-link");
+        nextLink.AddCssClass("page-link, gg-arrow-right-r");
         nextLink.Attributes.Add("href", projectList.HasNextPage ? pageUrl(projectList.PageNumber + 1) : "#");
-        nextLink.InnerHtml += "&gt;";
 
         var maxPageSpan = new TagBuilder("span");
         maxPageSpan.AddCssClass("max-page");
