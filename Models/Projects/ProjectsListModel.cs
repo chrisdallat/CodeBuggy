@@ -37,15 +37,20 @@ public class ProjectsModel
 
     public string GenerateAccessCode()
     {
+        char[] accessCodeGenerated = new char[32];
         string accessCode;
+        const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        
         do
         {
-            byte[] buffer = new byte[32];
-            Random.NextBytes(buffer);
-            accessCode = Convert.ToBase64String(buffer);
-            _logger.LogInformation(accessCode);
+            for (int i = 0; i < 32; i++)
+            {
+                accessCodeGenerated[i] = Characters[Random.Next(Characters.Length)];
+            }
 
-            } while (_context.Projects.Any(p => p.AccessCode == accessCode));
+            accessCode = new string(accessCodeGenerated);
+
+        } while (_context.Projects.Any(p => p.AccessCode == accessCode));
 
         return accessCode;
     }
