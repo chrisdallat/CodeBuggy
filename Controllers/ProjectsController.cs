@@ -7,6 +7,7 @@ using CodeBuggy.Helpers;
 using Field = CodeBuggy.Helpers.Popup.Field;
 using System.Security.Policy;
 using System;
+using Microsoft.AspNetCore.Identity;
 
 namespace CodeBuggy.Controllers;
 
@@ -14,18 +15,21 @@ public class ProjectsController : Controller
 {
     private readonly ILogger<ProjectsController> _logger;
     private readonly ProjectsModel _projectsModel;
-    public ProjectsController(ILogger<ProjectsController> logger, AppDbContext context)
+    public ProjectsController(ILogger<ProjectsController> logger, AppDbContext context, UserManager<AppUser> userManager)
     {
         _logger = logger;
-        _projectsModel = new ProjectsModel(_logger, context);
+        _projectsModel = new ProjectsModel(_logger, context, userManager);
     }
 
     public IActionResult ProjectsList(int page = 1)
     {
         var projectList = _projectsModel.GetProjectsList(page, User);
 
-        ViewBag.ProjectTable = HtmlHelpers.RenderProjectTable(projectList, Url);
-        ViewBag.Pagination = HtmlHelpers.RenderPagination(projectList, i => Url.Action("ProjectsList", new { page = i }));
+        if (projectList != null)
+        {
+            ViewBag.ProjectTable = HtmlHelpers.RenderProjectTable(projectList, Url);
+            ViewBag.Pagination = HtmlHelpers.RenderPagination(projectList, i => Url.Action("ProjectsList", new { page = i }));
+        }
 
         return View();
     }
@@ -81,16 +85,30 @@ public class ProjectsController : Controller
     [HttpPost]
     public IActionResult AddExistingProject(ProjectsModel.InputModel input)
     {
-        _logger.LogInformation("Malaka");
-        _logger.LogInformation("AddExistingProject " + input.Name + " " + input.AccessCode);
-        return RedirectToAction("ProjectsList", "Projects");
+        if (string.IsNullOrWhiteSpace(input.Name) || string.IsNullOrWhiteSpace(input.AccessCode))
+        {
+            return Json(new { success = false, error = "Project name or access code cannot be empty." });
+        }
+
+        _projectsModel.AddExistingProject(input);
+
+        return Json(new { success = true, message = "Project added successfully." });
     }
 
     [HttpPost]
     public IActionResult AddNewProject(ProjectsModel.InputModel input)
     {
-        _logger.LogInformation("AddExistingProject " + input.Name);
-        //_projectsModel.CreateProject(input);
-        return RedirectToAction("ProjectsList", "Projects");
+        if (string.IsNullOrWhiteSpace(input.Name))
+        {
+            return Json(new { success = false, error = "Project name cannot be empty." });
+        }
+
+        bool result = _projectsModel.AddNewProject(input, User);
+        if(result)
+        {
+            return Json(new { success = true, message = "Project added successfully." });
+        }
+
+        return Json(new { success = false, error = "Project was not created!" });
     }
 }

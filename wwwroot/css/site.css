@@ -195,3 +195,14 @@ h2 {
         height: 90%; /* Adjusted height for smaller screens */
     }
 }
+
+.page-nav {
+    margin-right: 5px;
+    display: flex;
+    grid-template-columns: 1fr auto;
+    margin-top: 5px;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+}

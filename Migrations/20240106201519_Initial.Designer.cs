@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CodeBuggy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240106175852_Tickets")]
-    partial class Tickets
+    [Migration("20240106201519_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

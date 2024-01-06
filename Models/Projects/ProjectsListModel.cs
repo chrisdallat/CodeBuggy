@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using PagedList;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using System.Xml.Linq;
+using Microsoft.AspNetCore.Identity;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -12,6 +15,9 @@ public class ProjectsModel
 {
     private readonly ILogger<ProjectsController> _logger;
     private readonly AppDbContext _context;
+    private static readonly Random Random = new Random();
+    private readonly UserManager<AppUser> _userManager;
+
 
     [BindProperty]
     public InputModel Input { get; set; }
@@ -29,10 +35,27 @@ public class ProjectsModel
         public string AccessCode { get; set; }
     }
 
-    public ProjectsModel(ILogger<ProjectsController> logger, AppDbContext context)
+    public string GenerateAccessCode()
+    {
+        string accessCode;
+        do
+        {
+            byte[] buffer = new byte[32];
+            Random.NextBytes(buffer);
+            accessCode = Convert.ToBase64String(buffer);
+            _logger.LogInformation(accessCode);
+
+            } while (_context.Projects.Any(p => p.AccessCode == accessCode));
+
+        return accessCode;
+    }
+
+
+    public ProjectsModel(ILogger<ProjectsController> logger, AppDbContext context, UserManager<AppUser> userManager)
     {
         _logger = logger;
         _context = context;
+        _userManager = userManager;
     }
 
     public IPagedList<Project> GetProjectsList( int page, ClaimsPrincipal user)
@@ -46,7 +69,8 @@ public class ProjectsModel
                 {
                     Id = e.Id,
                     Name = e.Name,
-                    AccessCode = e.AccessCode
+                    AccessCode = e.AccessCode,
+                    Owner = e.Owner
                 })
                 .ToPagedList(page, pageSize);
 
@@ -84,5 +108,36 @@ public class ProjectsModel
 
         return null;
     }
+
+    public bool AddExistingProject(InputModel input)
+    {
+
+        return true;
+    }
+
+    public bool AddNewProject(InputModel input, ClaimsPrincipal user)
+    {
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            string accessCode = GenerateAccessCode();
+
+            _logger.LogInformation("Hello malaka");
+            var owner = _userManager.GetUserAsync(user).Result.FirstName + " " + _userManager.GetUserAsync(user).Result.LastName;
+            var newProject = new CodeBuggy.Data.Project
+            {
+                Name = input.Name,
+                Owner = owner,
+                AccessCode = accessCode
+            };
+
+            _context.Projects.Add(newProject);
+            _context.SaveChanges();
+
+            return true;
+        }
+
+        return false;
+    }
+
 }
 

@@ -44,16 +44,6 @@ else
             </a>
         </div>
 
-        <form id="addNewProjectForm" asp-action="AddNewProject" style="display: none;" method="post">
-            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
-                <input asp-for="Input.Name" class="form-control" autocomplete="ProjectName" aria-required="true" placeholder=""/> 
-                <label asp-for="Input.Name">Project name</label>
-            </div>
-            <button id="submitButton" type="submit" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px">
-                Add Project
-            </button>
-        </form>
-
         <form id="addExistingProjectForm" asp-action="AddExistingProject" style="display: none;" method="post">
             <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
                 <input asp-for="Input.Name" class="form-control" autocomplete="ProjectName" aria-required="true" placeholder="" />
@@ -67,6 +57,18 @@ else
                 Add Project
             </button>
         </form>
+
+        <form id="addNewProjectForm" asp-action="AddNewProject" style="display: none;" method="post">
+            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
+                <input asp-for="Input.Name" class="form-control" autocomplete="ProjectName" aria-required="true" placeholder="" />
+                <label asp-for="Input.Name">Project name</label>
+            </div>
+            <button id="submitButton" type="submit" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px">
+                Add Project
+            </button>
+        </form>
+
+        <span id="messageDispaly" style="display: none"></span>
     </div>     
 </div>
 
@@ -75,7 +77,9 @@ else
     const addExistingProjectForm = document.getElementById('addExistingProjectForm');
     const buttons = document.getElementById('ProjectButtons');
     const goBackbutton = document.getElementById('goBackButton');
+    const messageDisplay = document.getElementById('messageDispaly');
     var popupTitle = document.getElementById('PopupTitle');
+
 
     var defaultShowPopUp = function() {
         addNewProjectForm.style.display = 'none';
@@ -83,6 +87,7 @@ else
         ProjectButtons.style.display = 'block';
         goBackbutton.style.display = 'none';
         PopupTitle.innerHTML = "Add Project";
+        messageDisplay.style.display = 'none';
     }
 
     var togglePopup = function () {
@@ -113,4 +118,40 @@ else
     var goBack = function () {
         defaultShowPopUp();
     }
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        function handleFormSubmit(form) {
+            var formData = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageDisplay.style.display = 'block';
+                if (data.error) {
+                    messageDisplay.style.color = "red";
+                    messageDisplay.innerHTML = data.error;
+                }
+                else {
+                    window.location.href = '/Projects/ProjectsList?page=1';
+                }
+            })
+            .catch(error => {
+                console.error(error.message);
+            });
+        }
+
+        addNewProjectForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            handleFormSubmit(addNewProjectForm);
+        });
+
+        addExistingProjectForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            handleFormSubmit(addExistingProjectForm);
+        });
+    });
 </script>
