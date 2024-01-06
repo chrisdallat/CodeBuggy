@@ -20,6 +20,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
     }
 
     public DbSet<Project> Projects { get; set; }
+
+    public DbSet<Ticket> Tickets { get; set; }
 }
 
 public class AppUserEntityConfiguration : IEntityTypeConfiguration<AppUser>

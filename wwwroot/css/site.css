@@ -181,9 +181,9 @@ h2 {
     border: 2px solid #3498db;
     border-radius: 5px;
     width: 80%; /* Fixed width for larger screens */
-    max-width: 600px; /* Maximum width */
+    max-width: 700px; /* Maximum width */
     height: fit-content; /* Fixed height for larger screens */
-    max-height: 600px; /* Maximum height */
+    max-height: 800px; /* Maximum height */
     overflow-y: auto;
     position: relative;
 }

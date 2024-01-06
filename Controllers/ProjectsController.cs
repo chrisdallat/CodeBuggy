@@ -5,6 +5,8 @@ using System.Diagnostics;
 using CodeBuggy.Models.Projects;
 using CodeBuggy.Helpers;
 using Field = CodeBuggy.Helpers.Popup.Field;
+using System.Security.Policy;
+using System;
 
 namespace CodeBuggy.Controllers;
 
@@ -20,12 +22,10 @@ public class ProjectsController : Controller
 
     public IActionResult ProjectsList(int page = 1)
     {
-        var viewModel = _projectsModel.GetProjectsList(page, ViewBag, User, Url);
+        var projectList = _projectsModel.GetProjectsList(page, User);
 
-        if (viewModel != null)
-        {
-            return View(viewModel);
-        }
+        ViewBag.ProjectTable = HtmlHelpers.RenderProjectTable(projectList, Url);
+        ViewBag.Pagination = HtmlHelpers.RenderPagination(projectList, i => Url.Action("ProjectsList", new { page = i }));
 
         return View();
     }
@@ -76,6 +76,21 @@ public class ProjectsController : Controller
         //if(User.Identity && )
 
         return View();
-        
+    }
+
+    [HttpPost]
+    public IActionResult AddExistingProject(ProjectsModel.InputModel input)
+    {
+        _logger.LogInformation("Malaka");
+        _logger.LogInformation("AddExistingProject " + input.Name + " " + input.AccessCode);
+        return RedirectToAction("ProjectsList", "Projects");
+    }
+
+    [HttpPost]
+    public IActionResult AddNewProject(ProjectsModel.InputModel input)
+    {
+        _logger.LogInformation("AddExistingProject " + input.Name);
+        //_projectsModel.CreateProject(input);
+        return RedirectToAction("ProjectsList", "Projects");
     }
 }

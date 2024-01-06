@@ -3,6 +3,7 @@ using CodeBuggy.Data;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using PagedList;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace CodeBuggy.Models.Projects;
@@ -12,15 +13,31 @@ public class ProjectsModel
     private readonly ILogger<ProjectsController> _logger;
     private readonly AppDbContext _context;
 
+    [BindProperty]
+    public InputModel Input { get; set; }
+
+    public class InputModel
+    {
+        [Required]
+        [StringLength(255, ErrorMessage = "The Project name must have max 255 characters.")]
+        [Display(Name = "Project name")]
+        public string Name { get; set; }
+
+        [Required]
+        [StringLength(255, ErrorMessage = "The access code must have max 255 characters.")]
+        [Display(Name = "Access code")]
+        public string AccessCode { get; set; }
+    }
+
     public ProjectsModel(ILogger<ProjectsController> logger, AppDbContext context)
     {
         _logger = logger;
         _context = context;
     }
 
-    public AppUser GetProjectsList( int page, dynamic viewBag, ClaimsPrincipal user, IUrlHelper url)
+    public IPagedList<Project> GetProjectsList( int page, ClaimsPrincipal user)
     {
-        int pageSize = 1;
+        int pageSize = 6;
 
         if (user.Identity != null && user.Identity.IsAuthenticated)
         {
@@ -33,15 +50,7 @@ public class ProjectsModel
                 })
                 .ToPagedList(page, pageSize);
 
-            var viewModel = new AppUser
-            {
-                ProjectList = projectList
-            };
-
-            viewBag.ProjectTable = HtmlHelpers.RenderProjectTable(projectList, url);
-            viewBag.Pagination = HtmlHelpers.RenderPagination(projectList, i => url.Action("ProjectsList", new { page = i }));
-
-            return viewModel;
+            return projectList;
         }
 
         return null;
@@ -49,7 +58,6 @@ public class ProjectsModel
 
     public List<Ticket> getTickets(ClaimsPrincipal user, int projectId)
     {
-        _logger.LogInformation("Khalil " + projectId);
         if (user.Identity != null && user.Identity.IsAuthenticated)
         {
             List<Ticket> tickets = new List<Ticket>

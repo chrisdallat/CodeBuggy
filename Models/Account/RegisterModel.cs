@@ -54,7 +54,7 @@ namespace CodeBuggy.Models.Account
         {
 
             [Required]
-            [StringLength(255, ErrorMessage = "The first name must have maxW 255 characters.")]
+            [StringLength(255, ErrorMessage = "The first name must have max 255 characters.")]
             [Display(Name = "First name")]
             public string FirstName { get; set; }
 

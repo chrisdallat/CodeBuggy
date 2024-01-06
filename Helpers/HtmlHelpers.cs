@@ -14,7 +14,6 @@ public static class HtmlHelpers
     {
         var table = new TagBuilder("table");
         table.AddCssClass("content-table");
-
         
         var thead = new TagBuilder("thead");
         thead.InnerHtml += "<tr><th>ID</th><th>Title</th><th>Description</th></tr>";

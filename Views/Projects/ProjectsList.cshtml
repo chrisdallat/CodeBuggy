@@ -1,10 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@using CodeBuggy.Data
+@using CodeBuggy.Models.Projects
 @using PagedList.Mvc
 
-@inject SignInManager<AppUser> SignInManager
+@model ProjectsModel
 
-@if (SignInManager.IsSignedIn(User))
+@if (User.Identity?.IsAuthenticated ?? false)
 {
 
     <div style="display: grid; grid-template-columns: 1fr auto;">
@@ -43,41 +43,43 @@ else
                 <span>Add New Project</span>
             </a>
         </div>
-        <form id="AddNewProject" asp-action="AddNewProject" style="display: none;" method="post">
+
+        <form id="addNewProjectForm" asp-action="AddNewProject" style="display: none;" method="post">
             <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
-                <input class="form-control" autocomplete="ProjectName" aria-required="true" placeholder=""/> 
-                <label>Project name</label>
+                <input asp-for="Input.Name" class="form-control" autocomplete="ProjectName" aria-required="true" placeholder=""/> 
+                <label asp-for="Input.Name">Project name</label>
             </div>
-            <a id="submitButton" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px" onclick="">
+            <button id="submitButton" type="submit" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px">
                 Add Project
-            </a>
+            </button>
         </form>
-        <form id="AddExistingProject" asp-action="AddExistingProject" style="display: none;" method="post">
+
+        <form id="addExistingProjectForm" asp-action="AddExistingProject" style="display: none;" method="post">
             <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
-                <input class="form-control" autocomplete="ProjectName" aria-required="true" placeholder="" />
-                <label>Project name</label>
+                <input asp-for="Input.Name" class="form-control" autocomplete="ProjectName" aria-required="true" placeholder="" />
+                <label asp-for="Input.Name">Project name</label>
             </div>
             <div id="projectAccessCode" class="form-floating mb-3" style="max-width: 380px">
-                <input class="form-control" autocomplete="ProjectAccessCode" aria-required="true" placeholder="" />
-                <label>Project Access Code</label>
+                <input asp-for="Input.AccessCode" class="form-control" autocomplete="ProjectAccessCode" aria-required="true" placeholder="" />
+                <label asp-for="Input.AccessCode">Project Access Code</label>
             </div>
-            <a id="submitButton" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px" onclick="">
+            <button id="submitButton" type="submit" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px">
                 Add Project
-            </a>
+            </button>
         </form>
     </div>     
 </div>
 
 <script>
-    const AddNewProject = document.getElementById('AddNewProject');
-    const AddExistingProject = document.getElementById('AddExistingProject');
+    const addNewProjectForm = document.getElementById('addNewProjectForm');
+    const addExistingProjectForm = document.getElementById('addExistingProjectForm');
     const buttons = document.getElementById('ProjectButtons');
     const goBackbutton = document.getElementById('goBackButton');
     var popupTitle = document.getElementById('PopupTitle');
 
     var defaultShowPopUp = function() {
-        AddNewProject.style.display = 'none';
-        AddExistingProject.style.display = 'none';
+        addNewProjectForm.style.display = 'none';
+        addExistingProjectForm.style.display = 'none';
         ProjectButtons.style.display = 'block';
         goBackbutton.style.display = 'none';
         PopupTitle.innerHTML = "Add Project";
@@ -93,16 +95,16 @@ else
     }
 
     var showExistingProject = function () {
-        AddExistingProject.style.display = 'block';
-        AddNewProject.style.display = 'none';
+        addExistingProjectForm.style.display = 'block';
+        addNewProjectForm.style.display = 'none';
         ProjectButtons.style.display = 'none';
         goBackbutton.style.display = 'block';
         PopupTitle.innerHTML = "Add Exisiting Project";
     }
 
     var showCreateProject = function () {
-        AddExistingProject.style.display = 'none';
-        AddNewProject.style.display = 'block';
+        addExistingProjectForm.style.display = 'none';
+        addNewProjectForm.style.display = 'block';
         ProjectButtons.style.display = 'none';
         goBackbutton.style.display = 'block';
         PopupTitle.innerHTML = "Add New Project";
