@@ -3,7 +3,11 @@ using CodeBuggy.Data;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using PagedList;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using System.Xml.Linq;
+using Microsoft.AspNetCore.Identity;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -11,16 +15,57 @@ public class ProjectsModel
 {
     private readonly ILogger<ProjectsController> _logger;
     private readonly AppDbContext _context;
+    private static readonly Random Random = new Random();
+    private readonly UserManager<AppUser> _userManager;
 
-    public ProjectsModel(ILogger<ProjectsController> logger, AppDbContext context)
+
+    [BindProperty]
+    public InputModel Input { get; set; }
+
+    public class InputModel
+    {
+        [Required]
+        [StringLength(255, ErrorMessage = "The Project name must have max 255 characters.")]
+        [Display(Name = "Project name")]
+        public string Name { get; set; }
+
+        [Required]
+        [StringLength(255, ErrorMessage = "The access code must have max 255 characters.")]
+        [Display(Name = "Access code")]
+        public string AccessCode { get; set; }
+    }
+
+    public string GenerateAccessCode()
+    {
+        char[] accessCodeGenerated = new char[32];
+        string accessCode;
+        const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        
+        do
+        {
+            for (int i = 0; i < 32; i++)
+            {
+                accessCodeGenerated[i] = Characters[Random.Next(Characters.Length)];
+            }
+
+            accessCode = new string(accessCodeGenerated);
+
+        } while (_context.Projects.Any(p => p.AccessCode == accessCode));
+
+        return accessCode;
+    }
+
+
+    public ProjectsModel(ILogger<ProjectsController> logger, AppDbContext context, UserManager<AppUser> userManager)
     {
         _logger = logger;
         _context = context;
+        _userManager = userManager;
     }
 
-    public AppUser GetProjectsList( int page, dynamic viewBag, ClaimsPrincipal user, IUrlHelper url)
+    public IPagedList<Project> GetProjectsList( int page, ClaimsPrincipal user)
     {
-        int pageSize = 1;
+        int pageSize = 6;
 
         if (user.Identity != null && user.Identity.IsAuthenticated)
         {
@@ -29,19 +74,12 @@ public class ProjectsModel
                 {
                     Id = e.Id,
                     Name = e.Name,
-                    AccessCode = e.AccessCode
+                    AccessCode = e.AccessCode,
+                    Owner = e.Owner
                 })
                 .ToPagedList(page, pageSize);
 
-            var viewModel = new AppUser
-            {
-                ProjectList = projectList
-            };
-
-            viewBag.ProjectTable = HtmlHelpers.RenderProjectTable(projectList, url);
-            viewBag.Pagination = HtmlHelpers.RenderPagination(projectList, i => url.Action("ProjectsList", new { page = i }));
-
-            return viewModel;
+            return projectList;
         }
 
         return null;
@@ -49,7 +87,6 @@ public class ProjectsModel
 
     public List<Ticket> getTickets(ClaimsPrincipal user, int projectId)
     {
-        _logger.LogInformation("Khalil " + projectId);
         if (user.Identity != null && user.Identity.IsAuthenticated)
         {
             List<Ticket> tickets = new List<Ticket>
@@ -76,5 +113,36 @@ public class ProjectsModel
 
         return null;
     }
+
+    public bool AddExistingProject(InputModel input)
+    {
+
+        return true;
+    }
+
+    public bool AddNewProject(InputModel input, ClaimsPrincipal user)
+    {
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            string accessCode = GenerateAccessCode();
+
+            _logger.LogInformation("Hello malaka");
+            var owner = _userManager.GetUserAsync(user).Result.FirstName + " " + _userManager.GetUserAsync(user).Result.LastName;
+            var newProject = new CodeBuggy.Data.Project
+            {
+                Name = input.Name,
+                Owner = owner,
+                AccessCode = accessCode
+            };
+
+            _context.Projects.Add(newProject);
+            _context.SaveChanges();
+
+            return true;
+        }
+
+        return false;
+    }
+
 }
 

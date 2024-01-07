@@ -7,16 +7,16 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CodeBuggy.Helpers;
+
 public static class HtmlHelpers
 {
     public static IHtmlContent RenderProjectTable(IEnumerable<Project> projects, IUrlHelper url)
     {
         var table = new TagBuilder("table");
         table.AddCssClass("content-table");
-
         
         var thead = new TagBuilder("thead");
-        thead.InnerHtml += "<tr><th>ID</th><th>Title</th><th>Description</th></tr>";
+        thead.InnerHtml += "<tr><th>ID</th><th>Title</th><th>Access Code</th><th>Owner</th></tr>";
         table.InnerHtml += thead;
 
         var tbody = new TagBuilder("tbody");
@@ -25,7 +25,7 @@ public static class HtmlHelpers
             var row = new TagBuilder("tr");
             row.AddCssClass("clickable-row");
             row.Attributes.Add("data-href", $"/Project/Details/{project.Id}");
-            row.InnerHtml += $"<td>{project.Id}</td><td><a class='nav-link project-link' href='{url.Action("ProjectBoard", "Projects", new { id = project.Id })}'>{project.Name}</a></td><td>{project.AccessCode}</td>";
+            row.InnerHtml += $"<td>{project.Id}</td><td><a class='nav-link project-link' href='{url.Action("ProjectBoard", "Projects", new { id = project.Id })}'>{project.Name}</a></td><td>{project.AccessCode}</td><td>{project.Owner}</td>";
             tbody.InnerHtml += row;
         }
         table.InnerHtml += tbody;
@@ -37,55 +37,30 @@ public static class HtmlHelpers
     {
         var div = new TagBuilder("div");
         div.AddCssClass("pagination-box");
+        div.MergeAttribute("style", "justify-content: center;");
 
-        var form = new TagBuilder("form");
-        form.Attributes.Add("action", pageUrl(1)); // Default action to the first page
-        form.Attributes.Add("method", "get");
+        var mainDiv = new TagBuilder("div");
+        mainDiv.AddCssClass("page-nav");
 
-        var input = new TagBuilder("input");
-        input.Attributes.Add("type", "number");
-        input.Attributes.Add("min", "1");
-        input.Attributes.Add("max", projectList.PageCount.ToString());
-        input.Attributes.Add("value", projectList.PageNumber.ToString());
-        input.AddCssClass("page-input");
-        input.Attributes.Add("name", "page");
+        var pages = new TagBuilder("span");
+        pages.InnerHtml = $" {projectList.PageNumber} / {projectList.PageCount}";
+        pages.MergeAttribute("style", "font-size:19px");
 
         var prevLink = new TagBuilder("a");
-        prevLink.AddCssClass("page-link");
+        prevLink.AddCssClass("page-link, gg-arrow-left-r");
         prevLink.Attributes.Add("href", projectList.HasPreviousPage ? pageUrl(projectList.PageNumber - 1) : "#");
-        prevLink.InnerHtml += "&lt;";
+        prevLink.MergeAttribute("style", "margin-right: 8px");
 
         var nextLink = new TagBuilder("a");
-        nextLink.AddCssClass("page-link");
+        nextLink.AddCssClass("page-link, gg-arrow-right-r");
         nextLink.Attributes.Add("href", projectList.HasNextPage ? pageUrl(projectList.PageNumber + 1) : "#");
-        nextLink.InnerHtml += "&gt;";
+        nextLink.MergeAttribute("style", "margin-left: 8px;");
 
-        var maxPageSpan = new TagBuilder("span");
-        maxPageSpan.AddCssClass("max-page");
-        maxPageSpan.InnerHtml += $" / {projectList.PageCount}";
+        mainDiv.InnerHtml += prevLink;
+        mainDiv.InnerHtml += pages;
+        mainDiv.InnerHtml += nextLink;
 
-        form.InnerHtml += prevLink;
-        form.InnerHtml += input;
-        form.InnerHtml += maxPageSpan;
-        form.InnerHtml += nextLink;
-
-        div.InnerHtml += form;
-
-        var script = new TagBuilder("script");
-        script.InnerHtml += @"
-        function validatePageInput(input) {
-            var maxPage = parseInt(input.getAttribute('max'));
-            var enteredValue = parseInt(input.value);
-    
-            if (isNaN(enteredValue) || enteredValue < 1) {
-                input.value = 1;
-            } else if (enteredValue > maxPage) {
-                input.value = maxPage;
-            }
-        }
-        ";
-
-        div.InnerHtml += script;
+        div.InnerHtml += mainDiv;
 
         return new HtmlString(div.ToString());
     }

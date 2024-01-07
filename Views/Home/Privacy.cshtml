@@ -1,6 +1,38 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Burndown";
 }
 <h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<canvas id="myChart" width="400" height="200"></canvas>
+
+<script>// Your Chart.js code goes here
+    // Example code for a simple line chart (burndown graph):
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+        type: 'line', // Change chart type to 'line'
+        data: {
+            labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+            datasets: [{
+                label: 'Remaining Tasks',
+                data: [65, 59, 44, 35, 19, 0], // Adjust data to represent remaining tasks
+                fill: false, // Set fill to false for an open line graph
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                pointRadius: 5, // Set point radius for better visibility
+                pointBackgroundColor: 'rgba(75, 192, 192, 1)', // Set point color
+                pointBorderColor: 'rgba(75, 192, 192, 1)', // Set point border color
+                pointHoverRadius: 8 // Set point hover radius
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });</script>
+
+
