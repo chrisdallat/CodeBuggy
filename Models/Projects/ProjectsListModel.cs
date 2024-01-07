@@ -8,6 +8,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -40,7 +41,7 @@ public class ProjectsModel
         char[] accessCodeGenerated = new char[32];
         string accessCode;
         const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        
+
         do
         {
             for (int i = 0; i < 32; i++)
@@ -63,7 +64,7 @@ public class ProjectsModel
         _userManager = userManager;
     }
 
-    public IPagedList<Project> GetProjectsList( int page, ClaimsPrincipal user)
+    public IPagedList<Project> GetProjectsList(int page, ClaimsPrincipal user)
     {
         int pageSize = 6;
 
@@ -117,32 +118,61 @@ public class ProjectsModel
     public bool AddExistingProject(InputModel input)
     {
 
+        // TODO: check Projects for matching Name and accessCode, then add claim for user to AspNetUserClaims
+
+        //Search table with if (Project == Project.Name && accessCode == Project.AccessCode)
+
+        //call function below to add claim to AspNetUsersClaim table when valid
+        //access code presented and match with existing project in Projects table
+
+        //AddProjectClaim(input.Name, _userManager.GetUserId(user));
+
         return true;
     }
 
     public bool AddNewProject(InputModel input, ClaimsPrincipal user)
     {
+
         if (user.Identity != null && user.Identity.IsAuthenticated)
         {
             string accessCode = GenerateAccessCode();
 
             _logger.LogInformation("Hello malaka");
             var owner = _userManager.GetUserAsync(user).Result.FirstName + " " + _userManager.GetUserAsync(user).Result.LastName;
-            var newProject = new CodeBuggy.Data.Project
+
+            if (owner != null)
             {
-                Name = input.Name,
-                Owner = owner,
-                AccessCode = accessCode
-            };
+                var newProject = new CodeBuggy.Data.Project
+                {
+                    Name = input.Name,
+                    Owner = owner,
+                    AccessCode = accessCode
+                };
 
-            _context.Projects.Add(newProject);
-            _context.SaveChanges();
+                _context.Projects.Add(newProject);
+                _context.SaveChanges();
 
+                AddProjectClaim(input.Name, _userManager.GetUserId(user));
+            }
             return true;
-        }
 
+        }
         return false;
+
     }
 
+    public void AddProjectClaim(string projectName, string userId)
+    {
+        // Create a new UserClaim object
+        var userClaim = new IdentityUserClaim<string>
+        {
+            UserId = userId,
+            ClaimType = "ProjectAccess",
+            ClaimValue = projectName
+        };
+
+        _context.UserClaims.Add(userClaim);
+        _context.SaveChangesAsync();
+    }
 }
 
