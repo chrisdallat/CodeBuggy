@@ -155,9 +155,13 @@ else
         });
     });
 
-    var toggleBlur = function(span) {
+    var toggleBlur = function (span) {
         span.classList.toggle('blurred-text');
-    }
+
+        setTimeout(function () {
+            span.classList.toggle('blurred-text');
+        }, 5000);
+    };
 
     var copyText = function(button) {
         let td = button.previousElementSibling; 
