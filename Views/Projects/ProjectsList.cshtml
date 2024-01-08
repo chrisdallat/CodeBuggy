@@ -154,4 +154,27 @@ else
             handleFormSubmit(addExistingProjectForm);
         });
     });
+
+    var toggleBlur = function(span) {
+        span.classList.toggle('blurred-text');
+    }
+
+    var copyText = function(button) {
+        let td = button.previousElementSibling; 
+        let textToCopy = td.innerText || td.textContent || td.innerHTML;
+
+        let tempTextarea = document.createElement('textarea');
+        tempTextarea.value = textToCopy;
+
+        document.body.appendChild(tempTextarea);
+
+        tempTextarea.select();
+        tempTextarea.setSelectionRange(0, 99999);
+
+        document.execCommand('copy');
+
+        document.body.removeChild(tempTextarea);
+
+        alert('Text copied to clipboard!');
+    }
 </script>
