@@ -131,6 +131,7 @@
 
 .gg-close-r:hover, .gg-arrow-left-r:hover {
     cursor: pointer;
+<<<<<<< HEAD
 }
 
  .gg-copy {
@@ -177,3 +178,6 @@
     top: 2px;
     box-shadow: 0 4px 0,0 8px 0
 } 
+=======
+}
+>>>>>>> main
