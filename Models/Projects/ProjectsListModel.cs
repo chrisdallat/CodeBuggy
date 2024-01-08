@@ -8,10 +8,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Identity;
-<<<<<<< HEAD
 using Microsoft.EntityFrameworkCore;
-=======
->>>>>>> main
 
 namespace CodeBuggy.Models.Projects;
 
@@ -44,11 +41,6 @@ public class ProjectsModel
         char[] accessCodeGenerated = new char[32];
         string accessCode;
         const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-<<<<<<< HEAD
-
-=======
-        
->>>>>>> main
         do
         {
             for (int i = 0; i < 32; i++)
