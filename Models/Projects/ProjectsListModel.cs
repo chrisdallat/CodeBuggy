@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -28,12 +29,12 @@ public class ProjectsModel
         [Required]
         [StringLength(255, ErrorMessage = "The Project name must have max 255 characters.")]
         [Display(Name = "Project name")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Required]
         [StringLength(255, ErrorMessage = "The access code must have max 255 characters.")]
         [Display(Name = "Access code")]
-        public string AccessCode { get; set; }
+        public string AccessCode { get; set; } = string.Empty;
     }
 
     public string GenerateAccessCode()
@@ -63,13 +64,33 @@ public class ProjectsModel
         _userManager = userManager;
     }
 
-    public IPagedList<Project> GetProjectsList(int page, ClaimsPrincipal user)
+    public IPagedList<Project>? GetProjectsList(int page, ClaimsPrincipal user)
     {
         int pageSize = 6;
 
-        if (user.Identity != null && user.Identity.IsAuthenticated)
+        if (user.Identity == null || user.Identity.IsAuthenticated == false)
         {
+            return null;
+        }
+
+        // Get the user's Id from the ClaimsPrincipal
+        string? userId = _userManager.GetUserId(user);
+        if (userId == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            // Get the project names from the user claims
+            var projectNames = _context.UserClaims
+                    .Where(uc => uc.UserId == userId && uc.ClaimType == "ProjectAccess")
+                    .Select(uc => uc.ClaimValue)
+                    .ToList();
+
+            // Filter projects based on the user's claims
             var projectList = _context.Projects
+                .Where(p => projectNames.Contains(p.Id.ToString()))
                 .Select(e => new Project
                 {
                     Id = e.Id,
@@ -79,13 +100,23 @@ public class ProjectsModel
                 })
                 .ToPagedList(page, pageSize);
 
-            return projectList;
+            if (projectList != null && projectList.Any())
+            {
+                return projectList;
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Couldn't load projects: " + ex);
         }
 
         return null;
     }
 
-    public List<Ticket> getTickets(ClaimsPrincipal user, int projectId)
+
+    public List<Ticket>? GetTickets(ClaimsPrincipal user, int projectId)
     {
         if (user.Identity != null && user.Identity.IsAuthenticated)
         {
@@ -129,48 +160,74 @@ public class ProjectsModel
         return true;
     }
 
-    public bool AddNewProject(InputModel input, ClaimsPrincipal user)
+    public async Task<bool> AddNewProjectAsync(InputModel input, ClaimsPrincipal user)
     {
-        if (user.Identity != null && user.Identity.IsAuthenticated)
+        bool result = false;
+
+        if (user.Identity == null || user.Identity.IsAuthenticated == false)
         {
-            string accessCode = GenerateAccessCode();
-
-            _logger.LogInformation("Hello malaka");
-            var owner = _userManager.GetUserAsync(user).Result.FirstName + " " + _userManager.GetUserAsync(user).Result.LastName;
-
-            if (owner != null)
-            {
-                var newProject = new CodeBuggy.Data.Project
-                {
-                    Name = input.Name,
-                    Owner = owner,
-                    AccessCode = accessCode
-                };
-
-                _context.Projects.Add(newProject);
-                _context.SaveChanges();
-
-                AddProjectClaim(input.Name, _userManager.GetUserId(user));
-            }
-            return true;
-
+            return result;
         }
-        return false;
 
+        string accessCode = GenerateAccessCode();
+
+        var owner = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+
+        if (owner == null)
+        {
+            return result;
+        }
+
+        try
+        {
+            var newProject = new Project
+            {
+                Name = input.Name,
+                Owner = owner,
+                AccessCode = accessCode
+            };
+
+            _context.Projects.Add(newProject);
+            await _context.SaveChangesAsync();
+
+            var userId = _userManager?.GetUserId(user);
+
+            if (userId == null || newProject?.Id == null || newProject.Id == 0)
+            {
+                return result;
+            }
+
+            result = AddProjectClaim(newProject.Id, userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error: " + ex);
+        }
+
+        return result;
     }
 
-    public void AddProjectClaim(string projectName, string userId)
+    public bool AddProjectClaim(int projectId, string userId)
     {
-        // Create a new UserClaim object
-        var userClaim = new IdentityUserClaim<string>
+        try
         {
-            UserId = userId,
-            ClaimType = "ProjectAccess",
-            ClaimValue = projectName
-        };
+            var userClaim = new IdentityUserClaim<string>
+            {
+                UserId = userId,
+                ClaimType = "ProjectAccess",
+                ClaimValue = projectId.ToString()
+            };
 
-        _context.UserClaims.Add(userClaim);
-        _context.SaveChangesAsync();
+            _context.UserClaims.Add(userClaim);
+            _context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error: " + ex);
+            return false;
+        }
+
+        return true;
     }
 }
 

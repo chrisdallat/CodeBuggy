@@ -16,7 +16,7 @@ public static class HtmlHelpers
         table.AddCssClass("content-table");
         
         var thead = new TagBuilder("thead");
-        thead.InnerHtml += "<tr><th>ID</th><th>Title</th><th>Access Code</th><th>Owner</th></tr>";
+        thead.InnerHtml += "<tr><th>Title</th><th>Access Code</th><th>Owner</th></tr>";
         table.InnerHtml += thead;
 
         var tbody = new TagBuilder("tbody");
@@ -26,7 +26,7 @@ public static class HtmlHelpers
             row.AddCssClass("clickable-row");
             row.Attributes.Add("data-href", $"/Project/Details/{project.Id}");
 
-            row.InnerHtml += $"<td>{project.Id}</td><td><a class='nav-link project-link' href='{url.Action("ProjectBoard", "Projects", new { id = project.Id })}'>{project.Name}</a></td>" +
+            row.InnerHtml += $"<td><a class='nav-link project-link' href='{url.Action("ProjectBoard", "Projects", new { id = project.Id })}'>{project.Name}</a></td>" +
                             $"<td><span class='blurred-text' onclick='toggleBlur(this)'><span>{project.AccessCode}</span></span>" +
                             $"<button class='gg-copy' onclick='copyText(this)'></button></td>" +
                             $"<td>{project.Owner}</td>";
@@ -47,7 +47,7 @@ public static class HtmlHelpers
         mainDiv.AddCssClass("page-nav");
 
         var pages = new TagBuilder("span");
-        pages.InnerHtml = $" {projectList.PageNumber} / {projectList.PageCount}";
+        pages.InnerHtml = $" {projectList.PageNumber} / {(projectList.PageCount == 0 ? 1 : projectList.PageCount)}";
         pages.MergeAttribute("style", "font-size:19px");
 
         var prevLink = new TagBuilder("a");
@@ -69,7 +69,7 @@ public static class HtmlHelpers
         return new HtmlString(div.ToString());
     }
 
-    public static async Task<IHtmlContent> RenderTicketsAsync(this IHtmlHelper htmlHelper, List<Ticket> tickets, TicketStatus status)
+    public static IHtmlContent RenderTickets(this IHtmlHelper htmlHelper, List<Ticket> tickets, TicketStatus status)
     {
         var ticketByStatus = tickets.Where(t => t.Status == status);
         var result = new StringBuilder();
@@ -102,6 +102,6 @@ public static class HtmlHelpers
         }
 
         return new HtmlString(result.ToString());
-    } 
+    }
 
 }

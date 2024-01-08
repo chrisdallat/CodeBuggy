@@ -43,6 +43,7 @@ h2 {
 
 .pagination-box {
     display: flex;
+    margin-top: 20px;
     align-items: center;
     overflow-x: hidden; /* Hide horizontal scrollbar */
     overflow-y: hidden; /* Enable vertical scrollbar when necessary */

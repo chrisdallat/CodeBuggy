@@ -36,7 +36,7 @@ public class ProjectsController : Controller
 
     public IActionResult ProjectBoard(int projectId)
     {
-        List<Ticket> tickets = _projectsModel.getTickets(User, projectId);
+        var tickets = _projectsModel?.GetTickets(User, projectId);
 
         if (tickets != null)
         {
@@ -96,14 +96,14 @@ public class ProjectsController : Controller
     }
 
     [HttpPost]
-    public IActionResult AddNewProject(ProjectsModel.InputModel input)
+    public async Task<IActionResult> AddNewProject(ProjectsModel.InputModel input)
     {
         if (string.IsNullOrWhiteSpace(input.Name))
         {
             return Json(new { success = false, error = "Project name cannot be empty." });
         }
 
-        bool result = _projectsModel.AddNewProject(input, User);
+        bool result = await _projectsModel.AddNewProjectAsync(input, User);
         if(result)
         {
             return Json(new { success = true, message = "Project added successfully." });
