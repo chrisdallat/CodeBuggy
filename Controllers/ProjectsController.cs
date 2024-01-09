@@ -87,7 +87,7 @@ public class ProjectsController : Controller
     {
         if (string.IsNullOrWhiteSpace(input.Name) || string.IsNullOrWhiteSpace(input.AccessCode))
         {
-            return Json(new { success = false, error = "Project name or access code cannot be empty." });
+            return Json(new { success = false, message = "Project name or access code cannot be empty." });
         }
 
         OperationResult result = await _projectsModel.AddExistingProject(input, User);
