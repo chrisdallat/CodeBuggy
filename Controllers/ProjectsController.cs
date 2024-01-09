@@ -42,7 +42,7 @@ public class ProjectsController : Controller
         {
             return View(tickets);
         }
-        
+
         return RedirectToAction("Login", "Account");
     }
 
@@ -83,16 +83,16 @@ public class ProjectsController : Controller
     }
 
     [HttpPost]
-    public IActionResult AddExistingProject(ProjectsModel.InputModel input)
+    public async Task<IActionResult> AddExistingProject(ProjectsModel.InputModel input)
     {
         if (string.IsNullOrWhiteSpace(input.Name) || string.IsNullOrWhiteSpace(input.AccessCode))
         {
             return Json(new { success = false, error = "Project name or access code cannot be empty." });
         }
 
-        _projectsModel.AddExistingProject(input);
+        OperationResult result = await _projectsModel.AddExistingProject(input, User);
 
-        return Json(new { success = true, message = "Project added successfully." });
+        return Json(new { success = result.Success, message = result.Message });
     }
 
     [HttpPost]
@@ -103,12 +103,8 @@ public class ProjectsController : Controller
             return Json(new { success = false, error = "Project name cannot be empty." });
         }
 
-        bool result = await _projectsModel.AddNewProjectAsync(input, User);
-        if(result)
-        {
-            return Json(new { success = true, message = "Project added successfully." });
-        }
+        OperationResult result = await _projectsModel.AddNewProjectAsync(input, User);
 
-        return Json(new { success = false, error = "Project was not created!" });
+        return Json(new { success = result.Success, message = result.Message });
     }
 }

@@ -130,10 +130,11 @@ else
             })
             .then(response => response.json())
             .then(data => {
+                console.log(data);
                 messageDisplay.style.display = 'block';
-                if (data.error) {
+                if (data.success === false) {
                     messageDisplay.style.color = "red";
-                    messageDisplay.innerHTML = data.error;
+                    messageDisplay.innerHTML = data.message;
                 }
                 else {
                     window.location.href = '/Projects/ProjectsList?page=1';

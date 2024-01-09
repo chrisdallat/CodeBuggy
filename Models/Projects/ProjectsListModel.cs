@@ -10,6 +10,9 @@ using System.Xml.Linq;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq;
+using System.Net.Security;
+using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -19,7 +22,6 @@ public class ProjectsModel
     private readonly AppDbContext _context;
     private static readonly Random Random = new Random();
     private readonly UserManager<AppUser> _userManager;
-
 
     [BindProperty]
     public InputModel Input { get; set; }
@@ -64,6 +66,36 @@ public class ProjectsModel
         _userManager = userManager;
     }
 
+    private List<Project>? GetProjects(ClaimsPrincipal user)
+    {
+        string? userId = _userManager.GetUserId(user);
+        if (userId == null)
+        {
+            return null;
+        }
+
+        var projectIds = _context.UserClaims 
+        .Where(uc => uc.UserId == userId && uc.ClaimType == "ProjectAccess") 
+        .Select(uc => uc.ClaimValue) 
+        .ToList();
+
+        
+        // Filter projects based on the user's claims
+        var projectList = _context.Projects
+            .Where(p => projectIds.Contains(p.Id.ToString()))
+            .Select(e => new Project
+            {
+                Id = e.Id,
+                Name = e.Name,
+                AccessCode = e.AccessCode,
+                Owner = e.Owner,
+                OwnerId = e.OwnerId,
+            })
+            .ToList();
+
+        return projectList;
+    }
+
     public IPagedList<Project>? GetProjectsList(int page, ClaimsPrincipal user)
     {
         int pageSize = 6;
@@ -82,23 +114,8 @@ public class ProjectsModel
 
         try
         {
-            // Get the project names from the user claims
-            var projectNames = _context.UserClaims
-                    .Where(uc => uc.UserId == userId && uc.ClaimType == "ProjectAccess")
-                    .Select(uc => uc.ClaimValue)
-                    .ToList();
 
-            // Filter projects based on the user's claims
-            var projectList = _context.Projects
-                .Where(p => projectNames.Contains(p.Id.ToString()))
-                .Select(e => new Project
-                {
-                    Id = e.Id,
-                    Name = e.Name,
-                    AccessCode = e.AccessCode,
-                    Owner = e.Owner
-                })
-                .ToPagedList(page, pageSize);
+            var projectList = GetProjects(user).ToPagedList(page, pageSize);
 
             if (projectList != null && projectList.Any())
             {
@@ -145,69 +162,92 @@ public class ProjectsModel
         return null;
     }
 
-    public bool AddExistingProject(InputModel input)
+    public async Task<OperationResult> AddExistingProject(InputModel input, ClaimsPrincipal user)
     {
-
-        // TODO: check Projects for matching Name and accessCode, then add claim for user to AspNetUserClaims
-
-        //Search table with if (Project == Project.Name && accessCode == Project.AccessCode)
-
-        //call function below to add claim to AspNetUsersClaim table when valid
-        //access code presented and match with existing project in Projects table
-
-        //AddProjectClaim(input.Name, _userManager.GetUserId(user));
-
-        return true;
-    }
-
-    public async Task<bool> AddNewProjectAsync(InputModel input, ClaimsPrincipal user)
-    {
-        bool result = false;
-
         if (user.Identity == null || user.Identity.IsAuthenticated == false)
         {
-            return result;
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+        
+        var existingProject = _context.Projects.FirstOrDefault(p => p.Name == input.Name && p.AccessCode == input.AccessCode);
+
+        if (existingProject == null)
+        {
+            return new OperationResult { Success = false, Message = "Project does not exist or not found!" };
         }
 
-        string accessCode = GenerateAccessCode();
+        var userId = _userManager?.GetUserId(user);
+        if (userId == null || existingProject?.Id == null || existingProject.Id == 0)
+        {
+            return new OperationResult { Success = false, Message = "Could not join existing project" };
+        }
+
+        var projectClaimed = _context.UserClaims.FirstOrDefault(p => p.ClaimValue == existingProject.Id.ToString() && p.ClaimType == "ProjectAccess");
+        if (projectClaimed != null)
+        {
+            return new OperationResult { Success = false, Message = "You already have access to this project" };
+        }
+
+        bool result = AddProjectClaim(existingProject.Id, userId).Success;
+        return new OperationResult { Success = result, Message = "Project was found and added! "};
+    }
+
+    public async Task<OperationResult> AddNewProjectAsync(InputModel input, ClaimsPrincipal user)
+    {
+        if (user.Identity == null || user.Identity.IsAuthenticated == false)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
 
         var owner = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        var userId = _userManager?.GetUserId(user);
 
-        if (owner == null)
+        if (owner == null || userId == null)
         {
-            return result;
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
         try
         {
+            var userProjects = GetProjects(user);
+            if (userProjects != null)
+            {
+                var existingProjectWithName = userProjects.FirstOrDefault(p => p.Name == input.Name && p.OwnerId == userId);
+
+                if (existingProjectWithName != null)
+                {
+                    return new OperationResult { Success = false, Message = "Project with the same name already exists" };
+                }
+            }
+
+            string accessCode = GenerateAccessCode();
+
             var newProject = new Project
             {
                 Name = input.Name,
                 Owner = owner,
-                AccessCode = accessCode
+                AccessCode = accessCode,
+                OwnerId = userId,
             };
 
             _context.Projects.Add(newProject);
             await _context.SaveChangesAsync();
 
-            var userId = _userManager?.GetUserId(user);
-
             if (userId == null || newProject?.Id == null || newProject.Id == 0)
             {
-                return result;
+                return new OperationResult { Success = false, Message = "Could not create new project" };
             }
 
-            result = AddProjectClaim(newProject.Id, userId);
+            return AddProjectClaim(newProject.Id, userId);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error: " + ex);
+            _logger.LogError("Error: " + ex.Message);
+            return new OperationResult { Success = false, Message = "Error: " + ex.Message };
         }
-
-        return result;
     }
 
-    public bool AddProjectClaim(int projectId, string userId)
+    public OperationResult AddProjectClaim(int projectId, string userId)
     {
         try
         {
@@ -224,10 +264,10 @@ public class ProjectsModel
         catch (Exception ex)
         {
             _logger.LogError("Error: " + ex);
-            return false;
+            return new OperationResult { Success = false, Message = "Error: " + ex.Message };
         }
 
-        return true;
+        return new OperationResult { Success = true, Message = "Project was created successfully" };
     }
 }
 
