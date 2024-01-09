@@ -182,7 +182,7 @@ public class ProjectsModel
             return new OperationResult { Success = false, Message = "Could not join existing project" };
         }
 
-        var projectClaimed = _context.UserClaims.FirstOrDefault(p => p.ClaimValue == existingProject.Id.ToString() && p.ClaimType == "ProjectAccess");
+        var projectClaimed = _context.UserClaims.FirstOrDefault(p => p.ClaimValue == existingProject.Id.ToString() && p.ClaimType == "ProjectAccess" && p.UserId == userId);
         if (projectClaimed != null)
         {
             return new OperationResult { Success = false, Message = "You already have access to this project" };
