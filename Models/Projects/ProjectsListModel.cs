@@ -29,12 +29,12 @@ public class ProjectsModel
     public class InputModel
     {
         [Required]
-        [StringLength(255, ErrorMessage = "The Project name must have max 255 characters.")]
+        [StringLength(255, ErrorMessage = "The Project Name must be maximum 255 characters.")]
         [Display(Name = "Project name")]
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(255, ErrorMessage = "The access code must have max 255 characters.")]
+        [StringLength(255, ErrorMessage = "The Access Code must be maximum 255 characters.")]
         [Display(Name = "Access code")]
         public string AccessCode { get; set; } = string.Empty;
     }
@@ -126,7 +126,7 @@ public class ProjectsModel
         }
         catch (Exception ex)
         {
-            _logger.LogError("Couldn't load projects: " + ex);
+            _logger.LogError("Unable to load projects: " + ex);
         }
 
         return null;
@@ -173,23 +173,23 @@ public class ProjectsModel
 
         if (existingProject == null)
         {
-            return new OperationResult { Success = false, Message = "Project does not exist or not found!" };
+            return new OperationResult { Success = false, Message = "Unable to locate project with this name" };
         }
 
         var userId = _userManager?.GetUserId(user);
         if (userId == null || existingProject?.Id == null || existingProject.Id == 0)
         {
-            return new OperationResult { Success = false, Message = "Could not join existing project" };
+            return new OperationResult { Success = false, Message = "Unable to join existing project" };
         }
 
         var projectClaimed = _context.UserClaims.FirstOrDefault(p => p.ClaimValue == existingProject.Id.ToString() && p.ClaimType == "ProjectAccess" && p.UserId == userId);
         if (projectClaimed != null)
         {
-            return new OperationResult { Success = false, Message = "You already have access to this project" };
+            return new OperationResult { Success = false, Message = "Access to project previously granted" };
         }
 
         bool result = AddProjectClaim(existingProject.Id, userId).Success;
-        return new OperationResult { Success = result, Message = "Project was found and added! "};
+        return new OperationResult { Success = result, Message = "Project added"};
     }
 
     public async Task<OperationResult> AddNewProjectAsync(InputModel input, ClaimsPrincipal user)
@@ -216,7 +216,7 @@ public class ProjectsModel
 
                 if (existingProjectWithName != null)
                 {
-                    return new OperationResult { Success = false, Message = "Project with the same name already exists" };
+                    return new OperationResult { Success = false, Message = "Project with identical name exists" };
                 }
             }
 
@@ -235,7 +235,7 @@ public class ProjectsModel
 
             if (userId == null || newProject?.Id == null || newProject.Id == 0)
             {
-                return new OperationResult { Success = false, Message = "Could not create new project" };
+                return new OperationResult { Success = false, Message = "Unable to create new project" };
             }
 
             return AddProjectClaim(newProject.Id, userId);

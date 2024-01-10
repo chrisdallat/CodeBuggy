@@ -54,31 +54,6 @@ public class ProjectsController : Controller
 
     public ActionResult NewProject()
     {
-        //Popup NewProjectPopup = new Popup
-        //{
-        //    Title = "New Project",
-        //    Fields = new Field[]
-        //    {
-        //        new Field { Label = "Project Name", Type = "Input", Value = "" },
-        //        new Field { Label = "Project Name1", Type = "Input", Value = "" },
-        //        new Field { Label = "Project Name2", Type = "Input", Value = "" }
-        //    }
-        //};
-
-        //NewProjectPopup.Create();
-
-        //string html = NewProjectPopup.GetPopupHtml();
-
-        //if (html != null)
-        //{
-        //    _logger.LogInformation(html);
-        //    return Content(html, "text/html");
-        //}
-        //_logger.LogInformation("html is null");
-        //return Content("Popup not shown", "text/plain");
-
-        //if(User.Identity && )
-
         return View();
     }
 
@@ -87,7 +62,7 @@ public class ProjectsController : Controller
     {
         if (string.IsNullOrWhiteSpace(input.Name) || string.IsNullOrWhiteSpace(input.AccessCode))
         {
-            return Json(new { success = false, message = "Project name or access code cannot be empty." });
+            return Json(new { success = false, message = "Project Name and Access Code must be provided" });
         }
 
         OperationResult result = await _projectsModel.AddExistingProject(input, User);
@@ -100,7 +75,7 @@ public class ProjectsController : Controller
     {
         if (string.IsNullOrWhiteSpace(input.Name))
         {
-            return Json(new { success = false, error = "Project name cannot be empty." });
+            return Json(new { success = false, error = "Project Name must be provided" });
         }
 
         OperationResult result = await _projectsModel.AddNewProjectAsync(input, User);
