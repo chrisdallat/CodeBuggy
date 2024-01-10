@@ -16,7 +16,7 @@ public static class HtmlHelpers
         table.AddCssClass("content-table");
         
         var thead = new TagBuilder("thead");
-        thead.InnerHtml += "<tr><th>Title</th><th>Access Code</th><th>Owner</th></tr>";
+        thead.InnerHtml += "<tr><th>Title</th><th>Access Code</th><th>Owner</th><th></th></tr>";
         table.InnerHtml += thead;
 
         var tbody = new TagBuilder("tbody");
@@ -27,9 +27,11 @@ public static class HtmlHelpers
             row.Attributes.Add("data-href", $"/Project/Details/{project.Id}");
 
             row.InnerHtml += $"<td><a class='nav-link project-link' href='{url.Action("ProjectBoard", "Projects", new { id = project.Id })}'>{project.Name}</a></td>" +
-                            $"<td><span class='blurred-text' onclick='toggleBlur(this)'><span>{project.AccessCode}</span></span>" +
-                            $"<button class='gg-copy' onclick='copyText(this)'></button></td>" +
-                            $"<td>{project.Owner}</td>";
+                            $"<td style='width: 600px;'><span class='blurred-text' onclick='toggleBlur(this)'><span>{project.AccessCode}</span></span>" +
+                            $"<button class='gg-copy' onclick='copyText(this, \"{project.AccessCode}\")'></button>" +
+                            $"<span style='display: none; float: right; margin-right: 20px'>Copied!</span></td>" +
+                            $"<td>{project.Owner}</td>" +
+                            $"<td><button class='gg-trash' onclick='toggleDeletePopup(this, \"{project.AccessCode}\")'></button></td>";
             tbody.InnerHtml += row;
         }
         table.InnerHtml += tbody;

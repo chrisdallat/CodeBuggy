@@ -5,14 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using PagedList;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
-using System.Xml.Linq;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System.Linq;
-using System.Net.Security;
-using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -58,7 +52,6 @@ public class ProjectsModel
         return accessCode;
     }
 
-
     public ProjectsModel(ILogger<ProjectsController> logger, AppDbContext context, UserManager<AppUser> userManager)
     {
         _logger = logger;
@@ -78,7 +71,6 @@ public class ProjectsModel
         .Where(uc => uc.UserId == userId && uc.ClaimType == "ProjectAccess")
         .Select(uc => uc.ClaimValue)
         .ToList();
-
 
         // Filter projects based on the user's claims
         var projectList = _context.Projects
@@ -131,7 +123,6 @@ public class ProjectsModel
 
         return null;
     }
-
 
     public List<Ticket>? GetTickets(ClaimsPrincipal user, int projectId)
     {
@@ -268,6 +259,51 @@ public class ProjectsModel
         }
 
         return new OperationResult { Success = true, Message = "Project was created successfully" };
+    }
+
+    public async Task<OperationResult> DeleteProjectAsync(string accessCode, ClaimsPrincipal user)
+    {
+        try
+        {
+            var projectToDelete = await _context.Projects.FirstOrDefaultAsync(p => p.AccessCode == accessCode);
+
+            var userId = _userManager?.GetUserId(user);
+
+            if (projectToDelete == null || userId == null)
+            {
+                return new OperationResult { Success = false, Message = "Unable to delete project" };
+            }
+
+            if (projectToDelete.OwnerId != userId)
+            {
+                var haveAccessToProject = await _context.UserClaims.FirstOrDefaultAsync(p => p.ClaimValue == projectToDelete.Id.ToString() && p.ClaimType == "ProjectAccess" && p.UserId == userId);
+                if (haveAccessToProject == null)
+                {
+                    return new OperationResult { Success = false, Message = "Unable to delete project" };
+                }
+
+                _context.UserClaims.Remove(haveAccessToProject);
+                await _context.SaveChangesAsync();
+
+                return new OperationResult { Success = true, Message = "Project deleted" };
+            }
+
+            var projectClaims = _context.UserClaims.Where(uc => uc.ClaimValue == projectToDelete.Id.ToString() && uc.ClaimType == "ProjectAccess").ToList();
+            foreach (var claim in projectClaims)
+            {
+                _context.UserClaims.Remove(claim);
+            }
+
+            _context.Projects.Remove(projectToDelete);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error: " + ex);
+            return new OperationResult { Success = false, Message = "Error: " + ex.Message };
+        }
+
+        return new OperationResult { Success = true, Message = "Project deleted" };
     }
 }
 

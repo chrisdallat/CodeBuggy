@@ -68,8 +68,30 @@ else
             </button>
         </form>
 
-        <span id="messageDispaly" style="display: none"></span>
     </div>     
+</div>
+    <div id="deletePopup" class="overlay">
+         <div class="popup">
+        <div style="display: grid; grid-template-columns: 1fr auto;">
+            <h2 id="PopupTitle" style="text-align: center;">Delete Project</h2>
+            <span class="gg-close-r" style="top: unset; margin-top: 8px; right: 20px" onclick="toggleDeletePopup()"></span>
+        </div>
+        <div style="margin-top: 20px"></div>
+
+        <span style="text-align: center; font-size: 17px">Enter Project Access Code</span>
+        
+        <div style="margin-top: 20px"></div>
+        <form id="deleteProject" asp-action="DeleteProject" method="post">
+            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
+                <input asp-for="Input.AccessCode" class="form-control" aria-required="true" placeholder="" />
+                <label asp-for="Input.AccessCode">Project Access Code</label>
+            </div>
+            <button id="submitButton" type="submit" class="button-general mb-3 mt-5" style="text-align: center;">
+                Delete Project
+            </button>
+        </form>
+
+    </div>
 </div>
 
 <script>
@@ -77,7 +99,6 @@ else
     const addExistingProjectForm = document.getElementById('addExistingProjectForm');
     const buttons = document.getElementById('ProjectButtons');
     const goBackbutton = document.getElementById('goBackButton');
-    const messageDisplay = document.getElementById('messageDispaly');
     var popupTitle = document.getElementById('PopupTitle');
 
 
@@ -87,7 +108,6 @@ else
         ProjectButtons.style.display = 'block';
         goBackbutton.style.display = 'none';
         PopupTitle.innerHTML = "Add Project";
-        messageDisplay.style.display = 'none';
     }
 
     var togglePopup = function () {
@@ -95,7 +115,23 @@ else
         popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
 
         if (popup.style.display === 'none') {
+            let errorMessage = document.getElementById("errorMessage");
+            if (errorMessage) {
+                errorMessage.remove();
+            }
             defaultShowPopUp();
+        }
+    }
+
+    var toggleDeletePopup = function(button, projectAccessCode) {
+        const popup = document.getElementById('deletePopup');
+        popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+
+        if (popup.style.display === 'none') {
+            let errorMessage = document.getElementById("errorMessage");
+            if (errorMessage) {
+                errorMessage.remove();
+            }
         }
     }
 
@@ -116,43 +152,51 @@ else
     }
 
     var goBack = function () {
+        let errorMessage = document.getElementById("errorMessage");
+        if (errorMessage) {
+            errorMessage.remove();
+        }
         defaultShowPopUp();
+    }
+
+    var handleServerMessage = function (form, formData) {
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if (data.success === false) {
+                let errorMessage = document.createElement('span');
+                errorMessage.id = "errorMessage";
+                errorMessage.innerHTML = data.message;
+                form.insertAdjacentElement('afterend', errorMessage);
+            }
+            else {
+                window.location.href = '/Projects/ProjectsList?page=1';
+            }
+        })
+        .catch(error => {
+            console.error(error.message);
+        });
     }
 
     document.addEventListener("DOMContentLoaded", function () {
 
-        function handleFormSubmit(form) {
-            var formData = new FormData(form);
-
-            fetch(form.action, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
-                messageDisplay.style.display = 'block';
-                if (data.success === false) {
-                    messageDisplay.style.color = "red";
-                    messageDisplay.innerHTML = data.message;
-                }
-                else {
-                    window.location.href = '/Projects/ProjectsList?page=1';
-                }
-            })
-            .catch(error => {
-                console.error(error.message);
-            });
-        }
-
         addNewProjectForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            handleFormSubmit(addNewProjectForm);
+            handleServerMessage(this, new FormData(this));
         });
 
         addExistingProjectForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            handleFormSubmit(addExistingProjectForm);
+            handleServerMessage(this, new FormData(this));
+        });
+
+        document.getElementById('deleteProject').addEventListener('submit', function (e) {
+            e.preventDefault();
+            handleServerMessage(this, new FormData(this));
         });
     });
 
@@ -164,10 +208,16 @@ else
         }, 5000);
     };
 
-    var copyText = function(button) {
-        let td = button.previousElementSibling; 
-        let textToCopy = td.innerText || td.textContent || td.innerHTML;
+    var copyText = function(button, accessCode) {
+        let textToCopy = accessCode;
 
+        let copiedAccessCode = button.nextElementSibling;
+        if (copiedAccessCode) {
+            copiedAccessCode.style.display = 'inline';
+            setTimeout(function () {
+                copiedAccessCode.style.display = 'none';
+            }, 3000);
+        }
         let tempTextarea = document.createElement('textarea');
         tempTextarea.value = textToCopy;
 
@@ -180,6 +230,7 @@ else
 
         document.body.removeChild(tempTextarea);
 
-        alert('Text copied to clipboard!');
+
     }
+
 </script>
