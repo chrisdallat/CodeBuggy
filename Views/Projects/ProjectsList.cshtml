@@ -24,7 +24,7 @@
 }
 else
 {
-    <div>You have no access Malaka</div>
+    <div>Access Denied: Please Login to view this page</div>
 }
 
 <div id="popupOverlay" class="overlay">
@@ -37,7 +37,7 @@ else
         <div style="margin-top: 20px"></div>
         <div id="ProjectButtons">
             <a class="button-general mb-3" style="text-align: center; max-width: 380px" onclick="showExistingProject()">
-                <span>Add Exisiting Project</span>
+                <span>Add Existing Project</span>
             </a>
             <a class="button-general mb-3" style="text-align: center; max-width: 380px" onclick="showCreateProject()">
                 <span>Add New Project</span>
@@ -130,10 +130,11 @@ else
             })
             .then(response => response.json())
             .then(data => {
+                console.log(data);
                 messageDisplay.style.display = 'block';
-                if (data.error) {
+                if (data.success === false) {
                     messageDisplay.style.color = "red";
-                    messageDisplay.innerHTML = data.error;
+                    messageDisplay.innerHTML = data.message;
                 }
                 else {
                     window.location.href = '/Projects/ProjectsList?page=1';
@@ -154,4 +155,31 @@ else
             handleFormSubmit(addExistingProjectForm);
         });
     });
+
+    var toggleBlur = function (span) {
+        span.classList.toggle('blurred-text');
+
+        setTimeout(function () {
+            span.classList.toggle('blurred-text');
+        }, 5000);
+    };
+
+    var copyText = function(button) {
+        let td = button.previousElementSibling; 
+        let textToCopy = td.innerText || td.textContent || td.innerHTML;
+
+        let tempTextarea = document.createElement('textarea');
+        tempTextarea.value = textToCopy;
+
+        document.body.appendChild(tempTextarea);
+
+        tempTextarea.select();
+        tempTextarea.setSelectionRange(0, 99999);
+
+        document.execCommand('copy');
+
+        document.body.removeChild(tempTextarea);
+
+        alert('Text copied to clipboard!');
+    }
 </script>

@@ -9,15 +9,15 @@
 <div class="board">
     <div class="column">
         <h3>To Do</h3>
-        @await Html.RenderTicketsAsync(Model, TicketStatus.ToDo)
+        @Html.RenderTickets(Model, TicketStatus.ToDo)
     </div>
     <div class="column">
         <h3>In Progress</h3>
-        @await Html.RenderTicketsAsync(Model, TicketStatus.InProgress)
+        @Html.RenderTickets(Model, TicketStatus.InProgress)
     </div>
     <div class="column">
         <h3>Done</h3>
-        @await Html.RenderTicketsAsync(Model, TicketStatus.Done)
+        @Html.RenderTickets(Model, TicketStatus.Done)
     </div>
 </div>
 

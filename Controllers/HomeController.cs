@@ -21,7 +21,7 @@ namespace CodeBuggy.Controllers
             return View();
         }
 
-        public IActionResult Privacy()
+        public IActionResult Burndown()
         {
             return View( );
         }
