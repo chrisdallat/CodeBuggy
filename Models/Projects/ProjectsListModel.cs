@@ -74,12 +74,12 @@ public class ProjectsModel
             return null;
         }
 
-        var projectIds = _context.UserClaims 
-        .Where(uc => uc.UserId == userId && uc.ClaimType == "ProjectAccess") 
-        .Select(uc => uc.ClaimValue) 
+        var projectIds = _context.UserClaims
+        .Where(uc => uc.UserId == userId && uc.ClaimType == "ProjectAccess")
+        .Select(uc => uc.ClaimValue)
         .ToList();
 
-        
+
         // Filter projects based on the user's claims
         var projectList = _context.Projects
             .Where(p => projectIds.Contains(p.Id.ToString()))
@@ -168,7 +168,7 @@ public class ProjectsModel
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
-        
+
         var existingProject = _context.Projects.FirstOrDefault(p => p.Name == input.Name && p.AccessCode == input.AccessCode);
 
         if (existingProject == null)
@@ -189,7 +189,7 @@ public class ProjectsModel
         }
 
         bool result = AddProjectClaim(existingProject.Id, userId).Success;
-        return new OperationResult { Success = result, Message = "Project added"};
+        return new OperationResult { Success = result, Message = "Project added" };
     }
 
     public async Task<OperationResult> AddNewProjectAsync(InputModel input, ClaimsPrincipal user)
