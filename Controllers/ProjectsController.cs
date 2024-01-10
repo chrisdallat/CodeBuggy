@@ -72,7 +72,7 @@ public class ProjectsController : Controller
     {
         if (string.IsNullOrWhiteSpace(input.Name))
         {
-            return Json(new { success = false, error = "Project Name must be provided" });
+            return Json(new { success = false, message = "Project Name must be provided" });
         }
 
         OperationResult result = await _projectsModel.AddNewProjectAsync(input, User);

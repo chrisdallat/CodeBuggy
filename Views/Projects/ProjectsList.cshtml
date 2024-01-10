@@ -168,10 +168,13 @@ else
         .then(data => {
             console.log(data);
             if (data.success === false) {
-                let errorMessage = document.createElement('span');
-                errorMessage.id = "errorMessage";
+                    let errorMessage = document.getElementById('errorMessage');
+                if (!errorMessage) {
+                    errorMessage = document.createElement('span');
+                    errorMessage.id = "errorMessage";
+                    form.insertAdjacentElement('afterend', errorMessage);
+                }
                 errorMessage.innerHTML = data.message;
-                form.insertAdjacentElement('afterend', errorMessage);
             }
             else {
                 window.location.href = '/Projects/ProjectsList?page=1';
