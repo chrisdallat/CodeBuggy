@@ -4,9 +4,6 @@ using CodeBuggy.Models;
 using System.Diagnostics;
 using CodeBuggy.Models.Projects;
 using CodeBuggy.Helpers;
-using Field = CodeBuggy.Helpers.Popup.Field;
-using System.Security.Policy;
-using System;
 using Microsoft.AspNetCore.Identity;
 
 namespace CodeBuggy.Controllers;
@@ -75,10 +72,23 @@ public class ProjectsController : Controller
     {
         if (string.IsNullOrWhiteSpace(input.Name))
         {
-            return Json(new { success = false, error = "Project Name must be provided" });
+            return Json(new { success = false, message = "Project Name must be provided" });
         }
 
         OperationResult result = await _projectsModel.AddNewProjectAsync(input, User);
+
+        return Json(new { success = result.Success, message = result.Message });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteProject(ProjectsModel.InputModel input)
+    {
+        if (string.IsNullOrWhiteSpace(input.AccessCode))
+        {
+            return Json(new { success = false, error = "Project Access Code must be provided" });
+        }
+
+        OperationResult result = await _projectsModel.DeleteProjectAsync(input.AccessCode, User);
 
         return Json(new { success = result.Success, message = result.Message });
     }
