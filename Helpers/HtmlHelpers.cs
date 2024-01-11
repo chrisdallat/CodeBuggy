@@ -78,32 +78,39 @@ public static class HtmlHelpers
 
         foreach (var ticket in ticketByStatus)
         {
-            switch (ticket.Priority)
-            {
-                case TicketPriority.Urgent:
-                    result.Append($"<div class='ticket' style='background-color: #D98695;'><h4>{ticket.Title}</h4><p>{ticket.Priority}</p></div>");
-                    break;
+            var ticketHtml = new TagBuilder("div");
+            ticketHtml.AddCssClass("ticket");
+            ticketHtml.MergeAttribute("draggable", "true");
 
-                case TicketPriority.High:
-                    result.Append($"<div class='ticket' style='background-color: #BBB477;'><h4>{ticket.Title}</h4><p>{ticket.Priority}</p></div>");
-                    break;
+            var priorityColor = GetPriorityColor(ticket.Priority);
 
-                case TicketPriority.Medium:
-                    result.Append($"<div class='ticket' style='background-color: #56887D;'><h4>{ticket.Title}</h4><p>{ticket.Priority}</p></div>");
-                    break;
+            ticketHtml.InnerHtml = ($"<h4>{ticket.Title}</h4>");
+            ticketHtml.InnerHtml = ($"<p>{ticket.Priority}</p>");
 
-                case TicketPriority.Low:
-                    result.Append($"<div class='ticket' style='background-color: #A6A6A6;'><h4>{ticket.Title}</h4><p>{ticket.Priority}</p></div>");
-                    break;
-
-                default:
-                    result.Append($"<div class='ticket'><h4>{ticket.Title}</h4></div>");
-                    break;
-
-            }
+            ticketHtml.MergeAttribute("ondragstart", $"drag(event, this)");
+            result.Append(ticketHtml.ToString(TagRenderMode.StartTag));
+            result.Append($"<div class='ticket' style='background-color: {priorityColor};'><h4>{ticket.Title}</h4><p>{ticket.Priority}</p></div>");
+            result.Append("</div>");
         }
 
         return new HtmlString(result.ToString());
+    }
+
+    private static string GetPriorityColor(TicketPriority priority)
+    {
+        switch (priority)
+        {
+            case TicketPriority.Urgent:
+                return "#D98695";
+            case TicketPriority.High:
+                return "#BBB477";
+            case TicketPriority.Medium:
+                return "#56887D";
+            case TicketPriority.Low:
+                return "#A6A6A6";
+            default:
+                return string.Empty;
+        }
     }
 
 }

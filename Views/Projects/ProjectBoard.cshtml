@@ -7,17 +7,75 @@
 <h2>Ticket Management Board</h2>
 
 <div class="board">
-    <div class="column">
+    <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
         <h3>To Do</h3>
         @Html.RenderTickets(Model, TicketStatus.ToDo)
     </div>
-    <div class="column">
+    <div class="column" id="inProgressColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
         <h3>In Progress</h3>
         @Html.RenderTickets(Model, TicketStatus.InProgress)
     </div>
-    <div class="column">
+    <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
         <h3>Done</h3>
         @Html.RenderTickets(Model, TicketStatus.Done)
     </div>
 </div>
+
+<script>
+    let drop;
+
+    let allowDrop = function (event) {
+        event.preventDefault();
+    }
+   
+    let dropAction = function (event, ticket) {
+
+        let dropzone = event.target;
+
+        let dropzoneParentColumn = dropzone.closest('.column');
+        if (dropzoneParentColumn) {
+
+            // Append a clone of the ticket to the new column
+            dropzoneParentColumn.appendChild(ticket.cloneNode(true));
+
+            // Remove ticket from original column
+            ticket.parentElement.removeChild(ticket);
+
+        } else {
+            console.error("Parent column not found");
+        }
+
+        let status;
+        switch (dropzone.id) {
+            case "todoColumn":
+                status = "ToDo";
+                console.log(status);
+                break;
+            case "inProgressColumn":
+                status = "InProgress";
+                console.log(status);
+                break;
+            case "doneColumn":
+                status = "Done";
+                console.log(status);
+                break;
+            default:
+                break;
+        }
+    }
+
+    let drag = function(dragEvent, ticket) {
+
+        // This gets called when event drop gets dispatched
+        drop = function (dropEvent) {
+            dropEvent.preventDefault();
+            try {
+                dropAction(dropEvent, ticket);
+
+            } catch (e) {
+                console.error("Error: Could not find target");
+            }
+        }
+    }
+</script>
 
