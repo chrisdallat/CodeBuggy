@@ -17,7 +17,7 @@
     {
         ToDo,
         InProgress,
-        //Testing, // maybe should have this as another column?
+        Review,
         Done
     }
 

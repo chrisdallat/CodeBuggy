@@ -8,16 +8,28 @@
 
 <div class="board">
     <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3>To Do</h3>
-        @Html.RenderTickets(Model, TicketStatus.ToDo)
+        <h3 class="column-title">To Do</h3>
+        <div class="tickets-container">
+            @Html.RenderTickets(Model, TicketStatus.ToDo)
+        </div>
     </div>
     <div class="column" id="inProgressColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3>In Progress</h3>
-        @Html.RenderTickets(Model, TicketStatus.InProgress)
+        <h3 class="column-title">In Progress</h3>
+        <div class="tickets-container">
+            @Html.RenderTickets(Model, TicketStatus.InProgress)
+        </div>
+    </div>
+    <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h3 class="column-title">Review</h3>
+        <div class="tickets-container">
+            @Html.RenderTickets(Model, TicketStatus.InProgress)
+        </div>
     </div>
     <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3>Done</h3>
-        @Html.RenderTickets(Model, TicketStatus.Done)
+        <h3 class="column-title">Done</h3>
+        <div class="tickets-container">
+            @Html.RenderTickets(Model, TicketStatus.Done)
+        </div>
     </div>
 </div>
 
@@ -32,11 +44,11 @@
 
         let dropzone = event.target;
 
-        let dropzoneParentColumn = dropzone.closest('.column');
-        if (dropzoneParentColumn) {
+        let dropzoneColumnContainer = dropzone.closest('.column').getElementsByClassName('tickets-container')[0];
+        if (dropzoneColumnContainer) {
 
             // Append a clone of the ticket to the new column
-            dropzoneParentColumn.appendChild(ticket.cloneNode(true));
+            dropzoneColumnContainer.appendChild(ticket.cloneNode(true));
 
             // Remove ticket from original column
             ticket.parentElement.removeChild(ticket);
