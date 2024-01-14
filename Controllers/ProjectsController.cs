@@ -33,14 +33,21 @@ public class ProjectsController : Controller
 
     public IActionResult ProjectBoard(int projectId)
     {
-        var tickets = _projectsModel?.GetTickets(User, projectId);
-
-        if (tickets != null)
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
         {
-            return View(tickets);
+            return RedirectToAction("Login", "Account");
         }
 
-        return RedirectToAction("Login", "Account");
+        if (_projectsModel.ValidUserClaim(User, projectId))
+        {
+            _projectsModel.Tickets = _projectsModel?.GetTickets(projectId);
+            ViewBag.ProjectTitle = _projectsModel?.GetProjectName(projectId);
+            ViewBag.DeniedAccess = false;
+            return View(_projectsModel);
+        }
+
+        ViewBag.DeniedAccess = true;
+        return View();
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -75,6 +82,16 @@ public class ProjectsController : Controller
             return Json(new { success = false, message = "Project Name must be provided" });
         }
 
+        if (input.Name.Length > 20)
+        {
+            return Json(new { success = false, message = "Project Name must not exceed 20 characters" });
+        }
+
+        if (input.Name.Contains(' '))
+        {
+            return Json(new { success = false, message = "Project Name must not contain white spaces" });
+        }
+
         OperationResult result = await _projectsModel.AddNewProjectAsync(input, User);
 
         return Json(new { success = result.Success, message = result.Message });
@@ -85,7 +102,7 @@ public class ProjectsController : Controller
     {
         if (string.IsNullOrWhiteSpace(input.AccessCode))
         {
-            return Json(new { success = false, error = "Project Access Code must be provided" });
+            return Json(new { success = false, message = "Project Access Code must be provided" });
         }
 
         OperationResult result = await _projectsModel.DeleteProjectAsync(input.AccessCode, User);

@@ -26,7 +26,7 @@ public static class HtmlHelpers
             row.AddCssClass("clickable-row");
             row.Attributes.Add("data-href", $"/Project/Details/{project.Id}");
 
-            row.InnerHtml += $"<td><a class='nav-link project-link' href='{url.Action("ProjectBoard", "Projects", new { id = project.Id })}'>{project.Name}</a></td>" +
+            row.InnerHtml += $"<td><a class='nav-link project-link' href='{url.Action("ProjectBoard", "Projects", new { projectId = project.Id })}'>{project.Name}</a></td>" +
                             $"<td style='width: 600px;'><span class='blurred-text' onclick='toggleBlur(this)'><span>{project.AccessCode}</span></span>" +
                             $"<button class='gg-copy' onclick='copyText(this, \"{project.AccessCode}\")'></button>" +
                             $"<span style='display: none; float: right; margin-right: 20px'>Copied!</span></td>" +

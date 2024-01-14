@@ -17,6 +17,8 @@ public class ProjectsModel
     private static readonly Random Random = new Random();
     private readonly UserManager<AppUser> _userManager;
 
+    public List<Ticket> Tickets { get; set; }
+
     [BindProperty]
     public InputModel Input { get; set; }
 
@@ -31,6 +33,22 @@ public class ProjectsModel
         [StringLength(255, ErrorMessage = "The Access Code must be maximum 255 characters.")]
         [Display(Name = "Access code")]
         public string AccessCode { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(255, ErrorMessage = "The Ticket description must be maximum 255 characters.")]
+        [Display(Name = "Ticket title")]
+        public string TicketTitle { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Ticket description")]
+        public string TicketDescription { get; set; } = string.Empty;
+
+        public TicketPriority TicketPriorityValue { get; set; }
+
+        public TicketStatus TicketStatusValue { get; set; }
+
+        public string TicketComments { get; set; } = string.Empty;
+
     }
 
     public string GenerateAccessCode()
@@ -124,33 +142,57 @@ public class ProjectsModel
         return null;
     }
 
-    public List<Ticket>? GetTickets(ClaimsPrincipal user, int projectId)
+    public List<Ticket>? GetTickets(int projectId)
     {
-        if (user.Identity != null && user.Identity.IsAuthenticated)
+        List<Ticket> tickets = new List<Ticket>
         {
-            List<Ticket> tickets = new List<Ticket>
-            {
-                new Ticket { Id = 1, Title = "Task 1", Description = "Description 1", Priority = TicketPriority.None, Status = TicketStatus.ToDo },
-                new Ticket { Id = 2, Title = "Task 2", Description = "Description 2", Priority = TicketPriority.Low, Status = TicketStatus.InProgress },
-                new Ticket { Id = 3, Title = "Task 3", Description = "Description 3", Priority = TicketPriority.Medium, Status = TicketStatus.Done },
-                new Ticket { Id = 4, Title = "Task 4", Description = "Description 4", Priority = TicketPriority.High, Status = TicketStatus.Done },
-                new Ticket { Id = 5, Title = "Task 5", Description = "Description 5", Priority = TicketPriority.Urgent, Status = TicketStatus.ToDo },
-                new Ticket { Id = 6, Title = "Task 6", Description = "Description 6", Priority = TicketPriority.None, Status = TicketStatus.InProgress },
-                new Ticket { Id = 7, Title = "Task 7", Description = "Description 7", Priority = TicketPriority.Low, Status = TicketStatus.ToDo },
-                new Ticket { Id = 8, Title = "Task 8", Description = "Description 8", Priority = TicketPriority.Medium, Status = TicketStatus.Done },
-                new Ticket { Id = 9, Title = "Task 9", Description = "Description 9", Priority = TicketPriority.High, Status = TicketStatus.InProgress },
-                new Ticket { Id = 10, Title = "Task 10", Description = "Description 10", Priority = TicketPriority.Urgent, Status = TicketStatus.InProgress },
-                new Ticket { Id = 11, Title = "Task 11", Description = "Description 11", Priority = TicketPriority.None, Status = TicketStatus.ToDo },
-                new Ticket { Id = 12, Title = "Task 12", Description = "Description 12", Priority = TicketPriority.Low, Status = TicketStatus.Done },
-                new Ticket { Id = 13, Title = "Task 13", Description = "Description 13", Priority = TicketPriority.Medium, Status = TicketStatus.Done },
-                new Ticket { Id = 14, Title = "Task 14", Description = "Description 14", Priority = TicketPriority.High, Status = TicketStatus.ToDo },
-                new Ticket { Id = 15, Title = "Task 15", Description = "Description 15", Priority = TicketPriority.Urgent, Status = TicketStatus.InProgress },
-            };
+            new Ticket { Id = 1, Title = "Task 1", Description = "Description 1", Priority = TicketPriority.None, Status = TicketStatus.ToDo },
+            new Ticket { Id = 2, Title = "Task 2", Description = "Description 2", Priority = TicketPriority.Low, Status = TicketStatus.InProgress },
+            new Ticket { Id = 3, Title = "Task 3", Description = "Description 3", Priority = TicketPriority.Medium, Status = TicketStatus.Done },
+            new Ticket { Id = 4, Title = "Task 4", Description = "Description 4", Priority = TicketPriority.High, Status = TicketStatus.Done },
+            new Ticket { Id = 5, Title = "Task 5", Description = "Description 5", Priority = TicketPriority.Urgent, Status = TicketStatus.ToDo },
+            new Ticket { Id = 6, Title = "Task 6", Description = "Description 6", Priority = TicketPriority.None, Status = TicketStatus.InProgress },
+            new Ticket { Id = 7, Title = "Task 7", Description = "Description 7", Priority = TicketPriority.Low, Status = TicketStatus.ToDo },
+            new Ticket { Id = 8, Title = "Task 8", Description = "Description 8", Priority = TicketPriority.Medium, Status = TicketStatus.Done },
+            new Ticket { Id = 9, Title = "Task 9", Description = "Description 9", Priority = TicketPriority.High, Status = TicketStatus.InProgress },
+            new Ticket { Id = 10, Title = "Task 10", Description = "Description 10", Priority = TicketPriority.Urgent, Status = TicketStatus.InProgress },
+            new Ticket { Id = 11, Title = "Task 11", Description = "Description 11", Priority = TicketPriority.None, Status = TicketStatus.ToDo },
+            new Ticket { Id = 12, Title = "Task 12", Description = "Description 12", Priority = TicketPriority.Low, Status = TicketStatus.Done },
+            new Ticket { Id = 13, Title = "Task 13", Description = "Description 13", Priority = TicketPriority.Medium, Status = TicketStatus.Done },
+            new Ticket { Id = 14, Title = "Task 14", Description = "Description 14", Priority = TicketPriority.High, Status = TicketStatus.ToDo },
+            new Ticket { Id = 15, Title = "Task 15", Description = "Description 15", Priority = TicketPriority.Urgent, Status = TicketStatus.InProgress },
+        };
 
-            return tickets;
+        return tickets;
+    }
+
+    public string? GetProjectName(int projectId)
+    {
+        var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
+
+        if (project == null)
+        {
+            return null;
         }
 
-        return null;
+        return project.Name;
+    }
+
+    public bool ValidUserClaim(ClaimsPrincipal user, int projectId)
+    {
+        var userId = _userManager?.GetUserId(user);
+        if (userId == null )
+        {
+            return false;
+        }
+
+        var foundUserClaim = _context.UserClaims.FirstOrDefault(p => p.ClaimValue == projectId.ToString() && p.ClaimType == "ProjectAccess" && p.UserId == userId);
+        if (foundUserClaim == null)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public async Task<OperationResult> AddExistingProject(InputModel input, ClaimsPrincipal user)

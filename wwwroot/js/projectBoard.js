@@ -1,5 +1,18 @@
 let drop;
 
+var togglePopup = function () {
+    const popup = document.getElementById('createTicketPopup');
+    popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+
+    if (popup.style.display === 'none') {
+        let errorMessage = document.getElementById("errorMessage");
+        if (errorMessage) {
+            errorMessage.remove();
+        }
+        defaultShowPopUp();
+    }
+}
+
 let allowDrop = function (event) {
     event.preventDefault();
 }

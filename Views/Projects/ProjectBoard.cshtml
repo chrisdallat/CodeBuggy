@@ -1,37 +1,88 @@
 ﻿@using CodeBuggy.Controllers
 @using CodeBuggy.Data
 @using CodeBuggy.Helpers
-
-@model List<Ticket>
-
-<h2>Ticket Management Board</h2>
-
-<div class="board">
-    <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3 class="column-title">To Do</h3>
-        <div class="tickets-container">
-            @Html.RenderTickets(Model, TicketStatus.ToDo)
-        </div>
-    </div>
-    <div class="column" id="inProgressColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3 class="column-title">In Progress</h3>
-        <div class="tickets-container">
-            @Html.RenderTickets(Model, TicketStatus.InProgress)
-        </div>
-    </div>
-    <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3 class="column-title">Review</h3>
-        <div class="tickets-container">
-            @Html.RenderTickets(Model, TicketStatus.InProgress)
-        </div>
-    </div>
-    <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3 class="column-title">Done</h3>
-        <div class="tickets-container">
-            @Html.RenderTickets(Model, TicketStatus.Done)
-        </div>
-    </div>
-</div>
+@using CodeBuggy.Models.Projects
 
 <script type="text/javascript" src="~/js/projectBoard.js"></script>
+
+@model ProjectsModel
+
+@if (ViewBag.DeniedAccess == false)
+{
+    <div style="display: grid; grid-template-columns: 1fr auto;">
+        <h2 style="text-align: center;">@ViewBag.ProjectTitle Tickets board</h2>
+
+        <a class="create-button" style="text-align: right;" onclick="togglePopup()">
+            <span class="gg-math-plus"></span>
+            <span style="margin-left: 5px">New Ticket</span>
+        </a>
+    </div>
+
+    <div class="board">
+        <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3 class="column-title">To Do</h3>
+            <div class="tickets-container">
+                @Html.RenderTickets(Model.Tickets, TicketStatus.ToDo)
+            </div>
+        </div>
+        <div class="column" id="inProgressColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3 class="column-title">In Progress</h3>
+            <div class="tickets-container">
+                @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress)
+            </div>
+        </div>
+        <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3 class="column-title">Review</h3>
+            <div class="tickets-container">
+                @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress)
+            </div>
+        </div>
+        <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3 class="column-title">Done</h3>
+            <div class="tickets-container">
+                @Html.RenderTickets(Model.Tickets, TicketStatus.Done)
+            </div>
+        </div>
+    </div>
+    <div id="createTicketPopup" class="overlay">
+        <div class="popup">
+            <div style="display: grid; grid-template-columns: 1fr auto;">
+                <span id="goBackButton" class="gg-arrow-left-r" style="position:fixed; margin-top: 8px; display: none"
+                      onclick="goBack()"></span>
+                <h2 id="PopupTitle" style="text-align: center;">Add Ticket</h2>
+                <span class="gg-close-r" style="top: unset; margin-top: 8px; right: 20px" onclick="togglePopup()"></span>
+            </div>
+            <div style="margin-top: 20px"></div>
+            
+            <form id="addTicketForm" asp-action="AddTicket" method="post">
+                <div id="ticketTitle" class="form-floating mb-3" style="max-width: 380px">
+                    <input asp-for="Input.TicketTitle" class="form-control" autocomplete="TicketTitle" aria-required="true"
+                           placeholder="" />
+                    <label asp-for="Input.TicketTitle">Title</label>
+                </div>
+                <div id="ticketPriority" class="form-floating mb-3" style="max-width: 380px">
+                    @Html.DropDownListFor(model => model.Input.TicketPriorityValue, Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() }), "Select Priority", new { @class = "form-control" })
+                    <label asp-for="Input.TicketPriorityValue">Priority</label>
+                </div>
+                <div id="ticketStatus" class="form-floating mb-3" style="max-width: 380px">
+                    @Html.DropDownListFor(model => model.Input.TicketStatusValue, Enum.GetValues(typeof(TicketStatus)).Cast<TicketStatus>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() }), "Select Status", new { @class = "form-control" })
+                    <label asp-for="Input.TicketStatusValue">Status</label>
+                </div>
+                <div id="projectAccessCode" class="form-floating mb-3" style="max-width: 380px">
+                    <input asp-for="Input.TicketDescription" class="form-control" autocomplete="TicketDescription"
+                           aria-required="true" placeholder="" />
+                    <label asp-for="Input.TicketDescription">Description</label>
+                </div>
+                <button id="submitButton" type="submit" class="button-general mb-3 mt-5"
+                        style="text-align: center; max-width: 160px">
+                    Create Ticket
+                </button>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    <div>Access Denied: This page does not exist</div>
+}
 

@@ -9,5 +9,6 @@ namespace CodeBuggy.Data
         public string Owner { get; set; } = string.Empty;
         public string AccessCode { get; set; } = string.Empty;
         public string OwnerId { get; set; } = string.Empty;
+        public List<int> TicketsId { get; set; } = new List<int>();
     }
 }
