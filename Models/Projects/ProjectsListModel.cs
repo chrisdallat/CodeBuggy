@@ -152,7 +152,6 @@ public class ProjectsModel
                 return null;
             }
 
-            // Retrieve the list of tickets for the specified project
             var tickets = _context.Tickets
                 .Where(t => project.TicketsId.Contains(t.Id))
                 .ToList();
