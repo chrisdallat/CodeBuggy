@@ -2,6 +2,22 @@
 @using CodeBuggy.Data
 @using CodeBuggy.Helpers
 @using CodeBuggy.Models.Projects
+@using System.Text.Json
+@using System.Web.Helpers
+@using Microsoft.AspNetCore.Html
+
+
+@{
+    // Define a C# function to conditionally render the projectId input
+    Func<string, IHtmlContent> RenderProjectIdInput = (projectId) =>
+    {
+        if (!string.IsNullOrEmpty(projectId))
+        {
+            return Html.Raw($"<input type='hidden' name='projectId' value='{projectId}' />");
+        }
+        return Html.Raw(string.Empty);
+    };
+}
 
 <script type="text/javascript" src="~/js/projectBoard.js"></script>
 
@@ -34,7 +50,7 @@
         <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
             <h3 class="column-title">Review</h3>
             <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress)
+                @Html.RenderTickets(Model.Tickets, TicketStatus.Review)
             </div>
         </div>
         <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
@@ -44,45 +60,86 @@
             </div>
         </div>
     </div>
-    <div id="createTicketPopup" class="overlay">
-        <div class="popup">
-            <div style="display: grid; grid-template-columns: 1fr auto;">
-                <span id="goBackButton" class="gg-arrow-left-r" style="position:fixed; margin-top: 8px; display: none"
-                      onclick="goBack()"></span>
-                <h2 id="PopupTitle" style="text-align: center;">Add Ticket</h2>
-                <span class="gg-close-r" style="top: unset; margin-top: 8px; right: 20px" onclick="togglePopup()"></span>
-            </div>
-            <div style="margin-top: 20px"></div>
-            
-            <form id="addTicketForm" asp-action="AddTicket" method="post">
-                <div id="ticketTitle" class="form-floating mb-3" style="max-width: 380px">
-                    <input asp-for="Input.TicketTitle" class="form-control" autocomplete="TicketTitle" aria-required="true"
-                           placeholder="" />
-                    <label asp-for="Input.TicketTitle">Title</label>
-                </div>
-                <div id="ticketPriority" class="form-floating mb-3" style="max-width: 380px">
-                    @Html.DropDownListFor(model => model.Input.TicketPriorityValue, Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() }), "Select Priority", new { @class = "form-control" })
-                    <label asp-for="Input.TicketPriorityValue">Priority</label>
-                </div>
-                <div id="ticketStatus" class="form-floating mb-3" style="max-width: 380px">
-                    @Html.DropDownListFor(model => model.Input.TicketStatusValue, Enum.GetValues(typeof(TicketStatus)).Cast<TicketStatus>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() }), "Select Status", new { @class = "form-control" })
-                    <label asp-for="Input.TicketStatusValue">Status</label>
-                </div>
-                <div id="projectAccessCode" class="form-floating mb-3" style="max-width: 380px">
-                    <input asp-for="Input.TicketDescription" class="form-control" autocomplete="TicketDescription"
-                           aria-required="true" placeholder="" />
-                    <label asp-for="Input.TicketDescription">Description</label>
-                </div>
-                <button id="submitButton" type="submit" class="button-general mb-3 mt-5"
-                        style="text-align: center; max-width: 160px">
-                    Create Ticket
-                </button>
-            </form>
-        </div>
-    </div>
+
+    var popup = new Popup();
+
+    string addTicketForm = $@"
+        <form id='addTicketForm' action='AddTicket' method='post'>";
+
+    string editTicketForm = $@"
+        <form id='editTicketForm' action='editTicket' method='post'>";
+
+    string ticketTitleInput = @" 
+            <div id='ticketTitle' class='form-floating mb-3' style='max-width: 380px'>
+            <input name = 'Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true' placeholder=''/>
+            <label asp-for='Input.TicketTitle'>Title</label>
+        </div>";
+
+    string ticketPriorityDropdown = @"
+        <div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+            <select id='ticketPriorityDropdown' name='Input.TicketPriorityValue' class='form-control'></select>
+            <label asp-for='Input.TicketPriorityValue'>Priority</label>
+            <div class='dropdown-arrow'>▼</div>
+        </div>";
+
+    string ticketStatusDropdown = @"
+        <div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+            <select id='ticketStatusDropdown' name='Input.TicketStatusValue' class='form-control'></select>
+            <label asp-for='Input.TicketStatusValue'>Status</label>
+            <div class='dropdown-arrow'>▼</div>
+        </div>";
+
+    string ticketDescriptionInput = @"
+        <div id='ticketDescription' class='form-floating mb-3' style='max-width: 380px'>
+            <textarea id='codeEditor' name='Input.TicketDescription' class='form-control'
+                        autocomplete='TicketDescription' aria-required='true'
+                        placeholder='' style='resize: none; max-width: 100%; height: 150px; overflow-y: auto;'
+                        maxlength='5000'></textarea>
+            <label asp-for='Input.TicketDescription'>Description</label>
+        </div>";
+
+    string renderProjectId = $@" {RenderProjectIdInput(Context.Request.Query["projectId"])} ";
+
+    string submitButton = @"
+        <button id='submitButton' type='submit' class='button-general mb-3 mt-5'
+            style='text-align: center; max-width: 160px'>
+            Create Ticket
+        </button>";
+
+    addTicketForm += ticketTitleInput + ticketPriorityDropdown + ticketStatusDropdown + ticketDescriptionInput + renderProjectId + submitButton + "</form>";
+
+    var popupHtml = popup.CreatePopup("createTicketPopup", "Add Ticket", new string[] { addTicketForm });
+
+    @Html.Raw(popupHtml) 
 }
 else
 {
     <div>Access Denied: This page does not exist</div>
 }
+
+<script>
+    let populatePrioritiesDropdown = function () {
+        let priorities = @Html.Raw(JsonSerializer.Serialize(Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() })));
+        let dropdown = document.getElementById('ticketPriorityDropdown');
+
+        priorities.forEach(function (priority) {
+            let option = document.createElement('option');
+            option.text = priority.Text;
+            option.value = priority.Value;
+            dropdown.appendChild(option);
+        });
+    }
+
+    let populateStatusDropdown = function () {
+        let status = @Html.Raw(JsonSerializer.Serialize(Enum.GetValues(typeof(TicketStatus)).Cast<TicketStatus>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() })));
+        let dropdown = document.getElementById('ticketStatusDropdown');
+
+        status.forEach(function (status) {
+            let option = document.createElement('option');
+            option.text = status.Text;
+            option.value = status.Value;
+            dropdown.appendChild(option);
+        });
+    }
+</script>
 

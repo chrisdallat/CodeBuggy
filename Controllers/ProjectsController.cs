@@ -5,6 +5,8 @@ using System.Diagnostics;
 using CodeBuggy.Models.Projects;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace CodeBuggy.Controllers;
 
@@ -106,6 +108,21 @@ public class ProjectsController : Controller
         }
 
         OperationResult result = await _projectsModel.DeleteProjectAsync(input.AccessCode, User);
+
+        return Json(new { success = result.Success, message = result.Message });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddTicket(ProjectsModel.InputModel input, int projectId)
+    {
+
+        _logger.LogInformation("Khalil", input.TicketTitle, input.TicketPriorityValue, input.TicketStatusValue, projectId);
+        if (string.IsNullOrWhiteSpace(input.TicketTitle))
+        {
+            return Json(new { success = false, message = "Ticket title must be provided" });
+        }
+
+        OperationResult result = await _projectsModel.AddTicketToProject(User, input, projectId);
 
         return Json(new { success = result.Success, message = result.Message });
     }

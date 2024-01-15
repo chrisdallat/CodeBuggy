@@ -80,7 +80,7 @@ var handleServerMessage = function (form, formData) {
             errorMessage.innerHTML = data.message;
         }
         else {
-            window.location.href = '/Projects/ProjectsList?page=1';
+            //window.location.href = '/Projects/ProjectsList?page=1';
         }
     })
     .catch(error => {
