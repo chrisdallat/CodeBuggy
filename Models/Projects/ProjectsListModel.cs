@@ -346,5 +346,73 @@ public class ProjectsModel
 
         return new OperationResult { Success = true, Message = "Project deleted" };
     }
+
+    public async Task<OperationResult> AddTicketToProject(ClaimsPrincipal user, ProjectsModel.InputModel input, int projectId)
+    {
+        if (user.Identity == null || user.Identity.IsAuthenticated == false)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        _logger.LogInformation("Khalil 1");
+
+        if (ValidUserClaim(user, projectId) == false)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+        _logger.LogInformation("Khalil 2");
+
+        var projectDetails = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (projectDetails == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+        _logger.LogInformation("Khalil 3");
+
+        var owner = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        if (owner == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        _logger.LogInformation("Khalil 4");
+        int ticketCounter = projectDetails.TicketsId.Count;
+
+        _logger.LogInformation("Khalil 5");
+        var ticketDetails = new Ticket
+        {
+            StringId = $"{projectDetails.Name.ToUpper()}-{++ticketCounter}",
+            Title = input.TicketTitle,
+            Priority = input.TicketPriorityValue >= TicketPriority.None ? input.TicketPriorityValue : TicketPriority.None,
+            Status = input.TicketStatusValue >= TicketStatus.ToDo ? input.TicketStatusValue : TicketStatus.ToDo,
+            CreatedBy = owner,
+            CreationDate = DateTime.UtcNow,
+            ResolvedBy = "",
+            Description = input.TicketDescription,
+            Comments = "",
+        };
+
+        _logger.LogInformation("Khalil " + ticketDetails.StringId);
+
+        _logger.LogInformation("Khalil 6");
+        _context.Tickets.Add(ticketDetails);
+        _logger.LogInformation("Khalil 7");
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Khalil 8");
+
+        if (ticketDetails?.Id == null || ticketDetails.Id == 0)
+        {
+        _logger.LogInformation("Khalil 9");
+            return new OperationResult { Success = false, Message = "Unable to create new ticket" };
+        }
+
+        _logger.LogInformation("Khalil 10");
+        projectDetails.TicketsId.Add(ticketDetails.Id);
+        _logger.LogInformation("Khalil 11");
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Khalil 12");
+        return new OperationResult { Success = true, Message = "Ticket created successfully!" };
+    }
 }
 

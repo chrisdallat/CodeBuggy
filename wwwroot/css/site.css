@@ -281,7 +281,7 @@ h2 {
 
 .card .card__title {
     padding: 0;
-    font-size: 1.2rem;
+    font-size:  12px;
     font-weight: bold;
 }
 
@@ -323,4 +323,18 @@ h2 {
 
 .card:hover .card__arrow svg {
     transform: translateX(3px);
+}
+
+.dropdown-arrow {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    color: #1861ac;
+    transform: translateY(-50%);
+    pointer-events: none;
+    transition: transform 0.3s;
+}
+
+.dropdown-open .dropdown-arrow {
+    transform: translateY(-50%) rotate(180deg);
 }

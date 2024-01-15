@@ -34,7 +34,7 @@
         <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
             <h3 class="column-title">Review</h3>
             <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress)
+                @Html.RenderTickets(Model.Tickets, TicketStatus.Review)
             </div>
         </div>
         <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
@@ -56,23 +56,31 @@
             
             <form id="addTicketForm" asp-action="AddTicket" method="post">
                 <div id="ticketTitle" class="form-floating mb-3" style="max-width: 380px">
-                    <input asp-for="Input.TicketTitle" class="form-control" autocomplete="TicketTitle" aria-required="true"
-                           placeholder="" />
+                    <input asp-for="Input.TicketTitle" class="form-control" autocomplete="TicketTitle" aria-required="true" placeholder="" />
                     <label asp-for="Input.TicketTitle">Title</label>
                 </div>
-                <div id="ticketPriority" class="form-floating mb-3" style="max-width: 380px">
+                <div id="ticketPriority" class="form-floating mb-3 position-relative" style="max-width: 380px">
                     @Html.DropDownListFor(model => model.Input.TicketPriorityValue, Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() }), "Select Priority", new { @class = "form-control" })
                     <label asp-for="Input.TicketPriorityValue">Priority</label>
+                    <div class="dropdown-arrow">▼</div>
                 </div>
-                <div id="ticketStatus" class="form-floating mb-3" style="max-width: 380px">
+
+                <div id="ticketStatus" class="form-floating mb-3 position-relative" style="max-width: 380px">
                     @Html.DropDownListFor(model => model.Input.TicketStatusValue, Enum.GetValues(typeof(TicketStatus)).Cast<TicketStatus>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() }), "Select Status", new { @class = "form-control" })
                     <label asp-for="Input.TicketStatusValue">Status</label>
+                    <div class="dropdown-arrow">▼</div>
                 </div>
-                <div id="projectAccessCode" class="form-floating mb-3" style="max-width: 380px">
-                    <input asp-for="Input.TicketDescription" class="form-control" autocomplete="TicketDescription"
-                           aria-required="true" placeholder="" />
+                <div id="ticketDescription" class="form-floating mb-3" style="max-width: 380px">
+                    <textarea id="codeEditor" asp-for="Input.TicketDescription" class="form-control"
+                              autocomplete="TicketDescription" aria-required="true"
+                              placeholder="" style="resize: none; max-width: 100%; height: 150px; overflow-y: auto;"
+                              maxlength="5000"></textarea>
                     <label asp-for="Input.TicketDescription">Description</label>
                 </div>
+                @if (Context.Request.Query.ContainsKey("projectId"))
+                {
+                    <input type="hidden" name="projectId" value="@Context.Request.Query["projectId"]" />
+                }                
                 <button id="submitButton" type="submit" class="button-general mb-3 mt-5"
                         style="text-align: center; max-width: 160px">
                     Create Ticket
