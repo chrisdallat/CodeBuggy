@@ -79,7 +79,6 @@ var handleServerMessage = function (form, formData) {
     
     .then(response => response.json())
     .then(data => {
-
         console.log(data);
         if (data.success === false) {
             let errorMessage = document.getElementById('errorMessage');
@@ -113,7 +112,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const addTicketForm = document.getElementById('addTicketForm');
     addTicketForm.addEventListener('submit', function (e) {
         e.preventDefault();
-
         handleServerMessage(this, new FormData(this));
     });
 

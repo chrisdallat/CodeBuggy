@@ -116,7 +116,6 @@ public class ProjectsController : Controller
     public async Task<IActionResult> AddTicket(ProjectsModel.InputModel input, int projectId)
     {
 
-        _logger.LogInformation("Khalil", input.TicketTitle, input.TicketPriorityValue, input.TicketStatusValue, projectId);
         if (string.IsNullOrWhiteSpace(input.TicketTitle))
         {
             return Json(new { success = false, message = "Ticket title must be provided" });
