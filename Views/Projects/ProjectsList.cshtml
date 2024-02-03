@@ -6,7 +6,7 @@
 
 @if (User.Identity?.IsAuthenticated ?? false)
 {
-<div style="display: grid; grid-template-columns: 1fr auto;">
+    <div style="display: grid; grid-template-columns: 1fr auto;">
     <h2 style="text-align: center;">Your Projects</h2>
 
     <a class="create-button" style="text-align: right;" onclick="togglePopup()">
@@ -25,6 +25,8 @@ else
 {
     <div>Access Denied: Please Login to view this page</div>
 }
+
+<script type="text/javascript" src="~/js/projectsList.js"></script>
 
 <div id="popupOverlay" class="overlay">
     <div class="popup">
@@ -99,5 +101,3 @@ else
 
     </div>
 </div>
-
-<script type="text/javascript" src="~/js/projectsList.js"></script>

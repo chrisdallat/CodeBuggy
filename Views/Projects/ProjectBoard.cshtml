@@ -20,97 +20,105 @@
 }
 
 <script type="text/javascript" src="~/js/projectBoard.js"></script>
+<script type="text/javascript" src="~/js/burndown.js"></script>
 
 @model ProjectsModel
 
 @if (ViewBag.DeniedAccess == false)
 {
-    <div style="display: grid; grid-template-columns: 1fr auto;">
-        <h2 style="text-align: center;">@ViewBag.ProjectTitle Tickets board</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <a class="create-button" style="text-align: left;" asp-controller="Burndown" asp-action="Index"
+        onclick="showBurndown(this)">
+        <span style="margin-right: 5px">Burndown</span>
+    </a>
 
-        <a class="create-button" style="text-align: right;" onclick="togglePopup()">
-            <span class="gg-math-plus"></span>
-            <span style="margin-left: 5px">New Ticket</span>
-        </a>
-    </div>
+    <h2 style="text-align: center; flex: 1;">@ViewBag.ProjectTitle Tickets board</h2>
+
+    <a class="create-button" style="text-align: right;" onclick="togglePopup()">
+        <span class="gg-math-plus"></span>
+        <span style="margin-left: 5px">New Ticket</span>
+    </a>
+</div>
+
 
     <div class="board">
-        <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-            <h3 class="column-title">To Do</h3>
-            <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.ToDo)
-            </div>
-        </div>
-        <div class="column" id="inProgressColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-            <h3 class="column-title">In Progress</h3>
-            <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress)
-            </div>
-        </div>
-        <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-            <h3 class="column-title">Review</h3>
-            <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.Review)
-            </div>
-        </div>
-        <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-            <h3 class="column-title">Done</h3>
-            <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.Done)
-            </div>
+    <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h3 class="column-title">To Do</h3>
+        <div class="tickets-container">
+            @Html.RenderTickets(Model.Tickets, TicketStatus.ToDo)
         </div>
     </div>
+    <div class="column" id="inProgressColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h3 class="column-title">In Progress</h3>
+        <div class="tickets-container">
+            @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress)
+        </div>
+    </div>
+    <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h3 class="column-title">Review</h3>
+        <div class="tickets-container">
+            @Html.RenderTickets(Model.Tickets, TicketStatus.Review)
+        </div>
+    </div>
+    <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h3 class="column-title">Done</h3>
+        <div class="tickets-container">
+            @Html.RenderTickets(Model.Tickets, TicketStatus.Done)
+        </div>
+    </div>
+</div>
 
     var popup = new Popup();
 
     string addTicketForm = $@"
-        <form id='addTicketForm' action='AddTicket' method='post'>";
+<form id='addTicketForm' action='AddTicket' method='post'>";
 
     string editTicketForm = $@"
-        <form id='editTicketForm' action='editTicket' method='post'>";
+<form id='editTicketForm' action='editTicket' method='post'>";
 
-    string ticketTitleInput = @" 
-            <div id='ticketTitle' class='form-floating mb-3' style='max-width: 380px'>
-            <input name = 'Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true' placeholder=''/>
-            <label asp-for='Input.TicketTitle'>Title</label>
-        </div>";
+    string ticketTitleInput = @"
+<div id='ticketTitle' class='form-floating mb-3' style='max-width: 380px'>
+<input name = 'Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true' placeholder=''/>
+<label asp-for='Input.TicketTitle'>Title</label>
+</div>";
 
     string ticketPriorityDropdown = @"
-        <div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 380px'>
-            <select id='ticketPriorityDropdown' name='Input.TicketPriorityValue' class='form-control'></select>
-            <label asp-for='Input.TicketPriorityValue'>Priority</label>
-            <div class='dropdown-arrow'>▼</div>
-        </div>";
+<div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+<select id='ticketPriorityDropdown' name='Input.TicketPriorityValue' class='form-control'></select>
+<label asp-for='Input.TicketPriorityValue'>Priority</label>
+<div class='dropdown-arrow'>▼</div>
+</div>";
 
     string ticketStatusDropdown = @"
-        <div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 380px'>
-            <select id='ticketStatusDropdown' name='Input.TicketStatusValue' class='form-control'></select>
-            <label asp-for='Input.TicketStatusValue'>Status</label>
-            <div class='dropdown-arrow'>▼</div>
-        </div>";
+<div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+<select id='ticketStatusDropdown' name='Input.TicketStatusValue' class='form-control'></select>
+<label asp-for='Input.TicketStatusValue'>Status</label>
+<div class='dropdown-arrow'>▼</div>
+</div>";
 
     string ticketDescriptionInput = @"
-        <div id='ticketDescription' class='form-floating mb-3' style='max-width: 380px'>
-            <textarea id='codeEditor' name='Input.TicketDescription' class='form-control'
-                        autocomplete='TicketDescription' aria-required='true'
-                        placeholder='' style='resize: none; max-width: 100%; height: 150px; overflow-y: auto;'
-                        maxlength='5000'></textarea>
-            <label asp-for='Input.TicketDescription'>Description</label>
-        </div>";
+<div id='ticketDescription' class='form-floating mb-3' style='max-width: 380px'>
+<textarea id='codeEditor' name='Input.TicketDescription' class='form-control'
+autocomplete='TicketDescription' aria-required='true'
+placeholder='' style='resize: none; max-width: 100%; height: 150px; overflow-y: auto;'
+maxlength='5000'></textarea>
+<label asp-for='Input.TicketDescription'>Description</label>
+</div>";
 
     string renderProjectId = $@" {RenderProjectIdInput(Context.Request.Query["projectId"])} ";
 
     string submitButton = @"
-        <button id='submitButton' type='submit' class='button-general mb-3 mt-5'
-            style='text-align: center; max-width: 160px'>
-            Create Ticket
-        </button>";
+<button id='submitButton' type='submit' class='button-general mb-3 mt-5'
+style='text-align: center; max-width: 160px'>
+Create Ticket
+</button>";
 
-    addTicketForm += ticketTitleInput + ticketPriorityDropdown + ticketStatusDropdown + ticketDescriptionInput + renderProjectId + submitButton + "</form>";
+    addTicketForm += ticketTitleInput + ticketPriorityDropdown + ticketStatusDropdown + ticketDescriptionInput +
+    renderProjectId + submitButton + "</form>";
 
     var popupHtml = popup.CreatePopup("createTicketPopup", "Add Ticket", new string[] { addTicketForm });
 
-    @Html.Raw(popupHtml) 
+    @Html.Raw(popupHtml)
 }
 else
 {
@@ -142,4 +150,3 @@ else
         });
     }
 </script>
-

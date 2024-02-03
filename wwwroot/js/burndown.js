@@ -1,14 +1,12 @@
-﻿@{
-    ViewData["Title"] = "Burndown";
+
+function showBurndown(action, controller, projectId) {
+    var controller = element.getAttribute('asp-controller');
+    var action = element.getAttribute('asp-action');
+    var url = '/' + controller + '/' + action;
+    window.location.href = url;
 }
-<h1>@ViewData["Title"]</h1>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<canvas id="myChart" width="400" height="200"></canvas>
-
-<script>// Your Chart.js code goes here
-    // Example code for a simple line chart (burndown graph):
+function initializeBurndownChart() {
     const ctx = document.getElementById('myChart').getContext('2d');
     const myChart = new Chart(ctx, {
         type: 'line', // Change chart type to 'line'
@@ -33,6 +31,10 @@
                 }
             }
         }
-    });</script>
+    });
+}
 
-
+// Call the initialization function when the DOM is ready
+document.addEventListener('DOMContentLoaded', function () {
+    initializeBurndownChart();
+});

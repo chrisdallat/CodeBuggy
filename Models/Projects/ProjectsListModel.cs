@@ -143,6 +143,8 @@ public class ProjectsModel
 
     public List<Ticket>? GetTickets(int projectId)
     {
+        //TODO:: Move this to call this function daily perhaps on all projects. 
+        StoreBurndownData(projectId);
         try
         {
             var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
@@ -180,7 +182,7 @@ public class ProjectsModel
     public bool ValidUserClaim(ClaimsPrincipal user, int projectId)
     {
         var userId = _userManager?.GetUserId(user);
-        if (userId == null )
+        if (userId == null)
         {
             return false;
         }
@@ -354,20 +356,16 @@ public class ProjectsModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        _logger.LogInformation("Khalil 1");
-
         if (ValidUserClaim(user, projectId) == false)
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
-        _logger.LogInformation("Khalil 2");
 
         var projectDetails = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
         if (projectDetails == null)
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
-        _logger.LogInformation("Khalil 3");
 
         var owner = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
         if (owner == null)
@@ -375,10 +373,8 @@ public class ProjectsModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        _logger.LogInformation("Khalil 4");
         int ticketCounter = projectDetails.TicketsId.Count;
 
-        _logger.LogInformation("Khalil 5");
         var ticketDetails = new Ticket
         {
             StringId = $"{projectDetails.Name.ToUpper()}-{++ticketCounter}",
@@ -392,27 +388,129 @@ public class ProjectsModel
             Comments = "",
         };
 
-        _logger.LogInformation("Khalil " + ticketDetails.StringId);
-
-        _logger.LogInformation("Khalil 6");
         _context.Tickets.Add(ticketDetails);
-        _logger.LogInformation("Khalil 7");
         await _context.SaveChangesAsync();
-        _logger.LogInformation("Khalil 8");
 
         if (ticketDetails?.Id == null || ticketDetails.Id == 0)
         {
-        _logger.LogInformation("Khalil 9");
             return new OperationResult { Success = false, Message = "Unable to create new ticket" };
         }
 
-        _logger.LogInformation("Khalil 10");
         projectDetails.TicketsId.Add(ticketDetails.Id);
-        _logger.LogInformation("Khalil 11");
         await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Khalil 12");
         return new OperationResult { Success = true, Message = "Ticket created successfully!" };
     }
+
+    public void StoreBurndownData(int projectId)
+    {
+        try
+        {
+            var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
+
+            if (project == null)
+            {
+                _logger.LogError("Project not found.");
+                return;
+            }
+
+            var tickets = _context.Tickets
+                .Where(t => project.TicketsId.Contains(t.Id))
+                .ToList();
+
+            var currentDate = DateTime.UtcNow.Date;
+
+            var ticketGroups = tickets
+                .GroupBy(t => new { t.Status, t.Priority })
+                .Select(group => new
+                {
+                    Status = group.Key.Status,
+                    Priority = group.Key.Priority,
+                    Count = group.Count()
+                });
+
+            // Check if theres already data today
+            var existingData = _context.BurndownData
+                .Where(d => d.ProjectId == projectId && d.DailyCounts.Any(dc => dc.Date == currentDate))
+                .FirstOrDefault();
+
+            if (existingData != null)
+            {
+                existingData.DailyCounts.First().ToDoCount = ticketGroups.Where(g => g.Status == TicketStatus.ToDo).Sum(g => g.Count);
+                existingData.DailyCounts.First().InProgressCount = ticketGroups.Where(g => g.Status == TicketStatus.InProgress).Sum(g => g.Count);
+                existingData.DailyCounts.First().ReviewCount = ticketGroups.Where(g => g.Status == TicketStatus.Review).Sum(g => g.Count);
+                existingData.DailyCounts.First().DoneCount = ticketGroups.Where(g => g.Status == TicketStatus.Done).Sum(g => g.Count);
+                existingData.DailyCounts.First().NonePriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.None).Sum(g => g.Count);
+                existingData.DailyCounts.First().LowPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Low).Sum(g => g.Count);
+                existingData.DailyCounts.First().MediumPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Medium).Sum(g => g.Count);
+                existingData.DailyCounts.First().HighPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.High).Sum(g => g.Count);
+                existingData.DailyCounts.First().UrgentPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Urgent).Sum(g => g.Count);
+
+                _context.BurndownData.Update(existingData);
+            }
+            else
+            {
+                var newData = new BurndownData
+                {
+                    ProjectId = projectId,
+                    DailyCounts = new List<DailyTicketCounts>
+                    {
+                        new DailyTicketCounts
+                        {
+                            Date = currentDate,
+                            ToDoCount = ticketGroups.Where(g => g.Status == TicketStatus.ToDo).Sum(g => g.Count),
+                            InProgressCount = ticketGroups.Where(g => g.Status == TicketStatus.InProgress).Sum(g => g.Count),
+                            ReviewCount = ticketGroups.Where(g => g.Status == TicketStatus.Review).Sum(g => g.Count),
+                            DoneCount = ticketGroups.Where(g => g.Status == TicketStatus.Done).Sum(g => g.Count),
+                            NonePriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.None).Sum(g => g.Count),
+                            LowPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Low).Sum(g => g.Count),
+                            MediumPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Medium).Sum(g => g.Count),
+                            HighPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.High).Sum(g => g.Count),
+                            UrgentPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Urgent).Sum(g => g.Count),
+                        }
+                    }
+                };
+
+                _context.BurndownData.Add(newData);
+            }
+
+            _context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error storing Burndown data: " + ex);
+        }
+    }
+
+    public BurndownData GetBurndownData(int projectId)
+    {
+        //TODO:: find where to get projectId to call this from Burndown chartpage. 
+        try
+        {
+            var burndownData = _context.BurndownData
+                .Where(d => d.ProjectId == projectId)
+                .Include(d => d.DailyCounts)
+                .FirstOrDefault();
+
+            if (burndownData != null)
+            {
+                return burndownData;
+            }
+
+            return new BurndownData
+            {
+                ProjectId = projectId,
+                DailyCounts = new List<DailyTicketCounts>()
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error retrieving Burndown data: " + ex);
+            return null;
+        }
+    }
+
+
+
+
 }
 
