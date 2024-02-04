@@ -1,5 +1,5 @@
 
-function showBurndown(action, controller, projectId) {
+function showBurndown(action, controller) {
     var controller = element.getAttribute('asp-controller');
     var action = element.getAttribute('asp-action');
     var url = '/' + controller + '/' + action;

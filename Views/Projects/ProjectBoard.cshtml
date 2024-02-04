@@ -126,6 +126,19 @@ else
 }
 
 <script>
+    let getParameterByName = function (name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, "\\$&");
+        let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    let projectId = getParameterByName('projectId');
+    console.log("ProjectId = " + projectId);
+    
     let populatePrioritiesDropdown = function () {
         let priorities = @Html.Raw(JsonSerializer.Serialize(Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() })));
         let dropdown = document.getElementById('ticketPriorityDropdown');
