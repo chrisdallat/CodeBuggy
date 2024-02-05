@@ -17,6 +17,8 @@ public class ProjectsModel
     private static readonly Random Random = new Random();
     private readonly UserManager<AppUser> _userManager;
 
+    public List<Ticket> Tickets { get; set; }
+
     [BindProperty]
     public InputModel Input { get; set; }
 
@@ -31,6 +33,22 @@ public class ProjectsModel
         [StringLength(255, ErrorMessage = "The Access Code must be maximum 255 characters.")]
         [Display(Name = "Access code")]
         public string AccessCode { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(255, ErrorMessage = "The Ticket description must be maximum 255 characters.")]
+        [Display(Name = "Ticket title")]
+        public string TicketTitle { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Ticket description")]
+        public string TicketDescription { get; set; } = string.Empty;
+
+        public TicketPriority TicketPriorityValue { get; set; }
+
+        public TicketStatus TicketStatusValue { get; set; }
+
+        public string TicketComments { get; set; } = string.Empty;
+
     }
 
     public string GenerateAccessCode()
@@ -119,38 +137,63 @@ public class ProjectsModel
         catch (Exception ex)
         {
             _logger.LogError("Unable to load projects: " + ex);
+            return null;
         }
-
-        return null;
     }
 
-    public List<Ticket>? GetTickets(ClaimsPrincipal user, int projectId)
+    public List<Ticket>? GetTickets(int projectId)
     {
-        if (user.Identity != null && user.Identity.IsAuthenticated)
+        //TODO:: Move this to call this function daily perhaps on all projects. 
+        StoreBurndownData(projectId);
+        try
         {
-            List<Ticket> tickets = new List<Ticket>
+            var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
+
+            if (project == null)
             {
-                new Ticket { Id = 1, Title = "Task 1", Description = "Description 1", Priority = TicketPriority.None, Status = TicketStatus.ToDo },
-                new Ticket { Id = 2, Title = "Task 2", Description = "Description 2", Priority = TicketPriority.Low, Status = TicketStatus.InProgress },
-                new Ticket { Id = 3, Title = "Task 3", Description = "Description 3", Priority = TicketPriority.Medium, Status = TicketStatus.Done },
-                new Ticket { Id = 4, Title = "Task 4", Description = "Description 4", Priority = TicketPriority.High, Status = TicketStatus.Done },
-                new Ticket { Id = 5, Title = "Task 5", Description = "Description 5", Priority = TicketPriority.Urgent, Status = TicketStatus.ToDo },
-                new Ticket { Id = 6, Title = "Task 6", Description = "Description 6", Priority = TicketPriority.None, Status = TicketStatus.InProgress },
-                new Ticket { Id = 7, Title = "Task 7", Description = "Description 7", Priority = TicketPriority.Low, Status = TicketStatus.ToDo },
-                new Ticket { Id = 8, Title = "Task 8", Description = "Description 8", Priority = TicketPriority.Medium, Status = TicketStatus.Done },
-                new Ticket { Id = 9, Title = "Task 9", Description = "Description 9", Priority = TicketPriority.High, Status = TicketStatus.InProgress },
-                new Ticket { Id = 10, Title = "Task 10", Description = "Description 10", Priority = TicketPriority.Urgent, Status = TicketStatus.InProgress },
-                new Ticket { Id = 11, Title = "Task 11", Description = "Description 11", Priority = TicketPriority.None, Status = TicketStatus.ToDo },
-                new Ticket { Id = 12, Title = "Task 12", Description = "Description 12", Priority = TicketPriority.Low, Status = TicketStatus.Done },
-                new Ticket { Id = 13, Title = "Task 13", Description = "Description 13", Priority = TicketPriority.Medium, Status = TicketStatus.Done },
-                new Ticket { Id = 14, Title = "Task 14", Description = "Description 14", Priority = TicketPriority.High, Status = TicketStatus.ToDo },
-                new Ticket { Id = 15, Title = "Task 15", Description = "Description 15", Priority = TicketPriority.Urgent, Status = TicketStatus.InProgress },
-            };
+                return null;
+            }
+
+            var tickets = _context.Tickets
+                .Where(t => project.TicketsId.Contains(t.Id))
+                .ToList();
 
             return tickets;
         }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error retrieving tickets: " + ex);
+            return null;
+        }
+    }
 
-        return null;
+    public string? GetProjectName(int projectId)
+    {
+        var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
+
+        if (project == null)
+        {
+            return null;
+        }
+
+        return project.Name;
+    }
+
+    public bool ValidUserClaim(ClaimsPrincipal user, int projectId)
+    {
+        var userId = _userManager?.GetUserId(user);
+        if (userId == null)
+        {
+            return false;
+        }
+
+        var foundUserClaim = _context.UserClaims.FirstOrDefault(p => p.ClaimValue == projectId.ToString() && p.ClaimType == "ProjectAccess" && p.UserId == userId);
+        if (foundUserClaim == null)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public async Task<OperationResult> AddExistingProject(InputModel input, ClaimsPrincipal user)
@@ -305,5 +348,169 @@ public class ProjectsModel
 
         return new OperationResult { Success = true, Message = "Project deleted" };
     }
+
+    public async Task<OperationResult> AddTicketToProject(ClaimsPrincipal user, ProjectsModel.InputModel input, int projectId)
+    {
+        if (user.Identity == null || user.Identity.IsAuthenticated == false)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        if (ValidUserClaim(user, projectId) == false)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        var projectDetails = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (projectDetails == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        var owner = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        if (owner == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        int ticketCounter = projectDetails.TicketsId.Count;
+
+        var ticketDetails = new Ticket
+        {
+            StringId = $"{projectDetails.Name.ToUpper()}-{++ticketCounter}",
+            Title = input.TicketTitle,
+            Priority = input.TicketPriorityValue >= TicketPriority.None ? input.TicketPriorityValue : TicketPriority.None,
+            Status = input.TicketStatusValue >= TicketStatus.ToDo ? input.TicketStatusValue : TicketStatus.ToDo,
+            CreatedBy = owner,
+            CreationDate = DateTime.UtcNow,
+            ResolvedBy = "",
+            Description = input.TicketDescription,
+            Comments = "",
+        };
+
+        _context.Tickets.Add(ticketDetails);
+        await _context.SaveChangesAsync();
+
+        if (ticketDetails?.Id == null || ticketDetails.Id == 0)
+        {
+            return new OperationResult { Success = false, Message = "Unable to create new ticket" };
+        }
+
+        projectDetails.TicketsId.Add(ticketDetails.Id);
+        await _context.SaveChangesAsync();
+        return new OperationResult { Success = true, Message = "Ticket created successfully!" };
+    }
+
+    public void StoreBurndownData(int projectId)
+    {
+        try
+        {
+            var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
+
+            if (project == null)
+            {
+                _logger.LogError("Project not found.");
+                return;
+            }
+
+            var tickets = _context.Tickets
+                .Where(t => project.TicketsId.Contains(t.Id))
+                .ToList();
+
+            var currentDate = DateTime.UtcNow.Date;
+
+            var ticketGroups = tickets
+                .GroupBy(t => new { t.Status, t.Priority })
+                .Select(group => new
+                {
+                    Status = group.Key.Status,
+                    Priority = group.Key.Priority,
+                    Count = group.Count()
+                });
+
+            // Check if theres already data today
+            var existingData = _context.BurndownData
+                .Where(d => d.ProjectId == projectId && d.DailyCounts.Any(dc => dc.Date == currentDate))
+                .FirstOrDefault();
+
+            if (existingData != null)
+            {
+                existingData.DailyCounts.First().ToDoCount = ticketGroups.Where(g => g.Status == TicketStatus.ToDo).Sum(g => g.Count);
+                existingData.DailyCounts.First().InProgressCount = ticketGroups.Where(g => g.Status == TicketStatus.InProgress).Sum(g => g.Count);
+                existingData.DailyCounts.First().ReviewCount = ticketGroups.Where(g => g.Status == TicketStatus.Review).Sum(g => g.Count);
+                existingData.DailyCounts.First().DoneCount = ticketGroups.Where(g => g.Status == TicketStatus.Done).Sum(g => g.Count);
+                existingData.DailyCounts.First().NonePriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.None).Sum(g => g.Count);
+                existingData.DailyCounts.First().LowPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Low).Sum(g => g.Count);
+                existingData.DailyCounts.First().MediumPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Medium).Sum(g => g.Count);
+                existingData.DailyCounts.First().HighPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.High).Sum(g => g.Count);
+                existingData.DailyCounts.First().UrgentPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Urgent).Sum(g => g.Count);
+
+                _context.BurndownData.Update(existingData);
+            }
+            else
+            {
+                var newData = new BurndownData
+                {
+                    ProjectId = projectId,
+                    DailyCounts = new List<DailyTicketCounts>
+                    {
+                        new DailyTicketCounts
+                        {
+                            Date = currentDate,
+                            ToDoCount = ticketGroups.Where(g => g.Status == TicketStatus.ToDo).Sum(g => g.Count),
+                            InProgressCount = ticketGroups.Where(g => g.Status == TicketStatus.InProgress).Sum(g => g.Count),
+                            ReviewCount = ticketGroups.Where(g => g.Status == TicketStatus.Review).Sum(g => g.Count),
+                            DoneCount = ticketGroups.Where(g => g.Status == TicketStatus.Done).Sum(g => g.Count),
+                            NonePriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.None).Sum(g => g.Count),
+                            LowPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Low).Sum(g => g.Count),
+                            MediumPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Medium).Sum(g => g.Count),
+                            HighPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.High).Sum(g => g.Count),
+                            UrgentPriorityCount = ticketGroups.Where(g => g.Priority == TicketPriority.Urgent).Sum(g => g.Count),
+                        }
+                    }
+                };
+
+                _context.BurndownData.Add(newData);
+            }
+
+            _context.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error storing Burndown data: " + ex);
+        }
+    }
+
+    public BurndownData GetBurndownData(int projectId)
+    {
+        //TODO:: find where to get projectId to call this from Burndown chartpage. 
+        try
+        {
+            var burndownData = _context.BurndownData
+                .Where(d => d.ProjectId == projectId)
+                .Include(d => d.DailyCounts)
+                .FirstOrDefault();
+
+            if (burndownData != null)
+            {
+                return burndownData;
+            }
+
+            return new BurndownData
+            {
+                ProjectId = projectId,
+                DailyCounts = new List<DailyTicketCounts>()
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error retrieving Burndown data: " + ex);
+            return null;
+        }
+    }
+
+
+
+
 }
 

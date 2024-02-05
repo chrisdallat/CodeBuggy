@@ -1,239 +1,91 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using CodeBuggy.Models.Projects
+@using CodeBuggy.Helpers
 @using PagedList.Mvc
+
+<script type="text/javascript" src="~/js/projectsList.js"></script>
 
 @model ProjectsModel
 
 @if (User.Identity?.IsAuthenticated ?? false)
 {
+<div style="display: grid; grid-template-columns: 1fr auto;">
+    <h2 style="text-align: center;">Your Projects</h2>
 
-    <div style="display: grid; grid-template-columns: 1fr auto;">
-        <h2 style="text-align: center;">Your Projects</h2>
-
-        <a class="create-button" style="text-align: right;" onclick="togglePopup()">
-            <span class="gg-math-plus"></span>
-            <span style="margin-left: 5px">New project</span>
-        </a>
-    </div>
+        <a class="create-button" style="text-align: right;" onclick="showPopup('addProjectPopup')">
+        <span class="gg-math-plus"></span>
+        <span style="margin-left: 5px">New project</span>
+    </a>
+</div>
 
     @Html.Raw(ViewBag.ProjectTable)
 
     <div>
-        @Html.Raw(ViewBag.Pagination)
-    </div>
+    @Html.Raw(ViewBag.Pagination)
+</div>
 }
 else
 {
     <div>Access Denied: Please Login to view this page</div>
 }
 
-<div id="popupOverlay" class="overlay">
-    <div class="popup">
-        <div style="display: grid; grid-template-columns: 1fr auto;">
-            <span id="goBackButton" class="gg-arrow-left-r" style="position:fixed; margin-top: 8px; display: none" onclick="goBack()"></span>
-            <h2 id="PopupTitle" style="text-align: center;">Add Project</h2>
-            <span class="gg-close-r" style="top: unset; margin-top: 8px; right: 20px" onclick="togglePopup()"></span>
-        </div>
-        <div style="margin-top: 20px"></div>
-        <div id="ProjectButtons">
-            <a class="button-general mb-3" style="text-align: center; max-width: 380px" onclick="showExistingProject()">
+@****************************************************************@
+@************************* Dynamic Code *************************@
+@****************************************************************@
+@{
+    string projectButtons = @"
+        <div id='projectButtons'>
+            <a class='button-general mb-3' style='text-align: center; max-width: 380px' onclick='showExistingProject()'>
                 <span>Add Existing Project</span>
             </a>
-            <a class="button-general mb-3" style="text-align: center; max-width: 380px" onclick="showCreateProject()">
+            <a class='button-general mb-3' style='text-align: center; max-width: 380px' onclick='showCreateProject()'>
                 <span>Add New Project</span>
             </a>
-        </div>
+        </div>";
 
-        <form id="addExistingProjectForm" asp-action="AddExistingProject" style="display: none;" method="post">
-            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
-                <input asp-for="Input.Name" class="form-control" autocomplete="ProjectName" aria-required="true" placeholder="" />
-                <label asp-for="Input.Name">Project name</label>
-            </div>
-            <div id="projectAccessCode" class="form-floating mb-3" style="max-width: 380px">
-                <input asp-for="Input.AccessCode" class="form-control" autocomplete="ProjectAccessCode" aria-required="true" placeholder="" />
-                <label asp-for="Input.AccessCode">Project Access Code</label>
-            </div>
-            <button id="submitButton" type="submit" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px">
-                Add Project
-            </button>
-        </form>
+    string addExistingProjectForm = @"<form id='addExistingProjectForm' action='AddExistingProject' style='display: none;' method='post'>";
 
-        <form id="addNewProjectForm" asp-action="AddNewProject" style="display: none;" method="post">
-            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
-                <input asp-for="Input.Name" class="form-control" autocomplete="ProjectName" aria-required="true" placeholder="" />
-                <label asp-for="Input.Name">Project name</label>
-            </div>
-            <button id="submitButton" type="submit" class="button-general mb-3 mt-5" style="text-align: center; max-width: 160px">
-                Add Project
-            </button>
-        </form>
+    string addNewProjectForm = @"<form id='addNewProjectForm' action='AddNewProject' style='display: none;' method='post'>";
 
-    </div>     
-</div>
-    <div id="deletePopup" class="overlay">
-         <div class="popup">
-        <div style="display: grid; grid-template-columns: 1fr auto;">
-            <h2 id="PopupTitle" style="text-align: center;">Delete Project</h2>
-            <span class="gg-close-r" style="top: unset; margin-top: 8px; right: 20px" onclick="toggleDeletePopup()"></span>
-        </div>
-        <div style="margin-top: 20px"></div>
+    string deleteProjectForm = @"
+    <form id='deleteProject' action='DeleteProject' method='post'>
+        <span style='text-align: center; font-size: 17px'>Enter Project Access Code</span>
+        <div style='margin-top: 20px'></div>
+        <div id='projectNameInput' class='form-floating mb-3' style='max-width: 380px'>
+            <input name='Input.AccessCode' class='form-control' aria-required='true' placeholder='' />
+            <label name='Input.AccessCode'>Project Access Code</label>
+        </div>";
 
-        <span style="text-align: center; font-size: 17px">Enter Project Access Code</span>
-        
-        <div style="margin-top: 20px"></div>
-        <form id="deleteProject" asp-action="DeleteProject" method="post">
-            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
-                <input asp-for="Input.AccessCode" class="form-control" aria-required="true" placeholder="" />
-                <label asp-for="Input.AccessCode">Project Access Code</label>
-            </div>
-            <button id="submitButton" type="submit" class="button-general mb-3 mt-5" style="text-align: center;">
-                Delete Project
-            </button>
-        </form>
+    string projectNameInput = @"
+        <div id='projectNameInput' class='form-floating mb-3' style='max-width: 380px'>
+            <input name='Input.Name' class='form-control' autocomplete='ProjectName' aria-required='true'
+                placeholder='' />
+            <label name='Input.Name'>Project name</label>
+        </div>";
 
-    </div>
-</div>
+    string projectAccessCodeInput = @"
+        <div id='projectAccessCode' class='form-floating mb-3' style='max-width: 380px'>
+            <input name='Input.AccessCode' class='form-control' autocomplete='ProjectAccessCode'
+                aria-required='true' placeholder='' />
+            <label name='Input.AccessCode'>Project Access Code</label>
+        </div>";
 
-<script>
-    const addNewProjectForm = document.getElementById('addNewProjectForm');
-    const addExistingProjectForm = document.getElementById('addExistingProjectForm');
-    const buttons = document.getElementById('ProjectButtons');
-    const goBackbutton = document.getElementById('goBackButton');
-    var popupTitle = document.getElementById('PopupTitle');
+    string submitButton = @"
+        <button id='submitButton' type='submit' class='button-general mb-3 mt-5'
+            style='text-align: center; max-width: 160px'>";
+
+    // New Project Popup Creation
+    var addProjectPopup = new Popup();
+    var addExistingProjectDOM = addExistingProjectForm + projectNameInput + projectAccessCodeInput + submitButton + "Add Project" + "</button>" + "</form>";
+    var addNewProjectDOM = addNewProjectForm + projectNameInput + submitButton + "Add Project" + "</button>" + "</form>";
+    var addProjectPopupHTML = addProjectPopup.CreatePopup("addProjectPopup", "Add Project", new string[] { projectButtons, addExistingProjectDOM, addNewProjectDOM });
+    @Html.Raw(addProjectPopupHTML)
 
 
-    var defaultShowPopUp = function() {
-        addNewProjectForm.style.display = 'none';
-        addExistingProjectForm.style.display = 'none';
-        ProjectButtons.style.display = 'block';
-        goBackbutton.style.display = 'none';
-        PopupTitle.innerHTML = "Add Project";
-    }
+    // Delete Popup creation
+    var deleteProjectPopup = new Popup();
+    var deleteProjectDom = deleteProjectForm + submitButton + "Delete Project" + "</button>" + "</form>";
+    var deleteProjectPopupHTML = deleteProjectPopup.CreatePopup("deleteProjectPopup", "Delete Project", new string[] { deleteProjectDom });
+    @Html.Raw(deleteProjectPopupHTML)
+}
 
-    var togglePopup = function () {
-        const popup = document.getElementById('popupOverlay');
-        popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
-
-        if (popup.style.display === 'none') {
-            let errorMessage = document.getElementById("errorMessage");
-            if (errorMessage) {
-                errorMessage.remove();
-            }
-            defaultShowPopUp();
-        }
-    }
-
-    var toggleDeletePopup = function(button, projectAccessCode) {
-        const popup = document.getElementById('deletePopup');
-        popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
-
-        if (popup.style.display === 'none') {
-            let errorMessage = document.getElementById("errorMessage");
-            if (errorMessage) {
-                errorMessage.remove();
-            }
-        }
-    }
-
-    var showExistingProject = function () {
-        addExistingProjectForm.style.display = 'block';
-        addNewProjectForm.style.display = 'none';
-        ProjectButtons.style.display = 'none';
-        goBackbutton.style.display = 'block';
-        PopupTitle.innerHTML = "Add Exisiting Project";
-    }
-
-    var showCreateProject = function () {
-        addExistingProjectForm.style.display = 'none';
-        addNewProjectForm.style.display = 'block';
-        ProjectButtons.style.display = 'none';
-        goBackbutton.style.display = 'block';
-        PopupTitle.innerHTML = "Add New Project";
-    }
-
-    var goBack = function () {
-        let errorMessage = document.getElementById("errorMessage");
-        if (errorMessage) {
-            errorMessage.remove();
-        }
-        defaultShowPopUp();
-    }
-
-    var handleServerMessage = function (form, formData) {
-        fetch(form.action, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
-            if (data.success === false) {
-                    let errorMessage = document.getElementById('errorMessage');
-                if (!errorMessage) {
-                    errorMessage = document.createElement('span');
-                    errorMessage.id = "errorMessage";
-                    form.insertAdjacentElement('afterend', errorMessage);
-                }
-                errorMessage.innerHTML = data.message;
-            }
-            else {
-                window.location.href = '/Projects/ProjectsList?page=1';
-            }
-        })
-        .catch(error => {
-            console.error(error.message);
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-
-        addNewProjectForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            handleServerMessage(this, new FormData(this));
-        });
-
-        addExistingProjectForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            handleServerMessage(this, new FormData(this));
-        });
-
-        document.getElementById('deleteProject').addEventListener('submit', function (e) {
-            e.preventDefault();
-            handleServerMessage(this, new FormData(this));
-        });
-    });
-
-    var toggleBlur = function (span) {
-        span.classList.toggle('blurred-text');
-
-        setTimeout(function () {
-            span.classList.toggle('blurred-text');
-        }, 5000);
-    };
-
-    var copyText = function(button, accessCode) {
-        let textToCopy = accessCode;
-
-        let copiedAccessCode = button.nextElementSibling;
-        if (copiedAccessCode) {
-            copiedAccessCode.style.display = 'inline';
-            setTimeout(function () {
-                copiedAccessCode.style.display = 'none';
-            }, 3000);
-        }
-        let tempTextarea = document.createElement('textarea');
-        tempTextarea.value = textToCopy;
-
-        document.body.appendChild(tempTextarea);
-
-        tempTextarea.select();
-        tempTextarea.setSelectionRange(0, 99999);
-
-        document.execCommand('copy');
-
-        document.body.removeChild(tempTextarea);
-
-
-    }
-
-</script>

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CodeBuggy.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CodeBuggy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240115193226_ticketsUpdateDescription")]
+    partial class ticketsUpdateDescription
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -98,22 +101,6 @@ namespace CodeBuggy.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("CodeBuggy.Data.BurndownData", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("BurndownData");
                 });
 
             modelBuilder.Entity("CodeBuggy.Data.Project", b =>
@@ -332,60 +319,6 @@ namespace CodeBuggy.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("CodeBuggy.Data.BurndownData", b =>
-                {
-                    b.OwnsMany("CodeBuggy.Data.DailyTicketCounts", "DailyCounts", b1 =>
-                        {
-                            b1.Property<int>("BurndownDataId")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("integer");
-
-                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
-
-                            b1.Property<DateTime>("Date")
-                                .HasColumnType("timestamp with time zone");
-
-                            b1.Property<int>("DoneCount")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("HighPriorityCount")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("InProgressCount")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("LowPriorityCount")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("MediumPriorityCount")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("NonePriorityCount")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("ReviewCount")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("ToDoCount")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("UrgentPriorityCount")
-                                .HasColumnType("integer");
-
-                            b1.HasKey("BurndownDataId", "Id");
-
-                            b1.ToTable("DailyTicketCounts");
-
-                            b1.WithOwner()
-                                .HasForeignKey("BurndownDataId");
-                        });
-
-                    b.Navigation("DailyCounts");
                 });
 
             modelBuilder.Entity("CodeBuggy.Data.Project", b =>
