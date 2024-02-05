@@ -24,6 +24,4 @@ public class BurndownController : Controller
         // Your logic here
         return View("../Projects/Burndown"); // needs to be relative to Views/Home for some reason
     }
-
-
 }
