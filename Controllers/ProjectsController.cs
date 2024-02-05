@@ -45,6 +45,7 @@ public class ProjectsController : Controller
             _projectsModel.Tickets = _projectsModel?.GetTickets(projectId);
             ViewBag.ProjectTitle = _projectsModel?.GetProjectName(projectId);
             ViewBag.DeniedAccess = false;
+            ViewBag.ProjectId = projectId;
             return View(_projectsModel);
         }
 
@@ -58,10 +59,10 @@ public class ProjectsController : Controller
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 
-    public ActionResult NewProject()
-    {
-        return View();
-    }
+    // public ActionResult NewProject()
+    // {
+    //     return View();
+    // }
 
     [HttpPost]
     public async Task<IActionResult> AddExistingProject(ProjectsModel.InputModel input)
