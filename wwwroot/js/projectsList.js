@@ -1,33 +1,35 @@
-const addNewProjectForm = document.getElementById('addNewProjectForm');
-const addExistingProjectForm = document.getElementById('addExistingProjectForm');
-const buttons = document.getElementById('ProjectButtons');
-const goBackbutton = document.getElementById('goBackButton');
-var popupTitle = document.getElementById('PopupTitle');
+let addNewProjectForm;
+let addExistingProjectForm;
+let buttons;
+let goBackbutton;
+let popupTitle;
 
 
 var defaultShowPopUp = function() {
     addNewProjectForm.style.display = 'none';
     addExistingProjectForm.style.display = 'none';
-    ProjectButtons.style.display = 'block';
+    buttons.style.display = 'block';
     goBackbutton.style.display = 'none';
-    PopupTitle.innerHTML = "Add Project";
+    popupTitle.innerHTML = "Add Project";
 }
 
-var togglePopup = function () {
-    const popup = document.getElementById('popupOverlay');
-    popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+var showPopup = function (popupId) {
+    const popup = document.getElementById(popupId);
+    popup.style.display = 'flex';
+}
 
-    if (popup.style.display === 'none') {
-        let errorMessage = document.getElementById("errorMessage");
-        if (errorMessage) {
-            errorMessage.remove();
-        }
-        defaultShowPopUp();
+var closePopup = function (popupId) {
+    const popup = document.getElementById(popupId);
+    popup.style.display = 'none';
+    let errorMessage = document.getElementById("errorMessage");
+    if (errorMessage) {
+        errorMessage.remove();
     }
+    defaultShowPopUp();
 }
 
-var toggleDeletePopup = function(button, projectAccessCode) {
-    const popup = document.getElementById('deletePopup');
+var toggleDeletePopup = function () {
+    const popup = document.getElementById('deleteProjectPopup');
     popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
 
     if (popup.style.display === 'none') {
@@ -41,17 +43,17 @@ var toggleDeletePopup = function(button, projectAccessCode) {
 var showExistingProject = function () {
     addExistingProjectForm.style.display = 'block';
     addNewProjectForm.style.display = 'none';
-    ProjectButtons.style.display = 'none';
+    buttons.style.display = 'none';
     goBackbutton.style.display = 'block';
-    PopupTitle.innerHTML = "Add Exisiting Project";
+    popupTitle.innerHTML = "Add Exisiting Project";
 }
 
 var showCreateProject = function () {
     addExistingProjectForm.style.display = 'none';
     addNewProjectForm.style.display = 'block';
-    ProjectButtons.style.display = 'none';
+    buttons.style.display = 'none';
     goBackbutton.style.display = 'block';
-    PopupTitle.innerHTML = "Add New Project";
+    popupTitle.innerHTML = "Add New Project";
 }
 
 var goBack = function () {
@@ -80,7 +82,7 @@ var handleServerMessage = function (form, formData) {
             errorMessage.innerHTML = data.message;
         }
         else {
-            //window.location.href = '/Projects/ProjectsList?page=1';
+            window.location.reload();
         }
     })
     .catch(error => {
@@ -89,6 +91,12 @@ var handleServerMessage = function (form, formData) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+
+    addNewProjectForm = document.getElementById('addNewProjectForm');
+    addExistingProjectForm = document.getElementById('addExistingProjectForm');
+    buttons = document.getElementById('projectButtons');
+    goBackbutton = document.getElementById('goBackButton');
+    popupTitle = document.getElementById('popupTitle');
 
     addNewProjectForm.addEventListener('submit', function (e) {
         e.preventDefault();

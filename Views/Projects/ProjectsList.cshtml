@@ -1,15 +1,18 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using CodeBuggy.Models.Projects
+@using CodeBuggy.Helpers
 @using PagedList.Mvc
+
+<script type="text/javascript" src="~/js/projectsList.js"></script>
 
 @model ProjectsModel
 
 @if (User.Identity?.IsAuthenticated ?? false)
 {
-    <div style="display: grid; grid-template-columns: 1fr auto;">
+<div style="display: grid; grid-template-columns: 1fr auto;">
     <h2 style="text-align: center;">Your Projects</h2>
 
-    <a class="create-button" style="text-align: right;" onclick="togglePopup()">
+        <a class="create-button" style="text-align: right;" onclick="showPopup('addProjectPopup')">
         <span class="gg-math-plus"></span>
         <span style="margin-left: 5px">New project</span>
     </a>
@@ -26,78 +29,63 @@ else
     <div>Access Denied: Please Login to view this page</div>
 }
 
-<script type="text/javascript" src="~/js/projectsList.js"></script>
-
-<div id="popupOverlay" class="overlay">
-    <div class="popup">
-        <div style="display: grid; grid-template-columns: 1fr auto;">
-            <span id="goBackButton" class="gg-arrow-left-r" style="position:fixed; margin-top: 8px; display: none"
-                onclick="goBack()"></span>
-            <h2 id="PopupTitle" style="text-align: center;">Add Project</h2>
-            <span class="gg-close-r" style="top: unset; margin-top: 8px; right: 20px" onclick="togglePopup()"></span>
-        </div>
-        <div style="margin-top: 20px"></div>
-        <div id="ProjectButtons">
-            <a class="button-general mb-3" style="text-align: center; max-width: 380px" onclick="showExistingProject()">
+@****************************************************************@
+@************************* Dynamic Code *************************@
+@****************************************************************@
+@{
+    string projectButtons = @"
+        <div id='projectButtons'>
+            <a class='button-general mb-3' style='text-align: center; max-width: 380px' onclick='showExistingProject()'>
                 <span>Add Existing Project</span>
             </a>
-            <a class="button-general mb-3" style="text-align: center; max-width: 380px" onclick="showCreateProject()">
+            <a class='button-general mb-3' style='text-align: center; max-width: 380px' onclick='showCreateProject()'>
                 <span>Add New Project</span>
             </a>
-        </div>
+        </div>";
 
-        <form id="addExistingProjectForm" asp-action="AddExistingProject" style="display: none;" method="post">
-            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
-                <input asp-for='Input.Name' class="form-control" autocomplete="ProjectName" aria-required="true"
-                    placeholder="" />
-                <label asp-for="Input.Name">Project name</label>
-            </div>
-            <div id="projectAccessCode" class="form-floating mb-3" style="max-width: 380px">
-                <input asp-for="Input.AccessCode" class="form-control" autocomplete="ProjectAccessCode"
-                    aria-required="true" placeholder="" />
-                <label asp-for="Input.AccessCode">Project Access Code</label>
-            </div>
-            <button id="submitButton" type="submit" class="button-general mb-3 mt-5"
-                style="text-align: center; max-width: 160px">
-                Add Project
-            </button>
-        </form>
+    string addExistingProjectForm = @"<form id='addExistingProjectForm' action='AddExistingProject' style='display: none;' method='post'>";
 
-        <form id="addNewProjectForm" asp-action="AddNewProject" style="display: none;" method="post">
-            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
-                <input asp-for="Input.Name" class="form-control" autocomplete="ProjectName" aria-required="true"
-                    placeholder="" />
-                <label asp-for="Input.Name">Project name</label>
-            </div>
-            <button id="submitButton" type="submit" class="button-general mb-3 mt-5"
-                style="text-align: center; max-width: 160px">
-                Add Project
-            </button>
-        </form>
+    string addNewProjectForm = @"<form id='addNewProjectForm' action='AddNewProject' style='display: none;' method='post'>";
 
-    </div>
-</div>
-<div id="deletePopup" class="overlay">
-    <div class="popup">
-        <div style="display: grid; grid-template-columns: 1fr auto;">
-            <h2 id="PopupTitle" style="text-align: center;">Delete Project</h2>
-            <span class="gg-close-r" style="top: unset; margin-top: 8px; right: 20px"
-                onclick="toggleDeletePopup()"></span>
-        </div>
-        <div style="margin-top: 20px"></div>
+    string deleteProjectForm = @"
+    <form id='deleteProject' action='DeleteProject' method='post'>
+        <span style='text-align: center; font-size: 17px'>Enter Project Access Code</span>
+        <div style='margin-top: 20px'></div>
+        <div id='projectNameInput' class='form-floating mb-3' style='max-width: 380px'>
+            <input name='Input.AccessCode' class='form-control' aria-required='true' placeholder='' />
+            <label name='Input.AccessCode'>Project Access Code</label>
+        </div>";
 
-        <span style="text-align: center; font-size: 17px">Enter Project Access Code</span>
+    string projectNameInput = @"
+        <div id='projectNameInput' class='form-floating mb-3' style='max-width: 380px'>
+            <input name='Input.Name' class='form-control' autocomplete='ProjectName' aria-required='true'
+                placeholder='' />
+            <label name='Input.Name'>Project name</label>
+        </div>";
 
-        <div style="margin-top: 20px"></div>
-        <form id="deleteProject" asp-action="DeleteProject" method="post">
-            <div id="projectNameInput" class="form-floating mb-3" style="max-width: 380px">
-                <input asp-for="Input.AccessCode" class="form-control" aria-required="true" placeholder="" />
-                <label asp-for="Input.AccessCode">Project Access Code</label>
-            </div>
-            <button id="submitButton" type="submit" class="button-general mb-3 mt-5" style="text-align: center;">
-                Delete Project
-            </button>
-        </form>
+    string projectAccessCodeInput = @"
+        <div id='projectAccessCode' class='form-floating mb-3' style='max-width: 380px'>
+            <input name='Input.AccessCode' class='form-control' autocomplete='ProjectAccessCode'
+                aria-required='true' placeholder='' />
+            <label name='Input.AccessCode'>Project Access Code</label>
+        </div>";
 
-    </div>
-</div>
+    string submitButton = @"
+        <button id='submitButton' type='submit' class='button-general mb-3 mt-5'
+            style='text-align: center; max-width: 160px'>";
+
+    // New Project Popup Creation
+    var addProjectPopup = new Popup();
+    var addExistingProjectDOM = addExistingProjectForm + projectNameInput + projectAccessCodeInput + submitButton + "Add Project" + "</button>" + "</form>";
+    var addNewProjectDOM = addNewProjectForm + projectNameInput + submitButton + "Add Project" + "</button>" + "</form>";
+    var addProjectPopupHTML = addProjectPopup.CreatePopup("addProjectPopup", "Add Project", new string[] { projectButtons, addExistingProjectDOM, addNewProjectDOM });
+    @Html.Raw(addProjectPopupHTML)
+
+
+    // Delete Popup creation
+    var deleteProjectPopup = new Popup();
+    var deleteProjectDom = deleteProjectForm + submitButton + "Delete Project" + "</button>" + "</form>";
+    var deleteProjectPopupHTML = deleteProjectPopup.CreatePopup("deleteProjectPopup", "Delete Project", new string[] { deleteProjectDom });
+    @Html.Raw(deleteProjectPopupHTML)
+}
+

@@ -31,7 +31,7 @@ public static class HtmlHelpers
                             $"<button class='gg-copy' onclick='copyText(this, \"{project.AccessCode}\")'></button>" +
                             $"<span style='display: none; float: right; margin-right: 20px'>Copied!</span></td>" +
                             $"<td>{project.Owner}</td>" +
-                            $"<td><button class='gg-trash' onclick='toggleDeletePopup(this, \"{project.AccessCode}\")'></button></td>";
+                            $"<td><button class='gg-trash' onclick='toggleDeletePopup()'></button></td>";
             tbody.InnerHtml += row;
         }
         table.InnerHtml += tbody;

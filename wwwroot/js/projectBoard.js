@@ -1,14 +1,16 @@
 let drop;
 
+var showPopup = function (popupId) {
+    const popup = document.getElementById(popupId);
+    popup.style.display = 'flex';
+}
 
-var togglePopup = function () {
-    const popup = document.getElementById('createTicketPopup');
-    popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
-    if (popup.style.display === 'none') {
-        let errorMessage = document.getElementById("errorMessage");
-        if (errorMessage) {
-            errorMessage.remove();
-        }
+var closePopup = function (popupId) {
+    const popup = document.getElementById(popupId);
+    popup.style.display = 'none';
+    let errorMessage = document.getElementById("errorMessage");
+    if (errorMessage) {
+        errorMessage.remove();
     }
 }
 
