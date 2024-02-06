@@ -1,11 +1,4 @@
 
-function showBurndown(action, controller, projectId) {
-    var controller = element.getAttribute('asp-controller');
-    var action = element.getAttribute('asp-action');
-    var url = '/' + controller + '/' + action;
-    window.location.href = url;
-}
-
 function initializeBurndownChart() {
     const ctx = document.getElementById('myChart').getContext('2d');
     const myChart = new Chart(ctx, {

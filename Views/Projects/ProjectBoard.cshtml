@@ -6,37 +6,48 @@
 @using System.Web.Helpers
 @using Microsoft.AspNetCore.Html
 
-
-@{
-
-    // Define a C# function to conditionally render the projectId input
-    Func<string, IHtmlContent> RenderProjectIdInput = (projectId) =>
-    {
-        if (!string.IsNullOrEmpty(projectId))
-        {
-            return Html.Raw($"<input type='hidden' name='projectId' value='{projectId}' />");
-        }
-        return Html.Raw(string.Empty);
-    };
-}
-
 <script type="text/javascript" src="~/js/projectBoard.js"></script>
 
-@model ProjectsModel
+@model ProjectBoardModel
 
+@{
+    Func<IHtmlContent> RenderProjectTicketStatusDropdownList = () =>
+    {
+        var enumValues = Enum.GetValues(typeof(TicketStatus)).Cast<TicketStatus>();
+        var options = enumValues.Select(e => $"<option value='{e}'>{e}</option>");
+        var dropdownHtml = $@"
+                <select name='Input.TicketStatusValue' class='form-control'>
+            {string.Join("", options)}
+                </select>";
+        return new HtmlString(dropdownHtml);
+    };
+
+    Func<IHtmlContent> RenderProjectTicketPriorityDropdownList = () =>
+    {
+        var enumValues = Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>();
+        var options = enumValues.Select(e => $"<option value='{e}'>{e}</option>");
+        var dropdownHtml = $@"
+                <select name='Input.TicketPriorityValue' class='form-control'>
+            {string.Join("", options)}
+                </select>";
+        return new HtmlString(dropdownHtml);
+    };
+}
 @if (ViewBag.DeniedAccess == false)
 {
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <a class="create-button" style="text-align: left;" asp-controller="Burndown" asp-action="Index"
-            asp-route-projectId="@ViewBag.ProjectId">
-            <span style="margin-right: 5px">Burndown</span>
+       
+        <h2 style="text-align: center; flex: 1; margin-left: 200px;">@ViewBag.ProjectTitle</h2>
+        <a class="create-button" style="text-align: left; margin-right: 10px;" asp-controller="Burndown" asp-action="Index"
+           asp-route-projectId="@ViewBag.ProjectId">
+            <span class="material-symbols-outlined" style="margin-right: 5px;">
+                query_stats
+            </span>
         </a>
-
-        <h2 style="text-align: center; flex: 1;">@ViewBag.ProjectTitle Tickets board</h2>
-
         <a class="create-button" style="text-align: right;" onclick="showPopup('addTicketPopup')">
-            <span class="gg-math-plus"></span>
-            <span style="margin-left: 5px">New Ticket</span>
+            <span class="material-symbols-outlined">
+                add
+            </span>
         </a>
     </div>
 
@@ -66,9 +77,6 @@
             </div>
         </div>
     </div>
-
-    
-    
 }
 else
 {
@@ -87,20 +95,20 @@ else
 
     string ticketTitleInput = @"
             <div id='ticketTitleInput' class='form-floating mb-3' style='max-width: 380px'>
-            <input name='Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true' placeholder=''/>
+            <input name='Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true' placeholder='sadasdsaadsas'/>
             <label name='Input.TicketTitle'>Title</label>
         </div>";
 
-    string ticketPriorityDropdown = @"
+    string ticketPriorityDropdown = $@"
         <div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 380px'>
-            <select id='ticketPriorityDropdown' name='Input.TicketPriorityValue' class='form-control'></select>
+            {RenderProjectTicketPriorityDropdownList()}
             <label name='Input.TicketPriorityValue'>Priority</label>
             <div class='dropdown-arrow'>▼</div>
         </div>";
 
-    string ticketStatusDropdown = @"
+    string ticketStatusDropdown = $@"
         <div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 380px'>
-            <select id='ticketStatusDropdown' name='Input.TicketStatusValue' class='form-control'></select>
+            {RenderProjectTicketStatusDropdownList()}
             <label name='Input.TicketStatusValue'>Status</label>
             <div class='dropdown-arrow'>▼</div>
         </div>";
@@ -114,7 +122,7 @@ else
             <label name='Input.TicketDescription'>Description</label>
         </div>";
 
-    string renderProjectId = $@" {RenderProjectIdInput(Context.Request.Query["projectId"])} ";
+    string projectIdDOM = $@"<input type='hidden' name='projectId' value='{@ViewBag.ProjectId}' />";
 
     string submitButton = @"
         <button id='submitButton' type='submit' class='button-general mb-3 mt-5'
@@ -122,36 +130,15 @@ else
             Create Ticket
         </button>";
 
-    addTicketForm += ticketTitleInput + ticketPriorityDropdown + ticketStatusDropdown + ticketDescriptionInput + renderProjectId + submitButton + "</form>";
+    var addTicketFormDOM = addTicketForm + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) + @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + submitButton + "</form>";
     var addTicketPopup = new Popup();
-    var addTicketPopupHTML = addTicketPopup.CreatePopup("addTicketPopup", "Add Ticket", new string[] { addTicketForm });
-    @Html.Raw(addTicketPopupHTML);
+    var addTicketPopupHTML = addTicketPopup.CreatePopup("addTicketPopup", "Add Ticket", new string[] { addTicketFormDOM });
+    @Html.Raw(addTicketPopupHTML)
+
+    var editTicketDOM = editTicketForm + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) + @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + submitButton + "</form>";
+    var editTicketPopup = new Popup();
+    var editTicketPopupHTML = editTicketPopup.CreatePopup("editTicketPopup", "", new string[] { editTicketDOM });
+    @Html.Raw(editTicketPopupHTML)
 }
  
-<script>
-    let populatePrioritiesDropdown = function () {
-        let priorities = @Html.Raw(JsonSerializer.Serialize(Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() })));
-        let dropdown = document.getElementById('ticketPriorityDropdown');
-
-        priorities.forEach(function (priority) {
-            let option = document.createElement('option');
-            option.text = priority.Text;
-            option.value = priority.Value;
-            dropdown.appendChild(option);
-        });
-    }
-
-    let populateStatusDropdown = function () {
-        let status = @Html.Raw(JsonSerializer.Serialize(Enum.GetValues(typeof(TicketStatus)).Cast<TicketStatus>().Select(e => new SelectListItem { Text = e.ToString(), Value = e.ToString() })));
-        let dropdown = document.getElementById('ticketStatusDropdown');
-
-        status.forEach(function (status) {
-            let option = document.createElement('option');
-            option.text = status.Text;
-            option.value = status.Value;
-            dropdown.appendChild(option);
-        });
-    }
-</script>
-
 

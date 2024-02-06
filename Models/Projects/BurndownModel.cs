@@ -1,13 +1,5 @@
-using CodeBuggy.Controllers;
 using CodeBuggy.Data;
-using CodeBuggy.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using PagedList;
-using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using CodeBuggy.Migrations;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -15,8 +7,7 @@ public class BurndownModel
 {
     private static readonly ILogger<BurndownModel> _logger = LoggerFactory.Create(builder =>
     {
-        // Configure logging options if needed
-        builder.AddConsole(); // Example: Console logger
+        builder.AddConsole(); 
     }).CreateLogger<BurndownModel>();
 
     public void StoreBurndownData(AppDbContext context, int projectId)

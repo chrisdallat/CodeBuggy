@@ -14,6 +14,39 @@ var closePopup = function (popupId) {
     }
 }
 
+var showTicket = function (ticket) {
+    const popup = document.getElementById("editTicketPopup");
+    let popupTitle = popup.querySelector("#popupTitle");
+    let ticketTitle = popup.querySelector("#ticketTitleInput").querySelector("input");
+    let ticketPriorityDropdown = popup.querySelector("#ticketPriority").querySelector("select");
+    let ticketStatusDropdown = popup.querySelector("#ticketStatus").querySelector("select");
+    let ticketDescription = popup.querySelector("#ticketDescriptionInput").querySelector("textarea");
+
+    ticketTitle.value = ticket.Title;
+    ticketDescription.value = ticket.Description;
+    popupTitle.innerHTML = ticket.StringId;
+
+    let i = 0;
+    Array.from(ticketPriorityDropdown.options).forEach(option => {
+        if (i === ticket.Priority) {
+            option.selected = true;
+        }
+        i++;
+    });
+
+    i = 0;
+    Array.from(ticketStatusDropdown.options).forEach(option => {
+        if (i === ticket.Status) {
+            option.selected = true;
+        }
+        i++;
+    });
+
+    popup.style.display = 'flex';
+}
+
+
+
 let allowDrop = function (event) {
     event.preventDefault();
 }
@@ -102,8 +135,6 @@ var handleServerMessage = function (form, formData) {
 }
 document.addEventListener('DOMContentLoaded', function () {
 
-    populatePrioritiesDropdown();
-    populateStatusDropdown();
     var dropdowns = document.querySelectorAll('.form-control');
     dropdowns.forEach(function (dropdown) {
         dropdown.addEventListener('click', function () {
