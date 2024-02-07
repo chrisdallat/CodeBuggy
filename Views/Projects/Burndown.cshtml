@@ -3,34 +3,41 @@
 @model BurndownModel
 
 @{
+    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Burndown Chart";
 }
-
 <!-- Your burndown chart rendering logic goes here -->
 <h2>@ViewData["Title"]</h2>
 <!-- Include your burndown chart rendering logic here -->
 
-
+<input id="bd-button" value="Show Chart" type="button" />
+<br />
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script type="text/javascript" src="~/js/burndown.js"></script>
 
 <canvas id="myChart" width="400" height="200"></canvas>
 
-@{
-    // var ticketData = Model?.Tickets != null ? Html.Raw(Json.Serialize(Model.Tickets)) : null;
-}
-
-@* <pre>@ticketData</pre> *@
-
 <script>
-    @* @Chris Not needed if what we are going to return JSON later
+    $(function = () {
+        $("bd-button").click(function () {
+            $.ajax({
+                type: "POST",
+                url: "/Burndown/GetDailyTicketCounts",
+                data: "",
+                contextType: "application/json, charset=utf-8",
+                dataType: "json",
+                success: OnSuccessResult,
+                error: OnError,
+            });
+            function OnSuccessResult(data) {
 
-    // Call the function to initialize the burndown chart with the ticket data
-    var ticketDataJson = @ticketData;
-    if (ticketDataJson) {
-        // initializeBurndownChart(ticketData);
+            }
+            
+            function OnError(err) {
 
-    }
-    *@
+            }
+        });
+    }); 
 </script>

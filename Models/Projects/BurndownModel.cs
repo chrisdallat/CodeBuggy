@@ -1,5 +1,6 @@
 using CodeBuggy.Data;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -7,7 +8,7 @@ public class BurndownModel
 {
     private static readonly ILogger<BurndownModel> _logger = LoggerFactory.Create(builder =>
     {
-        builder.AddConsole(); 
+        builder.AddConsole();
     }).CreateLogger<BurndownModel>();
 
     public void StoreBurndownData(AppDbContext context, int projectId)
@@ -90,9 +91,8 @@ public class BurndownModel
         }
     }
 
-    public BurndownData GetBurndownData(AppDbContext context, int projectId)
+    public List<DailyTicketCounts> GetBurndownData(AppDbContext context, int projectId)
     {
-        //TODO:: find where to get projectId to call this from Burndown chartpage. 
         try
         {
             var burndownData = context.BurndownData
@@ -102,14 +102,10 @@ public class BurndownModel
 
             if (burndownData != null)
             {
-                return burndownData;
+                return burndownData.DailyCounts;
             }
 
-            return new BurndownData
-            {
-                ProjectId = projectId,
-                DailyCounts = new List<DailyTicketCounts>()
-            };
+            return new List<DailyTicketCounts>();
         }
         catch (Exception ex)
         {
@@ -117,5 +113,23 @@ public class BurndownModel
             return null;
         }
     }
+
+    // nuget install Newtonsoft.Json
+    // using Newtonsoft.Json;
+    // public string getBurndownData(ILogger<BurndownModel> _logger, AppDbContext context, int projectId)
+    // {
+    //     var burndownData = context.BurndownData
+    //         .Where(b => b.ProjectId == projectId)
+    //         .Include(b => b.DailyCounts) // Include the owned DailyCounts
+    //         .ToList();
+
+    //     var jsonResult = JsonConvert.SerializeObject(burndownData, Formatting.Indented, new JsonSerializerSettings
+    //     {
+    //         ReferenceLoopHandling = ReferenceLoopHandling.Ignore, // Handle circular references
+    //         // Add other settings as needed
+    //     });
+    //     _logger.LogInformation("Burndown\n " + jsonResult);
+    //     return jsonResult;
+    // }
 
 }

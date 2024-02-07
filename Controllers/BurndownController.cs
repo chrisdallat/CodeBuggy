@@ -13,6 +13,7 @@ public class BurndownController : Controller
 {
     private readonly ILogger<BurndownController> _logger;
     private readonly BurndownModel _burndown;
+
     public BurndownController(ILogger<BurndownController> logger, AppDbContext context, UserManager<AppUser> userManager)
     {
         _logger = logger;
@@ -24,4 +25,11 @@ public class BurndownController : Controller
         // Your logic here
         return View("../Projects/Burndown"); // needs to be relative to Views/Home for some reason
     }
+
+    // [HttpPost]
+    // public List<DailyTicketCounts> GetDailyTicketCounts(int projectId)
+    // {
+
+
+    // }
 }
