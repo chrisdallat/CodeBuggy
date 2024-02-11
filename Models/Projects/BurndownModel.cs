@@ -98,11 +98,15 @@ public class BurndownModel
             var burndownData = context.BurndownData
                 .Where(d => d.ProjectId == projectId)
                 .Include(d => d.DailyCounts)
-                .FirstOrDefault();
+                .ToList();
 
-            if (burndownData != null)
+            if (burndownData.Any())
             {
-                return burndownData.DailyCounts;
+                // Concatenate all DailyCounts from different BurndownData entities
+                var allDailyCounts = burndownData.SelectMany(d => d.DailyCounts).ToList();
+                _logger.LogInformation("Burndown Data: " + JsonConvert.SerializeObject(allDailyCounts));
+
+                return allDailyCounts;
             }
 
             return new List<DailyTicketCounts>();
@@ -116,7 +120,7 @@ public class BurndownModel
 
     // nuget install Newtonsoft.Json
     // using Newtonsoft.Json;
-    // public string getBurndownData(ILogger<BurndownModel> _logger, AppDbContext context, int projectId)
+    // public string getBurndownData(AppDbContext context, int projectId)
     // {
     //     var burndownData = context.BurndownData
     //         .Where(b => b.ProjectId == projectId)

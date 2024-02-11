@@ -10,34 +10,125 @@
 <h2>@ViewData["Title"]</h2>
 <!-- Include your burndown chart rendering logic here -->
 
-<input id="bd-button" value="Show Chart" type="button" />
+<p>
+<div class=row>
+    <div class=col-1>
+        <label><b>Chart-Type</b></label>
+    </div>
+    <div class=col-2>
+        <select id="ChartType" class="form-control" style="width:150px;">
+            <option selected>--Select Chart Type--</option>
+            <option>line</option>
+        </select>
+    </div>
+    <div class="col-4">
+        <input id="bd-button" value="Show Chart" type="button" />
+    </div>
+</div>
+</p>
 <br />
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <script type="text/javascript" src="~/js/burndown.js"></script>
 
-<canvas id="myChart" width="400" height="200"></canvas>
+<div id="myChart" style="width: 400px; height: 200px;"></div>
 
 <script>
-    $(function = () {
-        $("bd-button").click(function () {
+    $(function () {
+        $("#bd-button").click(function () {
             $.ajax({
                 type: "POST",
                 url: "/Burndown/GetDailyTicketCounts",
                 data: "",
-                contextType: "application/json, charset=utf-8",
+                contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: OnSuccessResult,
                 error: OnError,
             });
+
             function OnSuccessResult(data) {
+                // Print the received data to the console in JSON format
+                console.log('Received data from server:', JSON.stringify(data, null, 2));
 
+                // Extract only the day, month, and year from the date string
+                var labels = data.map(entry => {
+                    var date = new Date(entry.date);
+                    return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+                });
+
+                // Extract data for different counts
+                var toDoCountData = {
+                    x: labels,
+                    y: data.map(entry => entry.toDoCount),
+                    type: 'line',
+                    name: 'To Do',
+                    line: { color: 'red' }
+                };
+
+                var inProgressCountData = {
+                    x: labels,
+                    y: data.map(entry => entry.inProgressCount),
+                    type: 'line',
+                    name: 'In Progress',
+                    line: { color: 'blue' }
+                };
+
+                var reviewCountData = {
+                    x: labels,
+                    y: data.map(entry => entry.reviewCount),
+                    type: 'line',
+                    name: 'Review',
+                    line: { color: 'yellow' }
+                };
+
+                var doneCountData = {
+                    x: labels,
+                    y: data.map(entry => entry.doneCount),
+                    type: 'line',
+                    name: 'Done',
+                    line: { color: 'green' }
+                };
+
+                // Calculate the total open tickets as the sum of counts on each day minus the "Done Count"
+                var totalOpenTicketsData = {
+                    x: labels,
+                    y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount - entry.doneCount),
+                    type: 'line',
+                    name: 'Total Open Tickets',
+                    line: { color: 'purple' }
+                };
+
+                // Calculate the chart size based on the window size
+                var chartWidth = window.innerWidth - 100; // Adjust as needed
+                var chartHeight = window.innerHeight - 100; // Adjust as needed
+
+                // Create the Plotly chart with dynamic size
+                Plotly.newPlot('myChart', [toDoCountData, inProgressCountData, reviewCountData, doneCountData, totalOpenTicketsData], {
+                    title: 'Burndown Chart',
+                    xaxis: {
+                        title: 'Date'
+                    },
+                    yaxis: {
+                        title: 'Count',
+                        range: [0, Math.max(
+                            ...data.map(entry => entry.toDoCount),
+                            ...data.map(entry => entry.inProgressCount),
+                            ...data.map(entry => entry.reviewCount),
+                            ...data.map(entry => entry.doneCount),
+                            ...data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount - entry.doneCount)
+                            // Add more counts as needed
+                        ) + 5] // Set the y-axis range starting from 0
+                    },
+                    width: chartWidth,
+                    height: chartHeight
+                });
             }
-            
-            function OnError(err) {
 
+
+            function OnError(err) {
+                console.log("COULD NOT FETCH DATA");
             }
         });
-    }); 
+    });
 </script>
