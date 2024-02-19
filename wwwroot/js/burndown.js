@@ -5,7 +5,39 @@ function extractLabels(data) {
     });
 }
 
+function getStartDate(selectedPeriod) {
+    var currentDate = new Date();
+    
+    switch (selectedPeriod) {
+        case '1week':
+            currentDate.setDate(currentDate.getDate() - 7);
+            break;
+        case '2week':
+            currentDate.setDate(currentDate.getDate() - 14);
+            break;
+        case '3week':
+            currentDate.setDate(currentDate.getDate() - 21);
+            break;
+        case '4week':
+            currentDate.setDate(currentDate.getDate() - 28);
+            break;
+        case 'monthly':
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            break;
+        case 'alltime':
+            currentDate.setYear(currentDate.getYear() - 10);
+            break;
+        default:
+            // Default to one week
+            currentDate.setDate(currentDate.getDate() - 7);
+            break;
+    }
+
+    return currentDate.toISOString().split('T')[0];
+}
+
 function createChartData(labels, data, selectedOption) {
+
     switch (selectedOption) {
         case 'Status':
             return {
@@ -105,7 +137,7 @@ function createChartData(labels, data, selectedOption) {
 }
 
 function createChart(chartData, data) {
-    var chartWidth = window.innerWidth - 40;
+    var chartWidth = window.innerWidth - 100;
     var chartHeight = window.innerHeight - 100; 
 
     var datasets = Object.values(chartData);
@@ -131,13 +163,14 @@ function createChart(chartData, data) {
 }
 
 function OnSuccessResult(data) {
-    // console.log('Received data from server:', JSON.stringify(data, null, 2));
-
     var labels = extractLabels(data);
-    var selectedOption = $("#ChartType").val();
-    var chartData = createChartData(labels, data, selectedOption);
-
-    createChart(chartData, data);
+    var selectedType = $("#ChartType").val();
+    var selectedDateRange = $("#TimePeriod").val();
+    var startDate = getStartDate(selectedDateRange);
+    var filteredData = data.filter(entry => entry.date >= startDate);
+    console.log(filteredData);
+    var chartData = createChartData(labels, filteredData, selectedType);
+    createChart(chartData, filteredData);
     adjustFooterPosition();
 }
 
@@ -146,7 +179,6 @@ function OnError(err) {
 }
 
 function fetchDataAndRenderChart(projectId) {
-    console.log("PROJECTID AJAX:::" + projectId);
     $.ajax({
         type: "POST",
         url: "/Burndown/GetDailyTicketCounts?projectId=" + projectId,
@@ -163,7 +195,3 @@ function adjustFooterPosition() {
 
     document.querySelector('.footer').style.marginTop = 1 + chartHeight + 'px';
 }
-
-// $(function () {
-//     $("#bd-button").click(fetchDataAndRenderChart);
-// });
