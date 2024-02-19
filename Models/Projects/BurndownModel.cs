@@ -11,6 +11,7 @@ public class BurndownModel
         builder.AddConsole();
     }).CreateLogger<BurndownModel>();
 
+
     public void StoreBurndownData(AppDbContext context, int projectId)
     {
         try

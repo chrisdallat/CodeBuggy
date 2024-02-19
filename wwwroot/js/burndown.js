@@ -39,7 +39,7 @@ function createChartData(labels, data, selectedOption) {
                 },
                 totalOpenTicketsData: {
                     x: labels,
-                    y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount - entry.doneCount),
+                    y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount),
                     type: 'line',
                     name: 'Total Open Tickets',
                     line: { color: 'purple' }
@@ -84,7 +84,7 @@ function createChartData(labels, data, selectedOption) {
                 },
                 totalOpenTicketsData: {
                     x: labels,
-                    y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount - entry.doneCount),
+                    y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount),
                     type: 'line',
                     name: 'Total Open Tickets',
                     line: { color: 'purple' }
@@ -95,7 +95,7 @@ function createChartData(labels, data, selectedOption) {
             return {
                 totalOpenTicketsData: {
                     x: labels,
-                    y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount - entry.doneCount),
+                    y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount),
                     type: 'line',
                     name: 'Total Open Tickets',
                     line: { color: 'purple' }
@@ -118,7 +118,7 @@ function createChart(chartData, data) {
             title: 'Count',
             range: [0, Math.max(
                 ...datasets.flatMap(dataset => dataset.y),
-                ...data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount - entry.doneCount)
+                ...data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount)
             ) + 3] 
         },
         width: chartWidth,
@@ -145,10 +145,11 @@ function OnError(err) {
     console.log("COULD NOT FETCH DATA");
 }
 
-function fetchDataAndRenderChart() {
+function fetchDataAndRenderChart(projectId) {
+    console.log("PROJECTID AJAX:::" + projectId);
     $.ajax({
         type: "POST",
-        url: "/Burndown/GetDailyTicketCounts",
+        url: "/Burndown/GetDailyTicketCounts?projectId=" + projectId,
         data: "",
         contentType: "application/json; charset=utf-8",
         dataType: "json",
@@ -163,6 +164,6 @@ function adjustFooterPosition() {
     document.querySelector('.footer').style.marginTop = 1 + chartHeight + 'px';
 }
 
-$(function () {
-    $("#bd-button").click(fetchDataAndRenderChart);
-});
+// $(function () {
+//     $("#bd-button").click(fetchDataAndRenderChart);
+// });

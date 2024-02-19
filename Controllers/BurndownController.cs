@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 public class BurndownController : Controller
 {
     private readonly ILogger<BurndownController> _logger;
-    private readonly BurndownModel _burndown;
+    private readonly BurndownModel _burndownModel;
     private readonly AppDbContext _context;
 
     // Private field to store projectId
@@ -22,24 +22,24 @@ public class BurndownController : Controller
     public BurndownController(ILogger<BurndownController> logger, AppDbContext context, UserManager<AppUser> userManager)
     {
         _logger = logger;
-        _burndown = new BurndownModel();
+        _burndownModel = new BurndownModel();
         _context = context;
     }
 
-    public IActionResult Index(int projectId)
+    public IActionResult Burndown(int projectId)
     {
         _logger.LogInformation("Chris " + projectId);
 
-        _projectId = projectId;
+        ViewBag.projectId = projectId;
 
-        return View("../Projects/Burndown"); // needs to be relative to Views/Home for some reason
+        return View(_burndownModel);
     }
 
     [HttpPost]
-    public List<DailyTicketCounts> GetDailyTicketCounts()
+    public List<DailyTicketCounts> GetDailyTicketCounts(int projectId)
     {
-        _logger.LogInformation("Using stored projectId: " + _projectId);
-        List<DailyTicketCounts> data = _burndown.GetBurndownData(_context, 17);
+        _logger.LogInformation("Using stored projectId: " + projectId);
+        List<DailyTicketCounts> data = _burndownModel.GetBurndownData(_context, projectId);
         _logger.LogInformation("DATA in BurndownController: " + JsonConvert.SerializeObject(data));
 
         return data;
