@@ -22,14 +22,13 @@ function getStartDate(selectedPeriod) {
             currentDate.setDate(currentDate.getDate() - 28);
             break;
         case 'monthly':
-            currentDate.setMonth(currentDate.getMonth() - 1);
+            currentDate.setMonth(currentDate.getMonth() - 12);
             break;
         case 'alltime':
-            currentDate.setYear(currentDate.getYear() - 10);
+            currentDate.setMonth(currentDate.getMonth() - 120);
             break;
         default:
-            // Default to one week
-            currentDate.setDate(currentDate.getDate() - 7);
+            currentDate.setMonth(currentDate.getMonth() - 120);
             break;
     }
 
@@ -40,97 +39,90 @@ function createChartData(labels, data, selectedOption) {
 
     switch (selectedOption) {
         case 'Status':
+            default:
             return {
                 toDoCountData: {
                     x: labels,
                     y: data.map(entry => entry.toDoCount),
                     type: 'line',
                     name: 'To Do',
-                    line: { color: 'red' }
+                    line: { color: '#a30402' }
                 },
                 inProgressCountData: {
                     x: labels,
                     y: data.map(entry => entry.inProgressCount),
                     type: 'line',
                     name: 'In Progress',
-                    line: { color: 'blue' }
+                    line: { color: '#f27202' }
                 },
                 reviewCountData: {
                     x: labels,
                     y: data.map(entry => entry.reviewCount),
                     type: 'line',
                     name: 'Review',
-                    line: { color: 'yellow' }
+                    line: { color: '#f2ba02' }
                 },
                 doneCountData: {
                     x: labels,
                     y: data.map(entry => entry.doneCount),
                     type: 'line',
                     name: 'Done',
-                    line: { color: 'green' }
+                    line: { color: '#00cf6b' }
                 },
                 totalOpenTicketsData: {
                     x: labels,
                     y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount),
                     type: 'line',
                     name: 'Total Open Tickets',
-                    line: { color: 'purple' }
+                    line: { color: '#00bacf' }
                 }
             };
         case 'Priority':
             return {
-                nonePriorityCountData: {
-                    x: labels,
-                    y: data.map(entry => entry.nonePriorityCount),
-                    type: 'line',
-                    name: 'None Priority',
-                    line: { color: 'gray' }
-                },
                 lowPriorityCountData: {
                     x: labels,
                     y: data.map(entry => entry.lowPriorityCount),
                     type: 'line',
                     name: 'Low Priority',
-                    line: { color: 'purple' }
+                    line: { color: '#6bcf00' }
                 },
                 mediumPriorityCountData: {
                     x: labels,
                     y: data.map(entry => entry.mediumPriorityCount),
                     type: 'line',
                     name: 'Medium Priority',
-                    line: { color: 'brown' }
+                    line: { color: '#f2ba02' }
                 },
                 highPriorityCountData: {
                     x: labels,
                     y: data.map(entry => entry.highPriorityCount),
                     type: 'line',
                     name: 'High Priority',
-                    line: { color: 'orange' }
+                    line: { color: '#f27202' }
                 },
                 urgentPriorityCountData: {
                     x: labels,
                     y: data.map(entry => entry.urgentPriorityCount),
                     type: 'line',
                     name: 'Urgent Priority',
-                    line: { color: 'purple' }
+                    line: { color: '#a30402' }
                 },
                 totalOpenTicketsData: {
                     x: labels,
                     y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount),
                     type: 'line',
                     name: 'Total Open Tickets',
-                    line: { color: 'purple' }
+                    line: { color: '#00bacf' }
                 }
             };
-        default:
-            // Default
+        case 'Total Open Tickets':
             return {
                 totalOpenTicketsData: {
                     x: labels,
                     y: data.map(entry => entry.toDoCount + entry.inProgressCount + entry.reviewCount),
                     type: 'line',
                     name: 'Total Open Tickets',
-                    line: { color: 'purple' }
+                    line: { color: '#00bacf' }
                 }
             };
     }
@@ -139,7 +131,6 @@ function createChartData(labels, data, selectedOption) {
 function createChart(chartData, data) {
     var chartWidth = window.innerWidth - 100;
     var chartHeight = window.innerHeight - 100; 
-
     var datasets = Object.values(chartData);
 
     Plotly.newPlot('burndownChart', datasets, {
@@ -156,22 +147,60 @@ function createChart(chartData, data) {
         width: chartWidth,
         height: chartHeight,
         legend: {
-            orientation: 'h', // 'h' for horizontal, 'v' for vertical
-            y: 1.2, // Adjust this value to set the legend position
+            orientation: 'h', 
+            y: 1.2, 
         }
     });
 }
 
+function fillShortRange(filteredData, startDate) {
+    if (filteredData.length > 0 && filteredData[0].date !== startDate) {
+        var missingEntry = { date: startDate };
+
+        Object.keys(filteredData[0]).forEach(key => {
+            if (key !== 'date') {
+                missingEntry[key] = filteredData[0][key];
+            }
+        });
+        filteredData.unshift(missingEntry);
+    }
+    return filteredData;
+}
+
+function fillLongRange(filteredData, startDate) {
+    if (filteredData.length > 0) {
+        var missingEntryDate = new Date(startDate);
+        missingEntryDate.setDate(missingEntryDate.getDate() - 1);
+
+        var missingEntry = { date: missingEntryDate.toISOString().split('T')[0] };
+
+        Object.keys(filteredData[0]).forEach(key => {
+            if (key !== 'date') {
+                missingEntry[key] = 0;
+            }
+        });
+
+        filteredData.unshift(missingEntry);
+    }
+    return filteredData;
+}
+
 function OnSuccessResult(data) {
-    var labels = extractLabels(data);
+    var firstDate = data[0].date;
     var selectedType = $("#ChartType").val();
     var selectedDateRange = $("#TimePeriod").val();
     var startDate = getStartDate(selectedDateRange);
     var filteredData = data.filter(entry => entry.date >= startDate);
-    console.log(filteredData);
+    
+    if(firstDate < startDate) {
+        filteredData = fillShortRange(filteredData, startDate);
+    }
+    else {
+        filteredData = fillLongRange(filteredData, firstDate);
+    }
+    var labels = extractLabels(filteredData);
     var chartData = createChartData(labels, filteredData, selectedType);
     createChart(chartData, filteredData);
-    adjustFooterPosition();
 }
 
 function OnError(err) {
@@ -188,10 +217,4 @@ function fetchDataAndRenderChart(projectId) {
         success: OnSuccessResult,
         error: OnError,
     });
-}
-
-function adjustFooterPosition() {
-    var chartHeight = document.getElementById('burndownChart').clientHeight;
-
-    document.querySelector('.footer').style.marginTop = 1 + chartHeight + 'px';
 }

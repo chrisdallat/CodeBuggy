@@ -17,6 +17,7 @@
             <option selected>--Select Chart Type--</option>
             <option>Status</option>
             <option>Priority</option>
+            <option>Total Open Tickets</option>
         </select>
     </div>
     <div class="col-5 d-flex align-items-center">
@@ -42,3 +43,9 @@
 <div id="burndownChart" style="display: flex; justify-content: center; align-items: center;"></div>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script type="text/javascript" src="~/js/burndown.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        fetchDataAndRenderChart(@ViewBag.ProjectId)
+    });
+</script>
