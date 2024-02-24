@@ -1,0 +1,54 @@
+﻿@using CodeBuggy.Models.Projects
+
+@model BurndownModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Burndown Chart";
+}
+
+@if (ViewBag.DeniedAccess == false)
+{
+    <h2>@ViewData["Title"]</h2>
+
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="col-5 d-flex align-items-center">
+            <label class="mr-4" style="padding-top: 8px"><b>Chart-Type</b></label>
+            <select id="ChartType" class="form-control" style="width:200px;">
+                <option selected>--Select Chart Type--</option>
+                <option>Status</option>
+                <option>Priority</option>
+                <option>Total Open Tickets</option>
+            </select>
+        </div>
+        <div class="col-5 d-flex align-items-center">
+            <label class="mr-4" style="padding-top: 8px"><b>Time Period</b></label>
+            <select id="TimePeriod" class="form-control" style="width:200px;">
+                <option selected>--Select Time Period--</option>
+                <option value="1week">1 Week</option>
+                <option value="2week">2 Weeks</option>
+                <option value="3week">3 Weeks</option>
+                <option value="4week">4 Weeks</option>
+                <option value="monthly">Monthly</option>
+                <option value="alltime">All Time</option>
+            </select>
+        </div>
+        <div class="col-3 d-flex align-items-center">
+            <input id="bd-button" value="Show Chart" type="button" onclick="fetchDataAndRenderChart(@ViewBag.ProjectId)" />
+        </div>
+    </div>
+}
+else
+{
+    <div>Access Denied: This page does not exist</div>
+}
+
+<div id="burndownChart" style="display: flex; justify-content: center; align-items: center;"></div>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script type="text/javascript" src="~/js/burndown.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        fetchDataAndRenderChart(@ViewBag.ProjectId)
+    });
+</script>

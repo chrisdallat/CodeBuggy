@@ -5,6 +5,7 @@ using System.Web.Mvc;
 using IHtmlHelper = Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace CodeBuggy.Helpers;
 
@@ -82,6 +83,8 @@ public static class HtmlHelpers
             ticketHtml.AddCssClass("card");
             ticketHtml.MergeAttribute("draggable", "true");
             ticketHtml.MergeAttribute("ondragstart", $"drag(event, this)");
+            string ticketJson = JsonConvert.SerializeObject(ticket);
+            ticketHtml.MergeAttribute("onclick", $"showTicket({ticketJson})");
 
             var ticketStringId = new TagBuilder("h3");
             ticketStringId.AddCssClass("card__title");
