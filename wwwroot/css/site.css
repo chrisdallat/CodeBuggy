@@ -158,9 +158,9 @@ h2 {
     border: 2px solid #3498db;
     border-radius: 5px;
     width: 80%; 
-    max-width: 700px; 
+    max-width: 1920px;
     height: fit-content; 
-    max-height: 800px; 
+    max-height: 1080px; 
     overflow-y: auto;
     position: relative;
 }

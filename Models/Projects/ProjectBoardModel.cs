@@ -156,4 +156,35 @@ public class ProjectBoardModel
 
         return project.Name;
     }
+
+    public async Task<OperationResult> ChangeTicketStatus(ClaimsPrincipal user, int projectId, int ticketId, string status)
+    {
+        if (ValidUserClaim(user, projectId) == false)
+        {
+            return new OperationResult { Success = false, Message = "User Doesn't have access" };
+        }
+
+        var ticketDetails = await _context.Tickets.FirstOrDefaultAsync(p => p.Id == ticketId);
+        if (ticketDetails == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        ticketDetails.Status = Enum.Parse<TicketStatus>(status);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+
+            _burndownModel.StoreBurndownData(_context, projectId);
+
+            return new OperationResult { Success = true, Message = $"Status of ticket changed successfully to {status}." };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error changing status of ticket with ID {ticketId}: {ex.Message}");
+
+            return new OperationResult { Success = false, Message = $"Error changing status of ticket : {ex.Message}" };
+        }
+    }
 }
