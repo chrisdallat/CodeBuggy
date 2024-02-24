@@ -15,6 +15,7 @@ public class BurndownController : Controller
     private readonly ILogger<BurndownController> _logger;
     private readonly BurndownModel _burndownModel;
     private readonly AppDbContext _context;
+    private readonly UserManager<AppUser> _userManager;
 
     // Private field to store projectId
     private int _projectId;
@@ -22,14 +23,25 @@ public class BurndownController : Controller
     public BurndownController(ILogger<BurndownController> logger, AppDbContext context, UserManager<AppUser> userManager)
     {
         _logger = logger;
-        _burndownModel = new BurndownModel();
+        _userManager = userManager;
         _context = context;
+        _burndownModel = new BurndownModel();
     }
 
     public IActionResult Burndown(int projectId)
     {
-        _logger.LogInformation("Chris " + projectId);
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
 
+        if (_burndownModel.ValidUserClaim(_context, _userManager, User, projectId) == false)
+        {
+            ViewBag.DeniedAccess = true;
+            return View();
+        }
+
+        ViewBag.DeniedAccess = false;
         ViewBag.projectId = projectId;
 
         return View(_burndownModel);
@@ -38,7 +50,6 @@ public class BurndownController : Controller
     [HttpPost]
     public List<DailyTicketCounts> GetDailyTicketCounts(int projectId)
     {
-        _logger.LogInformation("Using stored projectId: " + projectId);
         List<DailyTicketCounts> data = _burndownModel.GetBurndownData(_context, projectId);
         _logger.LogInformation("DATA in BurndownController: " + JsonConvert.SerializeObject(data));
 

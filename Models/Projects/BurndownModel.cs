@@ -1,6 +1,9 @@
+using CodeBuggy.Controllers;
 using CodeBuggy.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.Security.Claims;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -10,7 +13,6 @@ public class BurndownModel
     {
         builder.AddConsole();
     }).CreateLogger<BurndownModel>();
-
 
     public void StoreBurndownData(AppDbContext context, int projectId)
     {
@@ -119,22 +121,20 @@ public class BurndownModel
         }
     }
 
-    // nuget install Newtonsoft.Json
-    // using Newtonsoft.Json;
-    // public string getBurndownData(AppDbContext context, int projectId)
-    // {
-    //     var burndownData = context.BurndownData
-    //         .Where(b => b.ProjectId == projectId)
-    //         .Include(b => b.DailyCounts) // Include the owned DailyCounts
-    //         .ToList();
+    public bool ValidUserClaim(AppDbContext context, UserManager<AppUser> userManager, ClaimsPrincipal user, int projectId)
+    {
+        var userId = userManager?.GetUserId(user);
+        if (userId == null)
+        {
+            return false;
+        }
 
-    //     var jsonResult = JsonConvert.SerializeObject(burndownData, Formatting.Indented, new JsonSerializerSettings
-    //     {
-    //         ReferenceLoopHandling = ReferenceLoopHandling.Ignore, // Handle circular references
-    //         // Add other settings as needed
-    //     });
-    //     _logger.LogInformation("Burndown\n " + jsonResult);
-    //     return jsonResult;
-    // }
+        var foundUserClaim = context.UserClaims.FirstOrDefault(p => p.ClaimValue == projectId.ToString() && p.ClaimType == "ProjectAccess" && p.UserId == userId);
+        if (foundUserClaim == null)
+        {
+            return false;
+        }
 
+        return true;
+    }
 }
