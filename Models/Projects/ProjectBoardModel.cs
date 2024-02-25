@@ -3,8 +3,11 @@ using CodeBuggy.Data;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Evaluation;
+using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Net.NetworkInformation;
 using System.Security.Claims;
 
 namespace CodeBuggy.Models.Projects;
@@ -72,11 +75,10 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        int ticketCounter = projectDetails.TicketsId.Count;
-
+        projectDetails.TicketsCount += 1;
         var ticketDetails = new Ticket
         {
-            StringId = $"{projectDetails.Name.ToUpper()}-{++ticketCounter}",
+            StringId = $"{projectDetails.Name.ToUpper()}-{projectDetails.TicketsCount}",
             Title = input.TicketTitle,
             Priority = input.TicketPriorityValue >= TicketPriority.None ? input.TicketPriorityValue : TicketPriority.None,
             Status = input.TicketStatusValue >= TicketStatus.ToDo ? input.TicketStatusValue : TicketStatus.ToDo,
@@ -186,5 +188,83 @@ public class ProjectBoardModel
 
             return new OperationResult { Success = false, Message = $"Error changing status of ticket : {ex.Message}" };
         }
+    }
+
+    public async Task<OperationResult> SaveTicketChanges(ClaimsPrincipal user, int projectId, int ticketId, InputModel input)
+    {
+        if (ValidUserClaim(user, projectId) == false)
+        {
+            return new OperationResult { Success = false, Message = "User Doesn't have access" };
+        }
+
+        var ticketDetails = await _context.Tickets.FirstOrDefaultAsync(p => p.Id == ticketId);
+        if (ticketDetails == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        ticketDetails.Priority = input.TicketPriorityValue;
+        ticketDetails.Status = input.TicketStatusValue;
+        ticketDetails.Description = input.TicketDescription;
+        ticketDetails.Title = input.TicketTitle;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+
+            _burndownModel.StoreBurndownData(_context, projectId);
+
+            return new OperationResult { Success = true, Message = $"Ticket details changed successfully." };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error changing status of ticket with ID {ticketId}: {ex.Message}");
+
+            return new OperationResult { Success = false, Message = $"Error changing ticket details : {ex.Message}" };
+        }
+    }
+
+    public async Task<OperationResult> DeleteTicket(ClaimsPrincipal user, int projectId, int ticketId)
+    {
+        if (ValidUserClaim(user, projectId) == false)
+        {
+            return new OperationResult { Success = false, Message = "User Doesn't have access" };
+        }
+
+        var ticket = await _context.Tickets.FirstOrDefaultAsync(p => p.Id == ticketId);
+        if (ticket == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        try
+        {
+            _context.Tickets.Remove(ticket);
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error: " + ex);
+            return new OperationResult { Success = false, Message = "Error: " + ex.Message };
+        }
+
+        return new OperationResult { Success = true, Message = "Ticket deleted" };
+
+    }
+
+    public async Task<int> GetTicketStatus(ClaimsPrincipal user, int projectId, int ticketId)
+    {
+        if (ValidUserClaim(user, projectId) == false)
+        {
+            return -1;
+        }
+
+        var ticketDetails = await _context.Tickets.FirstOrDefaultAsync(p => p.Id == ticketId);
+        if (ticketDetails == null)
+        {
+            return -1;
+        }
+
+        return (int)ticketDetails.Status;
     }
 }

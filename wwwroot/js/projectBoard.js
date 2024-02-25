@@ -1,8 +1,9 @@
 let drop;
 
 let renderQuill = function (textBox, data) {
-    if (textBox.querySelector('.ql-editor') === null) {
-        const quill = new Quill(textBox, {
+    let quill;
+    if (!textBox.quill) {
+        quill = new Quill(textBox, {
             theme: 'snow',
             placeholder: 'Description...',
             modules: {
@@ -10,26 +11,30 @@ let renderQuill = function (textBox, data) {
                     ['bold', 'italic', 'underline'],
                     [{ 'header': 1 }, { 'header': 2 }],
                     [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    ['blockquote', 'code-block'], // Include 'code-block' as a toolbar item
+                    ['blockquote', 'code-block'],
                     [{ 'color': [] }],
                     ['clean']
                 ]
             }
         });
 
-        const ticketDescriptionInputValue = textBox.nextElementSibling;
-
-        if (data !== null || data !== "") {
-            quill.root.innerHTML = data;
-            ticketDescriptionInputValue.value = quill.root.innerHTML;
-        }
-
-        quill.on('text-change', function () {
-            ticketDescriptionInputValue.value = quill.root.innerHTML;
-        })
+        textBox.quill = quill; 
+    } else {
+        quill = textBox.quill;
     }
-   
+
+    const ticketDescriptionInputValue = textBox.nextElementSibling;
+
+    if (data !== null || data !== "") {
+        quill.root.innerHTML = data;
+        ticketDescriptionInputValue.value = quill.root.innerHTML;
+    }
+
+    quill.on('text-change', function () {
+        ticketDescriptionInputValue.value = quill.root.innerHTML;
+    });
 }
+
 var showPopup = function (popupId) {
     const popup = document.getElementById(popupId);
     let ticketDescription = popup.querySelector("#ticketDescriptionInput");
@@ -43,32 +48,65 @@ var showPopup = function (popupId) {
 
 var closePopup = function (popupId) {
     const popup = document.getElementById(popupId);
-    let ticketTitle = popup.querySelector("#ticketTitleInput").querySelector("input");
-    let ticketPriorityDropdown = popup.querySelector("#ticketPriority");
-    let ticketStatusDropdown = popup.querySelector("#ticketStatus");
-    let ticketDescription = popup.querySelector("#ticketDescriptionInput");
-
-    ticketTitle.value = "";
-    ticketDescription.value = "";
-    ticketPriorityDropdown.querySelector('label[name="Input.TicketPriorityValue"]').textContent = "Priority";
-    ticketStatusDropdown.querySelector('label[name="Input.TicketStatusValue"]').textContent = "Status";
-
-    popup.style.display = 'none';
-    let errorMessage = document.getElementById("errorMessage");
-    if (errorMessage) {
-        errorMessage.remove();
+    if (popup.id === "confirmDeletePopup") {
+        popup.style.display = "none";
+        return;
     }
+    try {
+        let ticketTitle = popup.querySelector("#ticketTitleInput").querySelector("input");
+        let ticketPriorityDropdown = popup.querySelector("#ticketPriority");
+        let ticketStatusDropdown = popup.querySelector("#ticketStatus");
+        let ticketDescription = popup.querySelector("#ticketDescriptionInput");
+
+        ticketTitle.value = "";
+        ticketDescription.value = "";
+        ticketPriorityDropdown.querySelector('label[name="Input.TicketPriorityValue"]').textContent = "Priority";
+        ticketStatusDropdown.querySelector('label[name="Input.TicketStatusValue"]').textContent = "Status";
+
+        popup.style.display = 'none';
+        let errorMessage = document.getElementById("errorMessage");
+        if (errorMessage) {
+            errorMessage.remove();
+        }
+    } catch (e) {
+        console.error(e);
+    }
+    
 }
 
-var showTicket = function (ticket) {
+let getTicketStaus =  async function (ticketId) {
+    let currentUrl = window.location.href;
+    let params = new URLSearchParams(currentUrl.substring(currentUrl.indexOf('?')));
+    let projectId = params.get('projectId');
+    let ticketStatus = -1;
+
+    await fetch(`/Projects/GetTicketStatus?projectId=${projectId}&ticketId=${ticketId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success === true) {
+            ticketStatus = data.ticketStatus;
+        }
+    })
+    .catch(error => {
+        console.error(error.message);
+    });
+
+    return ticketStatus;
+}
+
+var showTicket = async function (ticket) {
     const popup = document.getElementById("editTicketPopup");
-    let form = popup.querySelector("form");
-    form.style.textAlign = "left";
     let popupTitle = popup.querySelector("#popupTitle");
     let ticketTitle = popup.querySelector("#ticketTitleInput").querySelector("input");
     let ticketPriorityDropdown = popup.querySelector("#ticketPriority");
     let ticketStatusDropdown = popup.querySelector("#ticketStatus");
     let ticketDescription = popup.querySelector("#ticketDescriptionInput");
+    let ticketId = popup.querySelector("#changeTicketId");
 
     if (ticketDescription !== undefined) {
         if (ticket.Description !== undefined || ticket.Description !== "") {
@@ -82,6 +120,7 @@ var showTicket = function (ticket) {
     ticketTitle.value = ticket.Title;
     ticketDescription.value = ticket.Description;
     popupTitle.innerHTML = ticket.StringId;
+    ticketId.value = ticket.Id;
 
     let i = 0;
     Array.from(ticketPriorityDropdown.querySelector("select")).forEach(option => {
@@ -93,13 +132,24 @@ var showTicket = function (ticket) {
     });
 
     i = 0;
+
+    let ticketStatus = await getTicketStaus(ticket.Id);
+    if (ticketStatus === -1) {
+        ticketStatus = ticket.Status;
+    }
+
     Array.from(ticketStatusDropdown.querySelector("select")).forEach(option => {
-        if (i === ticket.Status) {
+        if (i === ticketStatus) {
             ticketStatusDropdown.querySelector('label[name="Input.TicketStatusValue"]').textContent = option.value;
             option.selected = true;
         }
         i++;
     });
+
+    let currentURL = window.location.href;
+    let newURL = currentURL + "&ticket=" + ticket.StringId
+
+    // KHALIL please don't forget to change that so it can load a popup with this ticket ID
 
     popup.style.display = 'flex';
 }
@@ -118,12 +168,14 @@ let changeTicketStatus = function (ticketId, newStatus) {
     })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
-            // Handle the response as needed
+            if (data.success === true) {
+                console.log("Changed ticket status");
+            }
         })
         .catch(error => {
             console.error(error.message);
         });
+
 }
 let allowDrop = function (event) {
     event.preventDefault();
@@ -158,22 +210,18 @@ let dropAction = function (event, ticket) {
         case "todoColumn":
             status = "ToDo";
             changeTicketStatus(ticketId, status);
-            console.log(status);
             break;
         case "inProgressColumn":
             status = "InProgress";
             changeTicketStatus(ticketId, status);
-            console.log(status);
             break;
         case "reviewColumn":
             status = "Review";
             changeTicketStatus(ticketId, status);
-            console.log(status);
             break;
         case "doneColumn":
             status = "Done";
             changeTicketStatus(ticketId, status);
-            console.log(status);
             break;
         default:
             break;
@@ -208,7 +256,36 @@ var handleServerMessage = function (form, formData) {
     
     .then(response => response.json())
     .then(data => {
-        console.log(data);
+        if (data.success === false) {
+            let errorMessage = document.getElementById('errorMessage');
+            if (!errorMessage) {
+                errorMessage = document.createElement('span');
+                errorMessage.id = "errorMessage";
+                form.insertAdjacentElement('afterend', errorMessage);
+            }
+            errorMessage.innerHTML = data.message;
+        }
+        else {
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error(error.message);
+    });
+
+}
+
+let handleServerMessageDeleteTicket = function(projectId, ticketId) {
+
+
+    fetch(`/Projects/DeleteTicket?projectId=${projectId}&ticketId=${ticketId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
         if (data.success === false) {
             let errorMessage = document.getElementById('errorMessage');
             if (!errorMessage) {
@@ -247,6 +324,59 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         handleServerMessage(this, new FormData(this));
     });
+
+    const editTicketForm = document.getElementById('editTicketForm');
+
+    editTicketForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        handleServerMessage(this, new FormData(this));
+    });
+
+    const deleteButton = editTicketForm.querySelector("#deleteButton");
+
+    deleteButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        let ticketId;
+        let projectId;
+        let formData = new FormData(editTicketForm);
+
+        for (var entry of formData.entries()) {
+            console.log(entry[0], entry[1]);
+            if (entry[0] === "ticketId") {
+                ticketId = entry[1];
+            }
+            else if (entry[0] === "projectId") {
+                projectId = entry[1];
+            }
+        }
+
+        let confirmDeletePopup = document.querySelector("#confirmDeletePopup");
+        confirmDeletePopup.querySelector(".popup").style.width = "600px";
+        let popupTitle = confirmDeletePopup.querySelector("#popupTitle");
+        popupTitle.innerHTML = "Confirm Deletion";
+        let confirmProjectId = confirmDeletePopup.querySelector("input[name='projectId']");
+        let confirmProjectTicketId = confirmDeletePopup.querySelector("input[name='ticketId']");
+
+        confirmProjectId.value = projectId;
+        confirmProjectTicketId.value = ticketId;
+
+        confirmDeletePopup.style.display = "flex";
+
+        let confirmButton = confirmDeletePopup.querySelector("#confirmDeleteButton");
+        let cancelButton = confirmDeletePopup.querySelector("#cancelDeleteButton");
+        confirmButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            handleServerMessageDeleteTicket(projectId, ticketId);
+        });
+
+        cancelButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            confirmDeletePopup.style.display = "none";
+        });
+
+    });
+
+
 
     // Get all priority select elements
     const prioritySelects = document.querySelectorAll('select[name="Input.TicketPriorityValue"]');

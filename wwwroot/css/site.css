@@ -194,6 +194,8 @@ h2 {
 
 .board {
     display: flex;
+    width: fit-content;
+    width: -moz-fit-content;
 }
 
 .ticket {
@@ -219,8 +221,8 @@ h2 {
     padding: 7px;
     background-color: #f5f5f5;
     color: grey;
-    max-height: 700px;
-    overflow-x: hidden; 
+    max-height: 1050px;
+    overflow: hidden; 
 }
 
 .column-title {
@@ -229,7 +231,8 @@ h2 {
 }
 
 .tickets-container {
-    max-height: 635px;
+    overflow-x: hidden;
+    max-height: 1000px;
     width:297px;
     overflow-y: auto;
     box-sizing: border-box; 
