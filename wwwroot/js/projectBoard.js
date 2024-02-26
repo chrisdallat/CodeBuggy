@@ -310,6 +310,34 @@ let updateLabel = function(selectElement, labelElement) {
     labelElement.textContent = selectedOption.textContent;
 }
 
+// TODO: Fetch LogInfoData to display on ProjectBoard View
+// let fetchLogInfoData = function() {
+
+//     fetch('/api/infoLog') 
+//         .then(response => response.json())
+//         .then(data => {
+
+//             var infoLogContainerHTML = `
+//                 <div id="infoLog-container" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; max-width: calc(100% - 20px); margin: 20px auto; font-family: 'Arial', sans-serif;">
+//                     <div id="messages-container" style="max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #eee; border-radius: 5px; background-color: #fff;">
+//                         <ul id="messages" style="list-style: none; padding: 0; margin: 0;">
+//                             ${generateInfoLogMessages(data)} <!-- Helper function to generate info log messages -->
+//                         </ul>
+//                     </div>
+//                     <div style="display: flex; margin-top: 10px;">
+//                         <input type="text" id="messageInput" style="flex-grow: 1; padding: 8px; margin-right: 5px; border: 1px solid #ccc; border-radius: 3px;" />
+//                         <button id="sendButton" style="padding: 8px; background-color: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;">Send</button>
+//                     </div>
+//                 </div>
+//             `;
+
+//             var placeholderContainer = document.getElementById("infoLogContainerPlaceholder");
+
+//             placeholderContainer.innerHTML = infoLogContainerHTML;
+//         })
+//         .catch(error => console.error('Error fetching info log data:', error));
+// }
+
 document.addEventListener('DOMContentLoaded', function () {
 
     var dropdowns = document.querySelectorAll('.form-control');
@@ -376,38 +404,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
-
-
-    // Get all priority select elements
     const prioritySelects = document.querySelectorAll('select[name="Input.TicketPriorityValue"]');
 
-    // Loop through each select element
     prioritySelects.forEach(function (selectElement) {
-        // Get the corresponding label element
+
         const labelElement = selectElement.parentNode.querySelector('label[name="Input.TicketPriorityValue"]');
 
-        // Add event listener to the select element
         selectElement.addEventListener('change', function () {
-            // Update label text content
             updateLabel(selectElement, labelElement);
         });
     });
 
-    // Get all status select elements
     const statusSelects = document.querySelectorAll('select[name="Input.TicketStatusValue"]');
 
-    // Loop through each status select element
     statusSelects.forEach(function (selectElement) {
-        // Get the corresponding label element
         const labelElement = selectElement.parentNode.querySelector('label[name="Input.TicketStatusValue"]');
-
-        // Add event listener to the status select element
         selectElement.addEventListener('change', function () {
-            // Update status label text content
             updateLabel(selectElement, labelElement);
         });
     });
-
 });
 
 

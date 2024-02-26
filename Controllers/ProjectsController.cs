@@ -5,9 +5,6 @@ using System.Diagnostics;
 using CodeBuggy.Models.Projects;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
-using Humanizer;
-using System.Net.Sockets;
-using System.Threading.Channels;
 
 namespace CodeBuggy.Controllers;
 
@@ -190,6 +187,20 @@ public class ProjectsController : Controller
 
         return Json(new { success = result.Success, message = result.Message });
     }
+
+    // [HttpPost]
+    // public async Task<IActionResult> GetLogInfoMessages(int projectId)
+    // {
+    //     if (User.Identity == null || User.Identity.IsAuthenticated == false)
+    //     {
+    //         return RedirectToAction("Login", "Account");
+    //     }
+
+
+    //     OperationResult result = await _projectBoardModel.DeleteTicket(User, projectId, ticketId);
+
+    //     return Json(new { success = result.Success, message = result.Message });
+    // }
 
     // ******************************************************************************* //
     // ************************************ General ********************************** // 

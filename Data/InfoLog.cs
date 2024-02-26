@@ -15,7 +15,7 @@ namespace CodeBuggy.Data
         DeleteTicket,
         EditTicket,
         MoveTicket,
-        CommentTicket,
+        CommentTicket, //TODO: add when commenting functionality implemented
         Message,
     }
 }

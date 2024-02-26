@@ -3,11 +3,9 @@ using CodeBuggy.Data;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Build.Evaluation;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-using System.Net.NetworkInformation;
 using System.Security.Claims;
 
 namespace CodeBuggy.Models.Projects;
@@ -94,6 +92,8 @@ public class ProjectBoardModel
         _context.Tickets.Add(ticketDetails);
         await _context.SaveChangesAsync();
 
+        _infoLogModel.StoreInfoLog(_context, projectId, ticketDetails.StringId, owner, "", ticketDetails.Status, LogType.AddTicket);
+
         if (ticketDetails?.Id == null || ticketDetails.Id == 0)
         {
             return new OperationResult { Success = false, Message = "Unable to create new ticket" };
@@ -175,10 +175,17 @@ public class ProjectBoardModel
         }
 
         ticketDetails.Status = Enum.Parse<TicketStatus>(status);
+        var username = user.Identity?.Name;
+        if (username == null)
+        {
+            return new OperationResult { Success = false, Message = "Username not found" };
+        }
 
         try
         {
             await _context.SaveChangesAsync();
+
+            _infoLogModel.StoreInfoLog(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, LogType.MoveTicket);
 
             _burndownModel.StoreBurndownData(_context, projectId);
 
@@ -210,10 +217,16 @@ public class ProjectBoardModel
         ticketDetails.Description = input.TicketDescription;
         ticketDetails.Title = input.TicketTitle;
 
+        var username = user.Identity?.Name;
+        if (username == null)
+        {
+            return new OperationResult { Success = false, Message = "Username not found" };
+        }
+
         try
         {
             await _context.SaveChangesAsync();
-
+            _infoLogModel.StoreInfoLog(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, LogType.EditTicket);
             _burndownModel.StoreBurndownData(_context, projectId);
 
             return new OperationResult { Success = true, Message = $"Ticket details changed successfully." };
@@ -239,10 +252,17 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
+        var username = user.Identity?.Name;
+        if (username == null)
+        {
+            return new OperationResult { Success = false, Message = "Username not found" };
+        }
+
         try
         {
             _context.Tickets.Remove(ticket);
             await _context.SaveChangesAsync();
+            _infoLogModel.StoreInfoLog(_context, projectId, ticket.StringId, username, "", ticket.Status, LogType.DeleteTicket);
         }
         catch (Exception ex)
         {

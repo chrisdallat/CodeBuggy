@@ -1,15 +1,5 @@
-using CodeBuggy.Controllers;
 using CodeBuggy.Data;
-using CodeBuggy.Helpers;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Build.Evaluation;
 using Microsoft.CodeAnalysis;
-using Microsoft.DotNet.Scaffolding.Shared.Messaging;
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.Net.NetworkInformation;
-using System.Security.Claims;
 
 namespace CodeBuggy.Models.Projects;
 
