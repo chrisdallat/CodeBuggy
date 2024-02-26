@@ -18,9 +18,10 @@ public class ProjectBoardModel
     private readonly AppDbContext _context;
     private readonly UserManager<AppUser> _userManager;
     private readonly BurndownModel _burndownModel;
+    private readonly InfoLogModel _infoLogModel;
 
     public List<Ticket> Tickets { get; set; }
-    
+
     [BindProperty]
     public InputModel Input { get; set; }
 
@@ -49,6 +50,7 @@ public class ProjectBoardModel
         _context = context;
         _userManager = userManager;
         _burndownModel = new BurndownModel();
+        _infoLogModel = new InfoLogModel();
     }
 
     public async Task<OperationResult> AddTicketToProject(ClaimsPrincipal user, InputModel input, int projectId)
@@ -119,7 +121,7 @@ public class ProjectBoardModel
 
             _burndownModel.StoreBurndownData(_context, projectId);
 
-            Tickets =  tickets;
+            Tickets = tickets;
         }
         catch (Exception ex)
         {

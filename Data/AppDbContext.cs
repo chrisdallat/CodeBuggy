@@ -13,11 +13,9 @@ public class AppDbContext : IdentityDbContext<AppUser>
     }
 
     public DbSet<Project> Projects { get; set; }
-
     public DbSet<Ticket> Tickets { get; set; }
-
     public DbSet<BurndownData> BurndownData { get; set; }
-
+    public DbSet<InfoLog> InfoLog { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
