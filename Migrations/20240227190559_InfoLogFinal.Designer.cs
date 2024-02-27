@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CodeBuggy.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CodeBuggy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240227190559_InfoLogFinal")]
+    partial class InfoLogFinal
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -116,7 +119,7 @@ namespace CodeBuggy.Migrations
                     b.ToTable("BurndownData");
                 });
 
-            modelBuilder.Entity("CodeBuggy.Data.Notification", b =>
+            modelBuilder.Entity("CodeBuggy.Data.InfoLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -124,15 +127,18 @@ namespace CodeBuggy.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Message")
+                    b.Property<string>("LogMessage")
                         .HasColumnType("text");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("InfoLog");
                 });
 
             modelBuilder.Entity("CodeBuggy.Data.Project", b =>
@@ -153,13 +159,6 @@ namespace CodeBuggy.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int>("NotificationCount")
-                        .HasColumnType("integer");
-
-                    b.Property<List<int>>("NotificationIds")
-                        .IsRequired()
-                        .HasColumnType("integer[]");
 
                     b.Property<string>("Owner")
                         .IsRequired()

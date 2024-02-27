@@ -1,15 +1,13 @@
 namespace CodeBuggy.Data
 {
-    public class InfoLog
+    public class Notification
     {
         public int Id { get; set; }
-        public int ProjectId { get; set; }
-        public string? Username { get; set; }
-        public string? LogMessage { get; set; }
+        public string? Message { get; set; }
         public DateTime Timestamp { get; set; }
     }
 
-    public enum LogType
+    public enum NotificationType
     {
         AddTicket,
         DeleteTicket,

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using CodeBuggy.Models.Projects;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json;
 
 namespace CodeBuggy.Controllers;
 
@@ -13,11 +14,15 @@ public class ProjectsController : Controller
     private readonly ILogger<ProjectsController> _logger;
     private readonly ProjectsListModel _projectsListModel;
     private readonly ProjectBoardModel _projectBoardModel;
+    private readonly NotificationModel _notificationModel;
+    private readonly AppDbContext _context;
     public ProjectsController(ILogger<ProjectsController> logger, AppDbContext context, UserManager<AppUser> userManager)
     {
         _logger = logger;
         _projectsListModel = new ProjectsListModel(_logger, context, userManager);
         _projectBoardModel = new ProjectBoardModel(_logger, context, userManager);
+        _notificationModel = new NotificationModel();
+        _context = context;
     }
 
     // ******************************************************************************* //
@@ -188,19 +193,14 @@ public class ProjectsController : Controller
         return Json(new { success = result.Success, message = result.Message });
     }
 
-    // [HttpPost]
-    // public async Task<IActionResult> GetLogInfoMessages(int projectId)
-    // {
-    //     if (User.Identity == null || User.Identity.IsAuthenticated == false)
-    //     {
-    //         return RedirectToAction("Login", "Account");
-    //     }
+    [HttpPost]
+    public List<Notification> GetNotifications(int projectId)
+    {
+        List<Notification> data = _notificationModel.GetNotificationData(_context, projectId);
+        _logger.LogInformation("\n\n\nDATA in ProjectsController: \n\n" + JsonConvert.SerializeObject(data));
 
-
-    //     OperationResult result = await _projectBoardModel.DeleteTicket(User, projectId, ticketId);
-
-    //     return Json(new { success = result.Success, message = result.Message });
-    // }
+        return data;
+    }
 
     // ******************************************************************************* //
     // ************************************ General ********************************** // 

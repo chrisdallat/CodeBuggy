@@ -7,6 +7,7 @@ namespace CodeBuggy.Data
         public Project()
         {
             TicketsCount = 0;
+            NotificationCount = 0;
         }
 
         public int Id { get; set; }
@@ -16,5 +17,7 @@ namespace CodeBuggy.Data
         public string OwnerId { get; set; } = string.Empty;
         public List<int> TicketsId { get; set; } = new List<int>();
         public int TicketsCount { get; set; }
+        public List<int> NotificationIds { get; set; } = new List<int>();
+        public int NotificationCount { get; set; }
     }
 }

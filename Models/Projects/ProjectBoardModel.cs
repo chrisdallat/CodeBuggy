@@ -16,7 +16,7 @@ public class ProjectBoardModel
     private readonly AppDbContext _context;
     private readonly UserManager<AppUser> _userManager;
     private readonly BurndownModel _burndownModel;
-    private readonly InfoLogModel _infoLogModel;
+    private readonly NotificationModel _notificationModel;
 
     public List<Ticket> Tickets { get; set; }
 
@@ -48,7 +48,7 @@ public class ProjectBoardModel
         _context = context;
         _userManager = userManager;
         _burndownModel = new BurndownModel();
-        _infoLogModel = new InfoLogModel();
+        _notificationModel = new NotificationModel();
     }
 
     public async Task<OperationResult> AddTicketToProject(ClaimsPrincipal user, InputModel input, int projectId)
@@ -69,8 +69,8 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        var owner = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
-        if (owner == null)
+        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        if (username == null)
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
@@ -82,7 +82,7 @@ public class ProjectBoardModel
             Title = input.TicketTitle,
             Priority = input.TicketPriorityValue >= TicketPriority.None ? input.TicketPriorityValue : TicketPriority.None,
             Status = input.TicketStatusValue >= TicketStatus.ToDo ? input.TicketStatusValue : TicketStatus.ToDo,
-            CreatedBy = owner,
+            CreatedBy = username,
             CreationDate = DateTime.UtcNow,
             ResolvedBy = "",
             Description = input.TicketDescription,
@@ -92,15 +92,19 @@ public class ProjectBoardModel
         _context.Tickets.Add(ticketDetails);
         await _context.SaveChangesAsync();
 
-        _infoLogModel.StoreInfoLog(_context, projectId, ticketDetails.StringId, owner, "", ticketDetails.Status, LogType.AddTicket);
+        var notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.AddTicket);
 
         if (ticketDetails?.Id == null || ticketDetails.Id == 0)
         {
             return new OperationResult { Success = false, Message = "Unable to create new ticket" };
         }
 
+
         projectDetails.TicketsId.Add(ticketDetails.Id);
+        projectDetails.NotificationIds.Add(notificationId);
+        projectDetails.NotificationCount += 1;
         await _context.SaveChangesAsync();
+
         return new OperationResult { Success = true, Message = "Ticket created successfully!" };
     }
 
@@ -175,19 +179,27 @@ public class ProjectBoardModel
         }
 
         ticketDetails.Status = Enum.Parse<TicketStatus>(status);
-        var username = user.Identity?.Name;
+        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
         if (username == null)
         {
-            return new OperationResult { Success = false, Message = "Username not found" };
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        var projectDetails = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (projectDetails == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
         try
         {
             await _context.SaveChangesAsync();
 
-            _infoLogModel.StoreInfoLog(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, LogType.MoveTicket);
-
+            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.MoveTicket);
+            projectDetails.NotificationIds.Add(notificationId);
+            projectDetails.NotificationCount += 1;
             _burndownModel.StoreBurndownData(_context, projectId);
+            await _context.SaveChangesAsync();
 
             return new OperationResult { Success = true, Message = $"Status of ticket changed successfully to {status}." };
         }
@@ -212,21 +224,54 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        ticketDetails.Priority = input.TicketPriorityValue;
-        ticketDetails.Status = input.TicketStatusValue;
-        ticketDetails.Description = input.TicketDescription;
-        ticketDetails.Title = input.TicketTitle;
+        bool ticketChange = TicketChanges(ticketDetails, input);
+        bool statusChange = false;
 
-        var username = user.Identity?.Name;
+        if (ticketDetails.Status != input.TicketStatusValue)
+        {
+            ticketDetails.Status = input.TicketStatusValue;
+            statusChange = true;
+        }
+
+        if (ticketChange == false && statusChange == false)
+        {
+            return new OperationResult { Success = false, Message = "No changes made to ticket" };
+        }
+
+        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
         if (username == null)
         {
-            return new OperationResult { Success = false, Message = "Username not found" };
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        var projectDetails = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (projectDetails == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
         try
         {
             await _context.SaveChangesAsync();
-            _infoLogModel.StoreInfoLog(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, LogType.EditTicket);
+
+            var notificationId = 0;
+
+            if (ticketChange == true)
+            {
+                notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.EditTicket);
+                projectDetails.NotificationIds.Add(notificationId);
+                projectDetails.NotificationCount += 1;
+            }
+
+            if (statusChange == true)
+            {
+                notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.MoveTicket);
+                projectDetails.NotificationIds.Add(notificationId);
+                projectDetails.NotificationCount += 1;
+            }
+
+            await _context.SaveChangesAsync();
+
             _burndownModel.StoreBurndownData(_context, projectId);
 
             return new OperationResult { Success = true, Message = $"Ticket details changed successfully." };
@@ -238,6 +283,32 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = $"Error changing ticket details : {ex.Message}" };
         }
     }
+
+    public bool TicketChanges(Ticket ticket, InputModel input)
+    {
+        bool changed = false;
+
+        if (ticket.Priority != input.TicketPriorityValue)
+        {
+            ticket.Priority = input.TicketPriorityValue;
+            changed = true;
+        }
+
+        if (ticket.Description != input.TicketDescription)
+        {
+            ticket.Description = input.TicketDescription;
+            changed = true;
+        }
+
+        if (ticket.Title != input.TicketTitle)
+        {
+            ticket.Title = input.TicketTitle;
+            changed = true;
+        }
+
+        return changed;
+    }
+
 
     public async Task<OperationResult> DeleteTicket(ClaimsPrincipal user, int projectId, int ticketId)
     {
@@ -252,17 +323,27 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        var username = user.Identity?.Name;
+        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
         if (username == null)
         {
-            return new OperationResult { Success = false, Message = "Username not found" };
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        var projectDetails = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (projectDetails == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
         try
         {
             _context.Tickets.Remove(ticket);
             await _context.SaveChangesAsync();
-            _infoLogModel.StoreInfoLog(_context, projectId, ticket.StringId, username, "", ticket.Status, LogType.DeleteTicket);
+            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticket.StringId, username, "", ticket.Status, NotificationType.DeleteTicket);
+            projectDetails.NotificationIds.Add(notificationId);
+            projectDetails.NotificationCount += 1;
+            await _context.SaveChangesAsync();
+
         }
         catch (Exception ex)
         {
