@@ -86,6 +86,11 @@ public static class HtmlHelpers
             string ticketJson = JsonConvert.SerializeObject(ticket);
             ticketHtml.MergeAttribute("onclick", $"showTicket({ticketJson})");
 
+            var ticketId = new TagBuilder("div");
+            ticketId.GenerateId("draggedTicketId");
+            ticketId.MergeAttribute("style", "display: none");
+            ticketId.InnerHtml = ticket.Id.ToString();
+
             var ticketStringId = new TagBuilder("h3");
             ticketStringId.AddCssClass("card__title");
             ticketStringId.InnerHtml = $"{ticket.StringId} <span class='priority'>{ticket.Priority}</span>";
@@ -116,6 +121,7 @@ public static class HtmlHelpers
 
             cardArrow.InnerHtml += svg;
 
+            ticketHtml.InnerHtml += ticketId;
             ticketHtml.InnerHtml += ticketStringId;
             ticketHtml.InnerHtml += ticketTitle;
             ticketHtml.InnerHtml += ticketCreateDate;

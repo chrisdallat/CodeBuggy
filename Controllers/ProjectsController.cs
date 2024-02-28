@@ -5,6 +5,9 @@ using System.Diagnostics;
 using CodeBuggy.Models.Projects;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
+using Humanizer;
+using System.Net.Sockets;
+using System.Threading.Channels;
 
 namespace CodeBuggy.Controllers;
 
@@ -125,6 +128,65 @@ public class ProjectsController : Controller
         }
 
         OperationResult result = await _projectBoardModel.AddTicketToProject(User, input, projectId);
+
+        return Json(new { success = result.Success, message = result.Message });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ChangeTicketStatus(int projectId, int ticketId, string status)
+    {
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        OperationResult result = await _projectBoardModel.ChangeTicketStatus(User ,projectId, ticketId, status);
+
+        return Json(new { success = result.Success, message = result.Message});
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SaveTicketChanges(int projectId, int ticketId, ProjectBoardModel.InputModel input)
+    {
+
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        OperationResult result = await _projectBoardModel.SaveTicketChanges(User, projectId, ticketId, input);
+
+        return Json(new { success = result.Success, message = result.Message });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> GetTicketStatus(int projectId, int ticketId)
+    {
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        int ticketStatusInt = await _projectBoardModel.GetTicketStatus(User, projectId, ticketId);
+
+        if (ticketStatusInt != -1)
+        {
+            return Json(new { success = true, ticketStatus = ticketStatusInt });
+        }
+
+        return Json(new { success = true, ticketStatus = ticketStatusInt });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteTicket(int projectId, int ticketId)
+    {
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+
+        OperationResult result = await _projectBoardModel.DeleteTicket(User, projectId, ticketId);
 
         return Json(new { success = result.Success, message = result.Message });
     }

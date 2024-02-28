@@ -16,9 +16,9 @@
         var enumValues = Enum.GetValues(typeof(TicketStatus)).Cast<TicketStatus>();
         var options = enumValues.Select(e => $"<option value='{e}'>{e}</option>");
         var dropdownHtml = $@"
-<select name='Input.TicketStatusValue' class='form-control'>
-{string.Join("", options)}
-</select>";
+            <select id='statusSelect' name='Input.TicketStatusValue' class='form-control'>
+            {string.Join("", options)}
+            </select>";
         return new HtmlString(dropdownHtml);
     };
 
@@ -27,9 +27,9 @@
         var enumValues = Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>();
         var options = enumValues.Select(e => $"<option value='{e}'>{e}</option>");
         var dropdownHtml = $@"
-<select name='Input.TicketPriorityValue' class='form-control'>
-{string.Join("", options)}
-</select>";
+            <select id='prioritySelect' name='Input.TicketPriorityValue' class='form-control'>
+            {string.Join("", options)}
+            </select>";
         return new HtmlString(dropdownHtml);
     };
 }
@@ -88,58 +88,81 @@ else
 @****************************************************************@
 @{
     string addTicketForm = $@"
-<form id='addTicketForm' action='AddTicket' method='post'>";
+        <form id='addTicketForm' action='AddTicket' method='post' style='text-align: left;'>";
 
     string editTicketForm = $@"
-<form id='editTicketForm' action='editTicket' method='post'>";
+        <form id='editTicketForm' action='SaveTicketChanges' method='post' style='text-align: left;'>";
+
+    string ticketId = $@"<input type='hidden' name='ticketId' id='changeTicketId' style='display: none'></input>";
 
     string ticketTitleInput = @"
-<div id='ticketTitleInput' class='form-floating mb-3' style='max-width: 380px'>
-<input name='Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true'
-placeholder='sadasdsaadsas'/>
-<label name='Input.TicketTitle'>Title</label>
-</div>";
+        <div id='ticketTitleInput' class='form-floating mb-3' style='max-width: 380px'>
+        <input name='Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true'
+        placeholder=''/>
+        <label name='Input.TicketTitle'>Title</label>
+        </div>";
 
     string ticketPriorityDropdown = $@"
-<div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 380px'>
-{RenderProjectTicketPriorityDropdownList()}
-<label name='Input.TicketPriorityValue'>Priority</label>
-<div class='dropdown-arrow'>▼</div>
-</div>";
+        <div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+        {RenderProjectTicketPriorityDropdownList()}
+        <label name='Input.TicketPriorityValue'>Priority</label>
+        <div class='dropdown-arrow'>▼</div>
+        </div>";
 
     string ticketStatusDropdown = $@"
-<div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 380px'>
-{RenderProjectTicketStatusDropdownList()}
-<label name='Input.TicketStatusValue'>Status</label>
-<div class='dropdown-arrow'>▼</div>
-</div>";
+        <div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+        {RenderProjectTicketStatusDropdownList()}
+        <label name='Input.TicketStatusValue'>Status</label>
+        <div class='dropdown-arrow'>▼</div>
+        </div>";
 
     string ticketDescriptionInput = @"
-<div id='ticketDescriptionInput' class='form-floating mb-3' style='max-width: 380px'>
-<textarea id='codeEditor' name='Input.TicketDescription' class='form-control'
-autocomplete='TicketDescription' aria-required='true'
-placeholder='' style='resize: none; max-width: 100%; height: 150px; overflow-y: auto;'
-maxlength='5000'></textarea>
-<label name='Input.TicketDescription'>Description</label>
-</div>";
+        <div id='ticketDescriptionInput' class='form-floating mb-3'>
+            <input name='Input.TicketDescription' type='hidden'>
+        </div>
+        <input type='hidden' id='ticketDescription' name='Input.TicketDescription'>";
 
     string projectIdDOM = $@"<input type='hidden' name='projectId' value='{@ViewBag.ProjectId}' />";
 
+    string formButtons = @"
+        <div style='display: flex; flex-wrap: wrap; justify-content: center;'>
+        ";
+
     string submitButton = @"
-<button id='submitButton' type='submit' class='button-general mb-3 mt-5'
-style='text-align: center; max-width: 160px'>
-Create Ticket
-</button>";
+        <button id='submitButton' type='submit' class='button-general btn-primary mb-3 mt-5'
+        style='margin-right: 20px; text-align: center; max-width: 200px'>
+        ";
+
+    string deleteButton = @"
+        <button id='deleteButton' type='button' class='button-general btn-danger mb-3 mt-5'
+        style='text-align: center; max-width: 160px'>
+        ";
+
+    string confirmTicketDelete = $@"
+        <div style='display: flex; flex-wrap: wrap; justify-content: center;'>
+            <input type='hidden' name='projectId' value='{@ViewBag.ProjectId}' />
+            <input type='hidden' name='ticketId'></input>
+            <button id='confirmDeleteButton' type='button' class='button-general btn-danger mb-3 mt-5'
+            style='margin-right: 20px; text-align: center; max-width: 160px'>Confirm</button>
+            <button id='cancelDeleteButton' type='button' class='button-general btn-primary mb-3 mt-5'
+            style='text-align: center; max-width: 200px'>Cancel</button>
+        </div>
+        ";
 
     var addTicketFormDOM = addTicketForm + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) +
-    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + submitButton + "</form>";
+    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + submitButton + "Create Ticket</button>" +  "</form>";
     var addTicketPopup = new Popup();
     var addTicketPopupHTML = addTicketPopup.CreatePopup("addTicketPopup", "Add Ticket", new string[] { addTicketFormDOM });
     @Html.Raw(addTicketPopupHTML)
 
-    var editTicketDOM = editTicketForm + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) +
-    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + submitButton + "</form>";
+    var editTicketDOM = editTicketForm + ticketId + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) +
+    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + formButtons + submitButton + "Save Changes</button>" + deleteButton + "Delete</button>" + "</div>" + "</form>";
     var editTicketPopup = new Popup();
     var editTicketPopupHTML = editTicketPopup.CreatePopup("editTicketPopup", "", new string[] { editTicketDOM });
     @Html.Raw(editTicketPopupHTML)
+
+    var deleteTicketConfirmDOM = confirmTicketDelete;
+    var deleteTicketConfirmPopup = new Popup();
+    var deleteTicketConfirmHTML = deleteTicketConfirmPopup.CreatePopup("confirmDeletePopup", "", new string[] { confirmTicketDelete });
+    @Html.Raw(deleteTicketConfirmHTML)
 }
