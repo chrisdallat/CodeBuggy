@@ -10,23 +10,22 @@ public class NotificationModel
         builder.AddConsole();
     }).CreateLogger<NotificationModel>();
 
-    public int StoreNotification(AppDbContext context, int projectId, string ticketId, string username, string message, TicketStatus status, NotificationType notificationType)
+    public int StoreNotification(AppDbContext context, int projectId, string ticketId, string username, string message, TicketStatus ticketStatus, NotificationType notificationType)
     {
-
+        var status = FormatStatus(ticketStatus);
         var info = new Notification
         {
             Message = FormatNotification(ticketId, username, message, status, notificationType),
             Timestamp = DateTime.UtcNow,
         };
-
-        _logger.LogInformation("StoreNotification: " + projectId.ToString() + "\n" + info.Message + "\n" + info.Timestamp);
+        
         context.Notifications.Add(info);
         context.SaveChanges();
 
         return info.Id;
     }
 
-    private string FormatNotification(string ticketId, string username, string message, TicketStatus status, NotificationType notificationType)
+    private string FormatNotification(string ticketId, string username, string message, string status, NotificationType notificationType)
     {
 
         string formatted;
@@ -34,19 +33,19 @@ public class NotificationModel
         switch (notificationType)
         {
             case NotificationType.AddTicket:
-                formatted = $"{username} added ticket '{ticketId}'";
+                formatted = $"{username} added ticket {ticketId}";
                 break;
 
             case NotificationType.DeleteTicket:
-                formatted = $"{username} deleted ticket '{ticketId}'";
+                formatted = $"{username} deleted ticket {ticketId}";
                 break;
 
             case NotificationType.EditTicket:
-                formatted = $"{username} edited ticket '{ticketId}'";
+                formatted = $"{username} edited ticket {ticketId}";
                 break;
 
             case NotificationType.MoveTicket:
-                formatted = $"{username} changed the status of ticket '{ticketId}' to '{status}'";
+                formatted = $"{username} changed the status of ticket {ticketId} to {status}";
                 break;
 
             case NotificationType.CommentTicket:
@@ -65,6 +64,33 @@ public class NotificationModel
         return formatted;
     }
 
+    public string FormatStatus(TicketStatus status)
+    {
+
+        string formattedStatus;
+
+        switch (status)
+        {
+            case TicketStatus.ToDo:
+                formattedStatus = "TO DO";
+                break;
+            case TicketStatus.InProgress:
+                formattedStatus = "IN PROGRESS";
+                break;
+            case TicketStatus.Review:
+                formattedStatus = "REVIEW";
+                break;
+            case TicketStatus.Done:
+                formattedStatus = "DONE";
+                break;
+            default:
+                formattedStatus = "UNKNOWN STATUS";
+                break;
+        }
+
+        return formattedStatus;
+    }
+
     public List<Notification> GetNotificationData(AppDbContext context, int projectId)
     {
         try
@@ -78,12 +104,11 @@ public class NotificationModel
             var notifications = context.Notifications
                 .Where(t => project.NotificationIds.Contains(t.Id))
                 .ToList();
-            
+
             return notifications;
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error retrieving Notification data: " + ex);
             return new List<Notification>();
         }
     }

@@ -276,6 +276,8 @@ var handleServerMessage = function (form, formData) {
 }
 
 let handleServerMessageDeleteTicket = function(projectId, ticketId) {
+
+
     fetch(`/Projects/DeleteTicket?projectId=${projectId}&ticketId=${ticketId}`, {
         method: 'POST',
         headers: {
@@ -307,38 +309,6 @@ let updateLabel = function(selectElement, labelElement) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     labelElement.textContent = selectedOption.textContent;
 }
-
-// function fetchNotifications(projectId) {
-//     fetch(`/Projects/GetNotifications?projectId=${projectId}`, {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//         },
-//     })
-//     .then(response => response.json())
-//     .then(data => {
-//         console.log("Received data:", data);
-//         var NotificationsHTML = `
-//             <div id="infoLog-container" style="border: 1px solid #ccc; padding: 10px; border-radius: 5px; max-width: calc(100% - 20px); margin: 20px auto; font-family: 'Arial', sans-serif;">
-//                 <div id="messages-container" style="max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid #eee; border-radius: 5px; background-color: #fff;">
-//                     <ul id="messages" style="list-style: none; padding: 0; margin: 0;">
-//                         ${data.map(notification => `<li>${notification.Timestamp}: ${notification.Message}</li>`).join('')}
-//                     </ul>
-//                 </div>
-//                 <div style="display: flex; margin-top: 10px;">
-//                     <input type="text" id="messageInput" style="flex-grow: 1; padding: 8px; margin-right: 5px; border: 1px solid #ccc; border-radius: 3px;" />
-//                     <button id="sendButton" style="padding: 8px; background-color: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;">Send</button>
-//                 </div>
-//             </div>
-//         `;
-
-//         var placeholderContainer = document.getElementById("NotificationsPlaceholder");
-
-//         placeholderContainer.innerHTML = NotificationsHTML;
-//     })
-//     .catch(error => console.error('Error fetching info log data:', error));
-// }
-
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -436,11 +406,10 @@ let fetchAndDisplayNotifications = function(projectId) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
-        var notificationsContainer = document.getElementById("notificationsContainer");
-        if (notificationsContainer) {
-            notificationsContainer.innerHTML = generateNotificationHTML(data);
-            notificationsContainer.scrollTop = notificationsContainer.scrollHeight;
+        var notificationContainer = document.getElementById("notificationContainer");
+        if (notificationContainer) {
+            notificationContainer.innerHTML = generateNotificationHTML(data);
+            notificationContainer.scrollTop = notificationContainer.scrollHeight;
         }
         return data;
     })
@@ -448,7 +417,7 @@ let fetchAndDisplayNotifications = function(projectId) {
 }
 
 let generateNotificationHTML = function(notifications) {
-    return `<ul>${notifications.map(notification => `<li>${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</li>`).join('')}</ul>`;
+    return `<div class="notification-list">${notifications.map(notification => `<div class="notification-item">${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</div>`).join('')}</div>`;
 }
 
 function formatTimestamp(timestamp) {

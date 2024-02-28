@@ -197,8 +197,7 @@ public class ProjectsController : Controller
     public List<Notification> GetNotifications(int projectId)
     {
         List<Notification> data = _notificationModel.GetNotificationData(_context, projectId);
-        _logger.LogInformation("\n\n\nDATA in ProjectsController: \n\n" + JsonConvert.SerializeObject(data));
-
+        
         return data;
     }
 
