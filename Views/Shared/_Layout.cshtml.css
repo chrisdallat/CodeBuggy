@@ -40,7 +40,7 @@ button.accept-policy {
 }
 
 .footer {
-  position: flex;
+  position: absolute;
   bottom: 0;
   width: 100%;
   background-color: #f6f6f6;

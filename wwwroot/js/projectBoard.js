@@ -276,8 +276,6 @@ var handleServerMessage = function (form, formData) {
 }
 
 let handleServerMessageDeleteTicket = function(projectId, ticketId) {
-
-
     fetch(`/Projects/DeleteTicket?projectId=${projectId}&ticketId=${ticketId}`, {
         method: 'POST',
         headers: {
@@ -429,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-function fetchAndDisplayNotifications(projectId) {
+let fetchAndDisplayNotifications = function(projectId) {
     fetch(`/Projects/GetNotifications?projectId=${projectId}`, {
         method: 'POST',
         headers: {
@@ -438,19 +436,25 @@ function fetchAndDisplayNotifications(projectId) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("Received notifications:", data);
-
-        var notificationsContainer = document.getElementById("NotificationsPlaceholder");
+        console.log(data);
+        var notificationsContainer = document.getElementById("notificationsContainer");
         if (notificationsContainer) {
             notificationsContainer.innerHTML = generateNotificationHTML(data);
+            notificationsContainer.scrollTop = notificationsContainer.scrollHeight;
         }
+        return data;
     })
     .catch(error => console.error('Error fetching notifications:', error));
 }
 
-function generateNotificationHTML(notifications) {
-    return `<ul>${notifications.map(notification => `<li>${notification.Timestamp}: ${notification.Message}</li>`).join('')}</ul>`;
+let generateNotificationHTML = function(notifications) {
+    return `<ul>${notifications.map(notification => `<li>${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</li>`).join('')}</ul>`;
 }
 
+function formatTimestamp(timestamp) {
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+    const formattedDate = new Date(timestamp).toLocaleString('en-GB', options);
+    return formattedDate;
+}
 
 
