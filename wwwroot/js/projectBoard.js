@@ -1,6 +1,5 @@
-let drop;
-
-let renderQuill = function (textBox, data) {
+var drop;
+var renderQuill = function (textBox, data) {
     let quill;
     if (!textBox.quill) {
         quill = new Quill(textBox, {
@@ -74,7 +73,7 @@ var closePopup = function (popupId) {
     
 }
 
-let getTicketStaus =  async function (ticketId) {
+var getTicketStaus =  async function (ticketId) {
     let currentUrl = window.location.href;
     let params = new URLSearchParams(currentUrl.substring(currentUrl.indexOf('?')));
     let projectId = params.get('projectId');
@@ -154,13 +153,13 @@ var showTicket = async function (ticket) {
     popup.style.display = 'flex';
 }
 
-let changeTicketStatus = function (ticketId, newStatus) {
+var changeTicketStatus = async function (ticketId, newStatus) {
     let currentUrl = window.location.href;
     let params = new URLSearchParams(currentUrl.substring(currentUrl.indexOf('?')));
     let projectId = params.get('projectId');
 
 
-    fetch(`/Projects/ChangeTicketStatus?projectId=${projectId}&ticketId=${ticketId}&status=${newStatus}`, {
+    await fetch(`/Projects/ChangeTicketStatus?projectId=${projectId}&ticketId=${ticketId}&status=${newStatus}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -168,6 +167,8 @@ let changeTicketStatus = function (ticketId, newStatus) {
     })
         .then(response => response.json())
         .then(data => {
+
+    console.log(data)
             if (data.success === true) {
                 console.log("Changed ticket status");
             }
@@ -177,13 +178,23 @@ let changeTicketStatus = function (ticketId, newStatus) {
         });
 
 }
-let allowDrop = function (event) {
+var allowDrop = function (event) {
     event.preventDefault();
 }
 
-let dropAction = function (event, ticket) {
+var findNearestColumnId = function(element) {
+    while (element) {
+        if (element.classList.contains("column")) {
+            return element;
+        }
+        element = element.parentElement;
+    }
+    return null; 
+}
 
-    let dropzone = event.target;
+var dropAction = async function (event, ticket) {
+
+    let dropzone = findNearestColumnId(event.target);
     let ticketId;
     ticketId = parseInt(ticket.firstChild.textContent, 10);
 
@@ -191,11 +202,34 @@ let dropAction = function (event, ticket) {
         return;
     }
 
-    let dropzoneColumnContainer = dropzone.closest('.column').getElementsByClassName('tickets-container')[0];
+    let status = undefined;
+    switch (dropzone.id) {
+        case "todoColumn":
+            status = "ToDo";
+            break;
+        case "inProgressColumn":
+            status = "InProgress";
+            break;
+        case "reviewColumn":
+            status = "Review";
+            break;
+        case "doneColumn":
+            status = "Done";
+            break;
+        default:
+            break;
+    }
+
+    if (status === undefined) {
+        console.error("Couldn't move ticket");
+        return;
+    }
+
+    let dropzoneColumnContainer = dropzone.querySelector('.tickets-container');
     if (dropzoneColumnContainer) {
 
         // Append a clone of the ticket to the new column
-  
+
         dropzoneColumnContainer.appendChild(ticket.cloneNode(true));
 
         // Remove ticket from original column
@@ -205,30 +239,11 @@ let dropAction = function (event, ticket) {
         console.error("Parent column not found");
     }
 
-    let status;
-    switch (dropzone.id) {
-        case "todoColumn":
-            status = "ToDo";
-            changeTicketStatus(ticketId, status);
-            break;
-        case "inProgressColumn":
-            status = "InProgress";
-            changeTicketStatus(ticketId, status);
-            break;
-        case "reviewColumn":
-            status = "Review";
-            changeTicketStatus(ticketId, status);
-            break;
-        case "doneColumn":
-            status = "Done";
-            changeTicketStatus(ticketId, status);
-            break;
-        default:
-            break;
-    }
+    await changeTicketStatus(ticketId, status);
+
 }
 
-let drag = function(dragEvent, ticket) {
+var drag = function(dragEvent, ticket) {
 
     // This gets called when event drop gets dispatched
     drop = function (dropEvent) {
@@ -275,7 +290,7 @@ var handleServerMessage = function (form, formData) {
 
 }
 
-let handleServerMessageDeleteTicket = function(projectId, ticketId) {
+var handleServerMessageDeleteTicket = function(projectId, ticketId) {
 
 
     fetch(`/Projects/DeleteTicket?projectId=${projectId}&ticketId=${ticketId}`, {
@@ -305,7 +320,7 @@ let handleServerMessageDeleteTicket = function(projectId, ticketId) {
 
 }
 
-let updateLabel = function(selectElement, labelElement) {
+var updateLabel = function(selectElement, labelElement) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     labelElement.textContent = selectedOption.textContent;
 }
@@ -375,8 +390,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     });
-
-
 
     // Get all priority select elements
     const prioritySelects = document.querySelectorAll('select[name="Input.TicketPriorityValue"]');
