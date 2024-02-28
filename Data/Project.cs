@@ -1,6 +1,4 @@
-﻿using PagedList;
-
-namespace CodeBuggy.Data
+﻿namespace CodeBuggy.Data
 {
     public class Project
     {

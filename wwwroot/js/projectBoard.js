@@ -154,13 +154,13 @@ var showTicket = async function (ticket) {
     popup.style.display = 'flex';
 }
 
-var changeTicketStatus = function (ticketId, newStatus) {
+var changeTicketStatus = async function (ticketId, newStatus) {
     let currentUrl = window.location.href;
     let params = new URLSearchParams(currentUrl.substring(currentUrl.indexOf('?')));
     let projectId = params.get('projectId');
 
 
-    fetch(`/Projects/ChangeTicketStatus?projectId=${projectId}&ticketId=${ticketId}&status=${newStatus}`, {
+    await fetch(`/Projects/ChangeTicketStatus?projectId=${projectId}&ticketId=${ticketId}&status=${newStatus}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -238,8 +238,6 @@ var dropAction = async function (event, ticket) {
 }
 
 var drag = function(dragEvent, ticket) {
-
-    // This gets called when event drop gets dispatched
     drop = function (dropEvent) {
         dropEvent.preventDefault();
         try {

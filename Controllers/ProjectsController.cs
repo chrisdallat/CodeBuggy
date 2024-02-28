@@ -6,7 +6,6 @@ using CodeBuggy.Models.Projects;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
-
 namespace CodeBuggy.Controllers;
 
 public class ProjectsController : Controller

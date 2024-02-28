@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Net.NetworkInformation;
 using System.Security.Claims;
 
 namespace CodeBuggy.Models.Projects;
@@ -249,7 +250,6 @@ public class ProjectBoardModel
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
-
         try
         {
             await _context.SaveChangesAsync();
