@@ -192,12 +192,6 @@ h2 {
     color: red;
 }
 
-.board {
-    display: flex;
-    width: fit-content;
-    width: -moz-fit-content;
-}
-
 .ticket {
     margin: 10px 0;
     padding: 5px;
@@ -358,7 +352,18 @@ h2 {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24
 }
 
-.fixed-height-container {
+.board {
+    display: flex;
+    width: fit-content;
+    width: -moz-fit-content;
+}
+
+.board-container {
+    width: fit-content;
+    width: -moz-fit-content;
+}
+
+.fixed-notification-container {
     margin-top: 30px;
     margin-bottom: 30px;
     height: 200px; 
