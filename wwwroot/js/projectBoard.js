@@ -1,6 +1,6 @@
-let drop;
+var drop;
 
-let renderQuill = function (textBox, data) {
+var renderQuill = function (textBox, data) {
     let quill;
     if (!textBox.quill) {
         quill = new Quill(textBox, {
@@ -74,7 +74,7 @@ var closePopup = function (popupId) {
     
 }
 
-let getTicketStaus =  async function (ticketId) {
+var getTicketStatus =  async function (ticketId) {
     let currentUrl = window.location.href;
     let params = new URLSearchParams(currentUrl.substring(currentUrl.indexOf('?')));
     let projectId = params.get('projectId');
@@ -133,7 +133,7 @@ var showTicket = async function (ticket) {
 
     i = 0;
 
-    let ticketStatus = await getTicketStaus(ticket.Id);
+    let ticketStatus = await getTicketStatus(ticket.Id);
     if (ticketStatus === -1) {
         ticketStatus = ticket.Status;
     }
@@ -154,7 +154,7 @@ var showTicket = async function (ticket) {
     popup.style.display = 'flex';
 }
 
-let changeTicketStatus = function (ticketId, newStatus) {
+var changeTicketStatus = function (ticketId, newStatus) {
     let currentUrl = window.location.href;
     let params = new URLSearchParams(currentUrl.substring(currentUrl.indexOf('?')));
     let projectId = params.get('projectId');
@@ -177,13 +177,24 @@ let changeTicketStatus = function (ticketId, newStatus) {
         });
 
 }
-let allowDrop = function (event) {
+
+var allowDrop = function (event) {
     event.preventDefault();
 }
 
-let dropAction = function (event, ticket) {
+var findNearestColumnId = function(element) {
+    while (element) {
+        if (element.classList.contains("column")) {
+            return element;
+        }
+        element = element.parentElement;
+    }
+    return null; 
+}
 
-    let dropzone = event.target;
+var dropAction = async function (event, ticket) {
+
+    let dropzone = findNearestColumnId(event.target);
     let ticketId;
     ticketId = parseInt(ticket.firstChild.textContent, 10);
 
@@ -191,44 +202,42 @@ let dropAction = function (event, ticket) {
         return;
     }
 
-    let dropzoneColumnContainer = dropzone.closest('.column').getElementsByClassName('tickets-container')[0];
-    if (dropzoneColumnContainer) {
-
-        // Append a clone of the ticket to the new column
-  
-        dropzoneColumnContainer.appendChild(ticket.cloneNode(true));
-
-        // Remove ticket from original column
-        ticket.parentElement.removeChild(ticket);
-
-    } else {
-        console.error("Parent column not found");
-    }
-
-    let status;
+    let status = undefined;
     switch (dropzone.id) {
         case "todoColumn":
             status = "ToDo";
-            changeTicketStatus(ticketId, status);
             break;
         case "inProgressColumn":
             status = "InProgress";
-            changeTicketStatus(ticketId, status);
             break;
         case "reviewColumn":
             status = "Review";
-            changeTicketStatus(ticketId, status);
             break;
         case "doneColumn":
             status = "Done";
-            changeTicketStatus(ticketId, status);
             break;
         default:
             break;
     }
+
+    if (status === undefined) {
+        console.error("Couldn't move ticket");
+        return;
+    }
+
+    let dropzoneColumnContainer = dropzone.querySelector('.tickets-container');
+    if (dropzoneColumnContainer) {
+        dropzoneColumnContainer.appendChild(ticket.cloneNode(true));
+        ticket.parentElement.removeChild(ticket);
+    } else {
+        console.error("Parent column not found");
+    }
+
+    await changeTicketStatus(ticketId, status);
+
 }
 
-let drag = function(dragEvent, ticket) {
+var drag = function(dragEvent, ticket) {
 
     // This gets called when event drop gets dispatched
     drop = function (dropEvent) {
@@ -275,7 +284,7 @@ var handleServerMessage = function (form, formData) {
 
 }
 
-let handleServerMessageDeleteTicket = function(projectId, ticketId) {
+var handleServerMessageDeleteTicket = function(projectId, ticketId) {
 
 
     fetch(`/Projects/DeleteTicket?projectId=${projectId}&ticketId=${ticketId}`, {
@@ -305,7 +314,7 @@ let handleServerMessageDeleteTicket = function(projectId, ticketId) {
 
 }
 
-let updateLabel = function(selectElement, labelElement) {
+var updateLabel = function(selectElement, labelElement) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     labelElement.textContent = selectedOption.textContent;
 }
@@ -397,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-let fetchAndDisplayNotifications = function(projectId) {
+var fetchAndDisplayNotifications = function(projectId) {
     fetch(`/Projects/GetNotifications?projectId=${projectId}`, {
         method: 'POST',
         headers: {
@@ -416,7 +425,7 @@ let fetchAndDisplayNotifications = function(projectId) {
     .catch(error => console.error('Error fetching notifications:', error));
 }
 
-let generateNotificationHTML = function(notifications) {
+var generateNotificationHTML = function(notifications) {
     return `<div class="notification-list">${notifications.map(notification => `<div class="notification-item">${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</div>`).join('')}</div>`;
 }
 
