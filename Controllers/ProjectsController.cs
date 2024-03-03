@@ -186,7 +186,6 @@ public class ProjectsController : Controller
             return RedirectToAction("Login", "Account");
         }
 
-
         OperationResult result = await _projectBoardModel.DeleteTicket(User, projectId, ticketId);
 
         return Json(new { success = result.Success, message = result.Message });
@@ -200,6 +199,34 @@ public class ProjectsController : Controller
         return data;
     }
 
+    [HttpPost]
+    public async Task<IActionResult> AddCommentToTicket(int projectId, int ticketId, string comment)
+    {
+        _logger.LogInformation("Khalil " + projectId.ToString() + ' ' + ticketId.ToString() + ' ' + comment);
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        OperationResult result = await _projectBoardModel.AddCommentToTicket(User, projectId, ticketId, comment);
+
+        return Json(new { success = result.Success, message = result.Message });
+    }
+
+    [HttpPost]
+    public IActionResult LoadComments(int projectId, int ticketId)
+    {
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var comments = new List<Comment>();
+
+        OperationResult result = _projectBoardModel.LoadComments(User, projectId, ticketId, ref comments);
+
+        return Json(new { success = result.Success, message = result.Message, commentsData = comments });
+    }
     // ******************************************************************************* //
     // ************************************ General ********************************** // 
     // ******************************************************************************* //

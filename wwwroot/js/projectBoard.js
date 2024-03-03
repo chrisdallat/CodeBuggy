@@ -99,6 +99,29 @@ var getTicketStatus =  async function (ticketId) {
     return ticketStatus;
 }
 
+var loadComments = async function (projectId, ticketId) {
+
+    let comments = undefined;
+    await fetch(`/Projects/LoadComments?projectId=${projectId}&ticketId=${ticketId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if (data.success === true) {
+                comments = data.commentsData;
+            }
+        })
+        .catch(error => {
+            console.error(error.message);
+        });
+
+    return comments;
+}
+
 var showTicket = async function (ticket) {
     const popup = document.getElementById("editTicketPopup");
     let popupTitle = popup.querySelector("#popupTitle");
@@ -107,6 +130,7 @@ var showTicket = async function (ticket) {
     let ticketStatusDropdown = popup.querySelector("#ticketStatus");
     let ticketDescription = popup.querySelector("#ticketDescriptionInput");
     let ticketId = popup.querySelector("#changeTicketId");
+    let projectId = popup.querySelector("input[name='projectId']").value;
 
     if (ticketDescription !== undefined) {
         if (ticket.Description !== undefined || ticket.Description !== "") {
@@ -150,6 +174,19 @@ var showTicket = async function (ticket) {
     let newURL = currentURL + "&ticket=" + ticket.StringId
 
     // KHALIL please don't forget to change that so it can load a popup with this ticket ID
+    console.log(projectId);
+    let comments = await loadComments(projectId, ticket.Id);
+    let commentsBox = popup.querySelector("#existingCommentsBox");
+    commentsBox.innerHTML = '';
+    console.log(comments);
+    if (comments !== undefined) {
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.classList.add('comment');
+            commentElement.innerHTML = `<strong>${comment.username}</strong> ${comment.timestamp}\n ${comment.text}`;
+            commentsBox.appendChild(commentElement);
+        })
+    }
 
     popup.style.display = 'flex';
 }
@@ -339,6 +376,15 @@ document.addEventListener('DOMContentLoaded', function () {
         handleServerMessage(this, new FormData(this));
     });
 
+    const addCommentButton = editTicketForm.querySelector('#addCommentButton');
+
+    addCommentButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        let projectId = editTicketForm.querySelector("input[name='projectId']").value;
+        let ticketId = editTicketForm.querySelector("input[name='ticketId']").value;
+        addComment(projectId, ticketId, addCommentButton);
+    })
+
     const deleteButton = editTicketForm.querySelector("#deleteButton");
 
     deleteButton.addEventListener('click', function (e) {
@@ -403,6 +449,80 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+var addCommentToTicket = async function (projectId, ticketId, text) {
+    if (text === null || text === '<p><br></p>') return;
+
+    await fetch(`/Projects/AddCommentToTicket?projectId=${projectId}&ticketId=${ticketId}&comment=${encodeURIComponent(text)}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        if (data.success === true) {
+            console.log("Changed ticket status");
+        }
+    })
+    .catch(error => {
+        console.error(error.message);
+    });
+}
+
+var addComment = function (projectId, ticketId, button) {
+
+    console.log(projectId, ticketId);
+    let parent = button.parentNode;
+    let addCommentTextBox = parent.querySelector("#addCommentTextBox");
+
+    button.style.display = 'none';
+
+    let buttonsContainer = parent.querySelector('#buttonsContainer');
+    buttonsContainer.style.display = 'flex';
+
+    let saveCommentButton = parent.querySelector("#saveCommentButton");
+    let cancelCommentButton = parent.querySelector("#cancelCommentButton");
+
+    saveCommentButton.addEventListener('click', async function (e) {
+        e.preventDefault();
+        let commentInput = parent.querySelector("input[name='commentInput']")
+        commentInput.value = addCommentTextBox.quill.root.innerHTML;
+        await addCommentToTicket(projectId, ticketId, commentInput.value);
+    })
+
+    cancelCommentButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        addCommentTextBox.style.display = 'none';
+        addCommentTextBox.previousSibling.style.display = 'none';
+        buttonsContainer.style.display = 'none';
+        button.style.display = 'flex';
+    })
+
+    if (!addCommentTextBox.quill) {
+        const quill = new Quill(addCommentTextBox, {
+            theme: 'snow',
+            placeholder: 'Add comment...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'header': 1 }, { 'header': 2 }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['blockquote', 'code-block'],
+                    [{ 'color': [] }],
+                    ['clean']
+                ]
+            }
+        });
+        addCommentTextBox.quill = quill;
+    } else {
+        addCommentTextBox.style.display = 'block';
+        addCommentTextBox.previousSibling.style.display = 'block';
+    }
+;    
+
+}
 
 var fetchAndDisplayNotifications = function(projectId) {
     fetch(`/Projects/GetNotifications?projectId=${projectId}`, {

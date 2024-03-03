@@ -162,6 +162,20 @@ else
         </div>
         ";
 
+    string addCommentDom = $@"
+            <div id='addCommentBox' class='comment-box' style='max-width: 900px;'>
+                <h3>Comments</h3>
+                <div id='addCommentTextBox' class='form-floating mb-3'></div>
+                <button id='addCommentButton' class='button-general' style='font-size: 15px;'>Add Comment</button>
+                <div id='buttonsContainer' style='display: none; flex-wrap: wrap; justify-content: left'>
+                    <button id='saveCommentButton' class='button-general btn-primary mb-3 mt-5' style='width: 80px; height: 40px; padding: 0px; margin: 2px;'>Save</button>
+                    <button id='cancelCommentButton' class='button-general btn-danger mb-3 mt-5' style='width: 80px; height: 40px; padding: 0px; margin: 2px;'>Cancel</button>
+                </div>
+                <input name='commentInput' type='hidden'></input>
+            </div>";
+
+    string existingComments = $@"<div id='existingCommentsBox' class='comment-box' style='max-width: 900px'></div>";
+
     var addTicketFormDOM = addTicketForm + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) +
     @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + submitButton + "Create Ticket</button>" +  "</form>";
     var addTicketPopup = new Popup();
@@ -169,7 +183,7 @@ else
     @Html.Raw(addTicketPopupHTML)
 
     var editTicketDOM = editTicketForm + ticketId + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) +
-    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + formButtons + submitButton + "Save Changes</button>" + deleteButton + "Delete</button>" + "</div>" + "</form>";
+    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + addCommentDom + existingComments + formButtons + submitButton + "Save Changes</button>" + deleteButton + "Delete Ticket</button>" + "</div>" + "</form>";
     var editTicketPopup = new Popup();
     var editTicketPopupHTML = editTicketPopup.CreatePopup("editTicketPopup", "", new string[] { editTicketDOM });
     @Html.Raw(editTicketPopupHTML)

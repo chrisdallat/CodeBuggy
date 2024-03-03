@@ -1,5 +1,14 @@
 ﻿namespace CodeBuggy.Data
 {
+    public class Comment
+    {
+        public int Id { get; set; }
+        public string Text { get; set; }
+        public string Username { get; set; }
+        public DateTime Timestamp { get; set; }
+        public int TicketId { get; set; }
+    }
+
     public class Ticket
     {
         private static int ticketCounter = 1;
@@ -13,7 +22,7 @@
         public string CreatedBy { get; set; } = string.Empty;
         public string ResolvedBy { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public string? Comments { get; set; }
+        public List<Comment> Comments { get; set; } = new List<Comment>();
     }
     public enum TicketStatus
     {
