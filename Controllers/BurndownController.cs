@@ -1,13 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using CodeBuggy.Data;
-using CodeBuggy.Models;
-using System.Diagnostics;
 using CodeBuggy.Models.Projects;
-using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using CodeBuggy.Migrations;
 using Newtonsoft.Json;
 
 public class BurndownController : Controller

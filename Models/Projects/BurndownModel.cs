@@ -1,4 +1,3 @@
-using CodeBuggy.Controllers;
 using CodeBuggy.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

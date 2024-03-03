@@ -15,7 +15,7 @@ public static class HtmlHelpers
     {
         var table = new TagBuilder("table");
         table.AddCssClass("content-table");
-        
+
         var thead = new TagBuilder("thead");
         thead.InnerHtml += "<tr><th>Title</th><th>Access Code</th><th>Owner</th><th></th></tr>";
         table.InnerHtml += thead;
@@ -79,6 +79,7 @@ public static class HtmlHelpers
 
         foreach (var ticket in ticketByStatus)
         {
+            var color = GetPriorityColor(ticket.Priority);
             var ticketHtml = new TagBuilder("div");
             ticketHtml.AddCssClass("card");
             ticketHtml.MergeAttribute("draggable", "true");
@@ -93,7 +94,7 @@ public static class HtmlHelpers
 
             var ticketStringId = new TagBuilder("h3");
             ticketStringId.AddCssClass("card__title");
-            ticketStringId.InnerHtml = $"{ticket.StringId} <span class='priority'>{ticket.Priority}</span>";
+            ticketStringId.InnerHtml = $"{ticket.StringId} <span class='priority' style='color: {color}'>{ticket.Priority}</span>";
 
             var ticketTitle = new TagBuilder("p");
             ticketTitle.AddCssClass("card__content");
@@ -139,13 +140,15 @@ public static class HtmlHelpers
         switch (priority)
         {
             case TicketPriority.Urgent:
-                return "#D98695";
+                return "#FF3B02";
             case TicketPriority.High:
-                return "#BBB477";
+                return "#FFBE02";
             case TicketPriority.Medium:
-                return "#56887D";
+                return "#F3E102";
             case TicketPriority.Low:
-                return "#A6A6A6";
+                return "#58DC22";
+            case TicketPriority.None:
+                return "#01CCF4";
             default:
                 return string.Empty;
         }

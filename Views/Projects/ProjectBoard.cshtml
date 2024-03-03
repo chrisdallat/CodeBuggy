@@ -35,8 +35,8 @@
 }
 @if (ViewBag.DeniedAccess == false)
 {
-    <div style="display: flex; justify-content: space-between; align-items: center;">
 
+<div style="display: flex; justify-content: space-between; align-items: center;">
     <h2 style="text-align: center; flex: 1; margin-left: 200px;">@ViewBag.ProjectTitle</h2>
     <a class="create-button" style="text-align: left; margin-right: 10px;" asp-controller="Burndown"
         asp-action="Burndown" asp-route-projectId="@ViewBag.ProjectId">
@@ -51,32 +51,45 @@
     </a>
 </div>
 
+<div class="board-container">
     <div class="board">
-    <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3 class="column-title">To Do</h3>
-        <div class="tickets-container">
-            @Html.RenderTickets(Model.Tickets, TicketStatus.ToDo)
+        <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3 class="column-title">To Do</h3>
+            <div class="tickets-container">
+                @Html.RenderTickets(Model.Tickets, TicketStatus.ToDo)
+            </div>
+        </div>
+        <div class="column" id="inProgressColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3 class="column-title">In Progress</h3>
+            <div class="tickets-container">
+                @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress)
+            </div>
+        </div>
+        <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3 class="column-title">Review</h3>
+            <div class="tickets-container">
+                @Html.RenderTickets(Model.Tickets, TicketStatus.Review)
+            </div>
+        </div>
+        <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3 class="column-title">Done</h3>
+            <div class="tickets-container">
+                @Html.RenderTickets(Model.Tickets, TicketStatus.Done)
+            </div>
         </div>
     </div>
-    <div class="column" id="inProgressColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3 class="column-title">In Progress</h3>
-        <div class="tickets-container">
-            @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress)
-        </div>
+
+    <div class="fixed-notification-container">
+        <div class="notification-container" id="notificationContainer"></div>
     </div>
-    <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3 class="column-title">Review</h3>
-        <div class="tickets-container">
-            @Html.RenderTickets(Model.Tickets, TicketStatus.Review)
-        </div>
-    </div>
-    <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
-        <h3 class="column-title">Done</h3>
-        <div class="tickets-container">
-            @Html.RenderTickets(Model.Tickets, TicketStatus.Done)
-        </div>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchAndDisplayNotifications(@ViewBag.ProjectId);
+        });
+    </script>
 </div>
+
+
 }
 else
 {

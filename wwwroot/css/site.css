@@ -192,12 +192,6 @@ h2 {
     color: red;
 }
 
-.board {
-    display: flex;
-    width: fit-content;
-    width: -moz-fit-content;
-}
-
 .ticket {
     margin: 10px 0;
     padding: 5px;
@@ -358,12 +352,42 @@ h2 {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24
 }
 
-.footer {
-    position: flex;
-    bottom: 0;
-    width: 100%;
-    background-color: #f6f6f6;
-    /* padding: 15px 0; */
-    text-align: left;
+.board {
+    display: flex;
+    width: fit-content;
+    width: -moz-fit-content;
 }
 
+.board-container {
+    width: fit-content;
+    width: -moz-fit-content;
+}
+
+.fixed-notification-container {
+    margin-top: 30px;
+    margin-bottom: 30px;
+    height: 200px; 
+    border: 1px solid #ccc;
+    overflow: hidden;
+}
+
+.notification-container {
+    overflow-y: auto;
+    height: 100%;
+    padding: 10px;
+}
+
+.notification-list {
+    margin-left: 1em; /* Adjust the margin to control the indentation */
+}
+
+.notification-item {
+    margin-bottom: 5px; 
+    position: relative; 
+}
+
+.notification-item::before {
+    content: '\003E'; 
+    position: absolute;
+    left: -1em;
+}

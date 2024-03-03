@@ -1,4 +1,5 @@
 var drop;
+
 var renderQuill = function (textBox, data) {
     let quill;
     if (!textBox.quill) {
@@ -73,7 +74,7 @@ var closePopup = function (popupId) {
     
 }
 
-var getTicketStaus =  async function (ticketId) {
+var getTicketStatus =  async function (ticketId) {
     let currentUrl = window.location.href;
     let params = new URLSearchParams(currentUrl.substring(currentUrl.indexOf('?')));
     let projectId = params.get('projectId');
@@ -132,7 +133,7 @@ var showTicket = async function (ticket) {
 
     i = 0;
 
-    let ticketStatus = await getTicketStaus(ticket.Id);
+    let ticketStatus = await getTicketStatus(ticket.Id);
     if (ticketStatus === -1) {
         ticketStatus = ticket.Status;
     }
@@ -167,8 +168,6 @@ var changeTicketStatus = async function (ticketId, newStatus) {
     })
         .then(response => response.json())
         .then(data => {
-
-    console.log(data)
             if (data.success === true) {
                 console.log("Changed ticket status");
             }
@@ -178,6 +177,7 @@ var changeTicketStatus = async function (ticketId, newStatus) {
         });
 
 }
+
 var allowDrop = function (event) {
     event.preventDefault();
 }
@@ -227,14 +227,8 @@ var dropAction = async function (event, ticket) {
 
     let dropzoneColumnContainer = dropzone.querySelector('.tickets-container');
     if (dropzoneColumnContainer) {
-
-        // Append a clone of the ticket to the new column
-
         dropzoneColumnContainer.appendChild(ticket.cloneNode(true));
-
-        // Remove ticket from original column
         ticket.parentElement.removeChild(ticket);
-
     } else {
         console.error("Parent column not found");
     }
@@ -244,8 +238,6 @@ var dropAction = async function (event, ticket) {
 }
 
 var drag = function(dragEvent, ticket) {
-
-    // This gets called when event drop gets dispatched
     drop = function (dropEvent) {
         dropEvent.preventDefault();
         try {
@@ -391,36 +383,54 @@ document.addEventListener('DOMContentLoaded', function () {
 
     });
 
-    // Get all priority select elements
     const prioritySelects = document.querySelectorAll('select[name="Input.TicketPriorityValue"]');
 
-    // Loop through each select element
     prioritySelects.forEach(function (selectElement) {
-        // Get the corresponding label element
+
         const labelElement = selectElement.parentNode.querySelector('label[name="Input.TicketPriorityValue"]');
 
-        // Add event listener to the select element
         selectElement.addEventListener('change', function () {
-            // Update label text content
             updateLabel(selectElement, labelElement);
         });
     });
 
-    // Get all status select elements
     const statusSelects = document.querySelectorAll('select[name="Input.TicketStatusValue"]');
 
-    // Loop through each status select element
     statusSelects.forEach(function (selectElement) {
-        // Get the corresponding label element
         const labelElement = selectElement.parentNode.querySelector('label[name="Input.TicketStatusValue"]');
-
-        // Add event listener to the status select element
         selectElement.addEventListener('change', function () {
-            // Update status label text content
             updateLabel(selectElement, labelElement);
         });
     });
-
 });
+
+var fetchAndDisplayNotifications = function(projectId) {
+    fetch(`/Projects/GetNotifications?projectId=${projectId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        var notificationContainer = document.getElementById("notificationContainer");
+        if (notificationContainer) {
+            notificationContainer.innerHTML = generateNotificationHTML(data);
+            notificationContainer.scrollTop = notificationContainer.scrollHeight;
+        }
+        return data;
+    })
+    .catch(error => console.error('Error fetching notifications:', error));
+}
+
+var generateNotificationHTML = function(notifications) {
+    return `<div class="notification-list">${notifications.map(notification => `<div class="notification-item">${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</div>`).join('')}</div>`;
+}
+
+function formatTimestamp(timestamp) {
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+    const formattedDate = new Date(timestamp).toLocaleString('en-GB', options);
+    return formattedDate;
+}
 
 
