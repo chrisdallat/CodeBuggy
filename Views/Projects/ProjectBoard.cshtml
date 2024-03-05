@@ -17,6 +17,7 @@
         var options = enumValues.Select(e => $"<option value='{e}'>{e}</option>");
         var dropdownHtml = $@"
             <select id='statusSelect' name='Input.TicketStatusValue' class='form-control'>
+            <option value disabled selected>Select Status</option>
             {string.Join("", options)}
             </select>";
         return new HtmlString(dropdownHtml);
@@ -28,6 +29,7 @@
         var options = enumValues.Select(e => $"<option value='{e}'>{e}</option>");
         var dropdownHtml = $@"
             <select id='prioritySelect' name='Input.TicketPriorityValue' class='form-control'>
+            <option value disabled selected>Select priority</option>
             {string.Join("", options)}
             </select>";
         return new HtmlString(dropdownHtml);
@@ -109,21 +111,21 @@ else
     string ticketId = $@"<input type='hidden' name='ticketId' id='changeTicketId' style='display: none'></input>";
 
     string ticketTitleInput = @"
-        <div id='ticketTitleInput' class='form-floating mb-3' style='max-width: 380px'>
+        <div id='ticketTitleInput' class='form-floating mb-3' style='max-width: 605px'>
         <input name='Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true'
         placeholder=''/>
         <label name='Input.TicketTitle'>Title</label>
         </div>";
 
     string ticketPriorityDropdown = $@"
-        <div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+        <div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 300px; display: inline-block;width: -webkit-fill-available;'>
         {RenderProjectTicketPriorityDropdownList()}
         <label name='Input.TicketPriorityValue'>Priority</label>
         <div class='dropdown-arrow'>▼</div>
         </div>";
 
     string ticketStatusDropdown = $@"
-        <div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+        <div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 300px; display: inline-block;width: -webkit-fill-available;'>
         {RenderProjectTicketStatusDropdownList()}
         <label name='Input.TicketStatusValue'>Status</label>
         <div class='dropdown-arrow'>▼</div>
@@ -183,7 +185,7 @@ else
     @Html.Raw(addTicketPopupHTML)
 
     var editTicketDOM = editTicketForm + ticketId + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) +
-    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + addCommentDom + existingComments + formButtons + submitButton + "Save Changes</button>" + deleteButton + "Delete Ticket</button>" + "</div>" + "</form>";
+    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + formButtons + submitButton + "Save Changes</button>" + deleteButton + "Delete Ticket</button></div>" + addCommentDom + existingComments + "</form>";
     var editTicketPopup = new Popup();
     var editTicketPopupHTML = editTicketPopup.CreatePopup("editTicketPopup", "", new string[] { editTicketDOM });
     @Html.Raw(editTicketPopupHTML)

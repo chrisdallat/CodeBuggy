@@ -181,11 +181,55 @@ var showTicket = async function (ticket) {
     console.log(comments);
     if (comments !== undefined) {
         comments.forEach(comment => {
-            const commentElement = document.createElement('div');
-            commentElement.classList.add('comment');
-            commentElement.innerHTML = `<strong>${comment.username}</strong> ${comment.timestamp}\n ${comment.text}`;
-            commentsBox.appendChild(commentElement);
-        })
+            // Create separator line
+            const separator = document.createElement('hr');
+            separator.classList.add('comment-separator');
+            commentsBox.appendChild(separator);
+
+            // Create comment container
+            const commentContainer = document.createElement('div');
+            commentContainer.classList.add('comment-container');
+
+            // Create username element
+            const userName = document.createElement('strong');
+            userName.textContent = comment.username;
+
+            // Format timestamp
+            const timestampDate = new Date(comment.timestamp);
+            const formattedDate = `${(timestampDate.getMonth() + 1).toString().padStart(2, '0')}/${timestampDate.getDate().toString().padStart(2, '0')}/${timestampDate.getFullYear()}`;
+            const formattedTime = `${timestampDate.getHours().toString().padStart(2, '0')}:${timestampDate.getMinutes().toString().padStart(2, '0')}`;
+
+            // Create timestamp element
+            const timestamp = document.createElement('span');
+            timestamp.textContent = `${formattedDate} ${formattedTime}`;
+            timestamp.classList.add('timestamp');
+
+            // Append username and timestamp to comment container
+            commentContainer.appendChild(userName);
+            commentContainer.appendChild(timestamp);
+
+            // Create comment content
+            const commentContent = document.createElement('div');
+            commentContent.classList.add('comment-content');
+
+             //Initialize Quill
+            const quill = new Quill(commentContent, {
+                theme: 'snow',
+                modules: {
+                    syntax: true, // Enable syntax highlighting module
+                    toolbar: false, // Disable toolbar
+                },
+            });
+
+            commentContent.classList.remove('ql-container');
+
+            // Insert comment text into Quill editor
+            quill.root.innerHTML = comment.text;
+
+            // Append comment container to comments box
+            commentsBox.appendChild(commentContainer);
+            commentsBox.appendChild(commentContent);
+        });
     }
 
     popup.style.display = 'flex';
@@ -300,6 +344,7 @@ var handleServerMessage = function (form, formData) {
     
     .then(response => response.json())
     .then(data => {
+            console.log(data)
         if (data.success === false) {
             let errorMessage = document.getElementById('errorMessage');
             if (!errorMessage) {
@@ -320,7 +365,6 @@ var handleServerMessage = function (form, formData) {
 }
 
 var handleServerMessageDeleteTicket = function(projectId, ticketId) {
-
 
     fetch(`/Projects/DeleteTicket?projectId=${projectId}&ticketId=${ticketId}`, {
         method: 'POST',

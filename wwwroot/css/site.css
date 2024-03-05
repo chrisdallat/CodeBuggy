@@ -391,3 +391,40 @@ h2 {
     position: absolute;
     left: -1em;
 }
+
+.comment-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.user-name {
+    font-weight: bold;
+}
+
+.timestamp {
+    margin-left: auto;
+    color: #999; /* Faded color */
+}
+
+.comment-content {
+    margin-left: 10px;
+}
+
+.ql-syntax {
+    background-color: #f0f0f0 !important;
+    color: black !important;
+}
+
+@media only screen and (max-width: 1920px) {
+    .popup {
+        max-width: 90%;
+    }
+}
+
+@media only screen and (max-height: 1080px) {
+    .popup {
+        max-height: 80%;
+    }
+}

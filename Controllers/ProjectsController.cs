@@ -122,12 +122,6 @@ public class ProjectsController : Controller
     [HttpPost]
     public async Task<IActionResult> AddTicket(ProjectBoardModel.InputModel input, int projectId)
     {
-
-        if (string.IsNullOrWhiteSpace(input.TicketTitle))
-        {
-            return Json(new { success = false, message = "Ticket title must be provided" });
-        }
-
         OperationResult result = await _projectBoardModel.AddTicketToProject(User, input, projectId);
 
         return Json(new { success = result.Success, message = result.Message });
@@ -202,7 +196,6 @@ public class ProjectsController : Controller
     [HttpPost]
     public async Task<IActionResult> AddCommentToTicket(int projectId, int ticketId, string comment)
     {
-        _logger.LogInformation("Khalil " + projectId.ToString() + ' ' + ticketId.ToString() + ' ' + comment);
         if (User.Identity == null || User.Identity.IsAuthenticated == false)
         {
             return RedirectToAction("Login", "Account");
@@ -227,6 +220,7 @@ public class ProjectsController : Controller
 
         return Json(new { success = result.Success, message = result.Message, commentsData = comments });
     }
+
     // ******************************************************************************* //
     // ************************************ General ********************************** // 
     // ******************************************************************************* //

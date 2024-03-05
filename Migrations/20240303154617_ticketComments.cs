@@ -41,6 +41,18 @@ namespace CodeBuggy.Migrations
                 name: "IX_Comments_TicketId",
                 table: "Comments",
                 column: "TicketId");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_Comments_Tickets_TicketId",
+                table: "Comments");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Comments_TicketId",
+                table: "Comments");
+
+            migrationBuilder.DropColumn(
+                name: "TicketId",
+                table: "Comments");
         }
 
         /// <inheritdoc />
