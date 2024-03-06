@@ -1,5 +1,6 @@
 ﻿namespace CodeBuggy.Data
 {
+
     public class Ticket
     {
         private static int ticketCounter = 1;
@@ -10,10 +11,12 @@
         public TicketPriority Priority { get; set; }
         public TicketStatus Status { get; set; }
         public DateTime CreationDate { get; set; }
-        public string CreatedBy { get; set; } = string.Empty;
+        public string Reporter { get; set; } = string.Empty;
+        public string Assignee { get; set; } = string.Empty;
         public string ResolvedBy { get; set; } = string.Empty;
         public string? Description { get; set; }
-        public string? Comments { get; set; }
+        public List<int>? CommentsIds { get; set; }
+        public int? CommentsCount { get; set; }
     }
     public enum TicketStatus
     {

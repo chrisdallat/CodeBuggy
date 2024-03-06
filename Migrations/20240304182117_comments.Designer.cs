@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CodeBuggy.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CodeBuggy.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240304182117_comments")]
+    partial class comments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -128,6 +131,9 @@ namespace CodeBuggy.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TicketId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone");
 
@@ -136,6 +142,8 @@ namespace CodeBuggy.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
 
                     b.ToTable("Comments");
                 });
@@ -215,15 +223,9 @@ namespace CodeBuggy.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Assignee")
+                    b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<int?>("CommentsCount")
-                        .HasColumnType("integer");
-
-                    b.Property<List<int>>("CommentsIds")
-                        .HasColumnType("integer[]");
 
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("timestamp with time zone");
@@ -233,10 +235,6 @@ namespace CodeBuggy.Migrations
 
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
-
-                    b.Property<string>("Reporter")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<string>("ResolvedBy")
                         .IsRequired()
@@ -448,6 +446,15 @@ namespace CodeBuggy.Migrations
                     b.Navigation("DailyCounts");
                 });
 
+            modelBuilder.Entity("CodeBuggy.Data.Comment", b =>
+                {
+                    b.HasOne("CodeBuggy.Data.Ticket", null)
+                        .WithMany("Comments")
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CodeBuggy.Data.Project", b =>
                 {
                     b.HasOne("CodeBuggy.Data.AppUser", null)
@@ -509,6 +516,11 @@ namespace CodeBuggy.Migrations
             modelBuilder.Entity("CodeBuggy.Data.AppUser", b =>
                 {
                     b.Navigation("ProjectList");
+                });
+
+            modelBuilder.Entity("CodeBuggy.Data.Ticket", b =>
+                {
+                    b.Navigation("Comments");
                 });
 #pragma warning restore 612, 618
         }

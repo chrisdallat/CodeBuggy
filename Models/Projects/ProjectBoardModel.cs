@@ -3,8 +3,10 @@ using CodeBuggy.Data;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Evaluation;
 using Microsoft.CodeAnalysis;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Net.NetworkInformation;
 using System.Security.Claims;
@@ -64,6 +66,24 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
+        if (string.IsNullOrWhiteSpace(input.TicketTitle))
+        {
+            return new OperationResult { Success = false, Message = "Ticket title must be provided" };
+        }
+
+        _logger.LogInformation((input.TicketPriorityValue >= TicketPriority.None && input.TicketPriorityValue <= TicketPriority.Urgent) ? "KHALIL Priority RIGHT " + input.TicketPriorityValue : "KHALIL Priority WRONG");
+
+        if ((input.TicketPriorityValue >= TicketPriority.None && input.TicketPriorityValue <= TicketPriority.Urgent) == false)
+        {
+            return new OperationResult { Success = false, Message = "Priority is invalid!" };
+        }
+        _logger.LogInformation((input.TicketStatusValue >= TicketStatus.ToDo && input.TicketStatusValue <= TicketStatus.Done) ? "KHALIL STATUS RIGHT " + input.TicketStatusValue : "KHALIL STATUS WRONG");
+        if ((input.TicketStatusValue >= TicketStatus.ToDo && input.TicketStatusValue <= TicketStatus.Done) == false)
+        {
+            return new OperationResult { Success = false, Message = "Status is invalid!" };
+        }
+
+
         var projectDetails = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
         if (projectDetails == null)
         {
@@ -76,37 +96,48 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        projectDetails.TicketsCount += 1;
-        var ticketDetails = new Ticket
+        try
         {
-            StringId = $"{projectDetails.Name.ToUpper()}-{projectDetails.TicketsCount}",
-            Title = input.TicketTitle,
-            Priority = input.TicketPriorityValue >= TicketPriority.None ? input.TicketPriorityValue : TicketPriority.None,
-            Status = input.TicketStatusValue >= TicketStatus.ToDo ? input.TicketStatusValue : TicketStatus.ToDo,
-            CreatedBy = username,
-            CreationDate = DateTime.UtcNow,
-            ResolvedBy = "",
-            Description = input.TicketDescription,
-            Comments = "",
-        };
+            projectDetails.TicketsCount += 1;
+            var ticketDetails = new Ticket
+            {
+                StringId = $"{projectDetails.Name.ToUpper()}-{projectDetails.TicketsCount}",
+                Title = input.TicketTitle,
+                Priority = input.TicketPriorityValue >= TicketPriority.None ? input.TicketPriorityValue : TicketPriority.None,
+                Status = input.TicketStatusValue >= TicketStatus.ToDo ? input.TicketStatusValue : TicketStatus.ToDo,
+                Reporter = username,
+                CreationDate = DateTime.UtcNow,
+                Assignee = username,
+                ResolvedBy = "",
+                Description = input.TicketDescription,
+                CommentsIds = new List<int>(),
+                CommentsCount = 0,
+            };
 
-        _context.Tickets.Add(ticketDetails);
-        await _context.SaveChangesAsync();
+            _context.Tickets.Add(ticketDetails);
+            await _context.SaveChangesAsync();
 
-        var notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.AddTicket);
+            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.AddTicket);
 
-        if (ticketDetails?.Id == null || ticketDetails.Id == 0)
+            if (ticketDetails?.Id == null || ticketDetails.Id == 0)
+            {
+                return new OperationResult { Success = false, Message = "Unable to create new ticket" };
+            }
+
+
+            projectDetails.TicketsId.Add(ticketDetails.Id);
+            projectDetails.NotificationIds.Add(notificationId);
+            projectDetails.NotificationCount += 1;
+            await _context.SaveChangesAsync();
+
+            return new OperationResult { Success = true, Message = "Ticket created successfully!" };
+        }
+        catch (Exception ex)
         {
-            return new OperationResult { Success = false, Message = "Unable to create new ticket" };
+            _logger.LogError("Error retrieving tickets: " + ex);
+            return new OperationResult { Success = false, Message = "Ticket was not created!" };
         }
 
-
-        projectDetails.TicketsId.Add(ticketDetails.Id);
-        projectDetails.NotificationIds.Add(notificationId);
-        projectDetails.NotificationCount += 1;
-        await _context.SaveChangesAsync();
-
-        return new OperationResult { Success = true, Message = "Ticket created successfully!" };
     }
 
     public bool PopulateTickets(int projectId)
@@ -369,5 +400,93 @@ public class ProjectBoardModel
         }
 
         return (int)ticketDetails.Status;
+    }
+
+    public async Task<OperationResult> AddCommentToTicket(ClaimsPrincipal user, int projectId, int ticketId, string comment)
+    {
+        if (ValidUserClaim(user, projectId) == false)
+        {
+            return new OperationResult { Success = false, Message = "User Doesn't have access" };
+        }
+
+        var ticket = await _context.Tickets.FirstOrDefaultAsync(p => p.Id == ticketId);
+        if (ticket == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        var projectDetails = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (projectDetails == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        if (username == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        var commentDetails = new Comment
+        {
+            Text = comment,
+            Username = username,
+            Timestamp = DateTime.UtcNow,
+        };
+
+        try
+        {
+            _context.Comments.Add(commentDetails);
+            await _context.SaveChangesAsync();
+
+            ticket.CommentsCount += 1;
+            ticket.CommentsIds.Add(commentDetails.Id);
+
+            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticket.StringId, username, "", ticket.Status, NotificationType.CommentTicket);
+
+            projectDetails.NotificationIds.Add(notificationId);
+            projectDetails.NotificationCount += 1;
+            await _context.SaveChangesAsync();
+
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error: " + ex);
+            return new OperationResult { Success = false, Message = "Error: " + ex.Message };
+        }
+
+        return new OperationResult { Success = true, Message = "Comment added successfully!" };
+    }
+
+    public OperationResult LoadComments(ClaimsPrincipal user, int projectId, int ticketId, ref List<Comment> comments)
+    {
+        if (ValidUserClaim(user, projectId) == false)
+        {
+            return new OperationResult { Success = false, Message = "User Doesn't have access" };
+        }
+
+        var ticket = _context.Tickets.FirstOrDefault(p => p.Id == ticketId);
+        if (ticket == null || ticket.CommentsIds == null)
+        {
+            return new OperationResult { Success = false, Message = "Ticket not found" };
+        }
+
+        comments = _context.Comments
+                .Where(t => ticket.CommentsIds.Contains(t.Id))
+                .ToList();
+
+        return new OperationResult { Success = true, Message = "Found comments"};
+    }
+
+    public string? GetUsername(ClaimsPrincipal user)
+    {
+        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        if (username == null)
+        {
+            return null;
+        }
+
+        return username;
     }
 }

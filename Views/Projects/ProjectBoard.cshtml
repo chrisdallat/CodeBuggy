@@ -56,25 +56,25 @@
         <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
             <h3 class="column-title">To Do</h3>
             <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.ToDo)
+                @Html.RenderTickets(Model.Tickets, TicketStatus.ToDo, (string)@ViewBag.Username)
             </div>
         </div>
         <div class="column" id="inProgressColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
             <h3 class="column-title">In Progress</h3>
             <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress)
+                @Html.RenderTickets(Model.Tickets, TicketStatus.InProgress, (string)@ViewBag.Username)
             </div>
         </div>
         <div class="column" id="reviewColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
             <h3 class="column-title">Review</h3>
             <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.Review)
+                @Html.RenderTickets(Model.Tickets, TicketStatus.Review, (string)@ViewBag.Username)
             </div>
         </div>
         <div class="column" id="doneColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
             <h3 class="column-title">Done</h3>
             <div class="tickets-container">
-                @Html.RenderTickets(Model.Tickets, TicketStatus.Done)
+                @Html.RenderTickets(Model.Tickets, TicketStatus.Done, (string)@ViewBag.Username)
             </div>
         </div>
     </div>
@@ -108,22 +108,42 @@ else
 
     string ticketId = $@"<input type='hidden' name='ticketId' id='changeTicketId' style='display: none'></input>";
 
+    string upperContainer = $@"<div id='upperContainer'>";
+
+    string assignmentContainer = $@"
+        <div id='assignmentContainer'>
+            <div id='assigneeContainer'>
+                <div id='assigneeLabel'>Assigned To</div>
+                <div id='assigneeName'></div>
+            </div>
+            <div style='display: flex; justify-content: flex-end;'>
+                <button id='assignToMeButton'>Assign me</button>
+            </div>
+            <div id='reporterContainer'>
+                <div id='reporterLabel'>Reporter</div>
+                <div id='reporterName'></div>
+            </div>
+        </div>";
+
+    string ticketDetailsContainer = $@"<div id='ticketDetailsContainer' style='float: left;'>";
+    string ticketStatusesContainer = $@"<div id='ticketStatusesContainer'>";
+
     string ticketTitleInput = @"
-        <div id='ticketTitleInput' class='form-floating mb-3' style='max-width: 380px'>
+        <div id='ticketTitleInput' class='form-floating mb-3' style='max-width: 605px'>
         <input name='Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true'
         placeholder=''/>
         <label name='Input.TicketTitle'>Title</label>
         </div>";
 
     string ticketPriorityDropdown = $@"
-        <div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+        <div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 300px; display: inline-block;width: -webkit-fill-available;'>
         {RenderProjectTicketPriorityDropdownList()}
         <label name='Input.TicketPriorityValue'>Priority</label>
         <div class='dropdown-arrow'>▼</div>
         </div>";
 
     string ticketStatusDropdown = $@"
-        <div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 380px'>
+        <div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 300px; display: inline-block;width: -webkit-fill-available;'>
         {RenderProjectTicketStatusDropdownList()}
         <label name='Input.TicketStatusValue'>Status</label>
         <div class='dropdown-arrow'>▼</div>
@@ -162,14 +182,28 @@ else
         </div>
         ";
 
+    string addCommentDom = $@"
+            <div id='addCommentBox' class='comment-box' style='max-width: 900px;'>
+                <h3>Comments</h3>
+                <div id='addCommentTextBox' class='form-floating mb-3'></div>
+                <button id='addCommentButton' class='button-general' style='font-size: 15px;'>Add Comment</button>
+                <div id='buttonsContainer' style='display: none; flex-wrap: wrap; justify-content: left'>
+                    <button id='saveCommentButton' class='button-general btn-primary mb-3 mt-5' style='width: 80px; height: 40px; padding: 0px; margin: 2px;'>Save</button>
+                    <button id='cancelCommentButton' class='button-general btn-danger mb-3 mt-5' style='width: 80px; height: 40px; padding: 0px; margin: 2px;'>Cancel</button>
+                </div>
+                <input name='commentInput' type='hidden'></input>
+            </div>";
+
+    string existingComments = $@"<div id='existingCommentsBox' class='comment-box' style='max-width: 900px'></div>";
+
     var addTicketFormDOM = addTicketForm + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) +
     @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + submitButton + "Create Ticket</button>" +  "</form>";
     var addTicketPopup = new Popup();
     var addTicketPopupHTML = addTicketPopup.CreatePopup("addTicketPopup", "Add Ticket", new string[] { addTicketFormDOM });
     @Html.Raw(addTicketPopupHTML)
 
-    var editTicketDOM = editTicketForm + ticketId + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) +
-    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + formButtons + submitButton + "Save Changes</button>" + deleteButton + "Delete</button>" + "</div>" + "</form>";
+    var upperDOM = upperContainer + ticketDetailsContainer + ticketTitleInput + ticketStatusesContainer + @Html.Raw(ticketPriorityDropdown) + @Html.Raw(ticketStatusDropdown) + "</div></div>" + assignmentContainer + "</div>";
+    var editTicketDOM = editTicketForm + ticketId + upperDOM + ticketDescriptionInput + projectIdDOM + formButtons + submitButton + "Save Changes</button>" + deleteButton + "Delete Ticket</button></div>" + addCommentDom + existingComments + "</form>";
     var editTicketPopup = new Popup();
     var editTicketPopupHTML = editTicketPopup.CreatePopup("editTicketPopup", "", new string[] { editTicketDOM });
     @Html.Raw(editTicketPopupHTML)

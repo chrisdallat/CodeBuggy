@@ -6,6 +6,8 @@ using IHtmlHelper = Microsoft.AspNetCore.Mvc.Rendering.IHtmlHelper;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Identity;
+using CodeBuggy.Models.Projects;
 
 namespace CodeBuggy.Helpers;
 
@@ -72,20 +74,26 @@ public static class HtmlHelpers
         return new HtmlString(div.ToString());
     }
 
-    public static IHtmlContent RenderTickets(this IHtmlHelper htmlHelper, List<Ticket> tickets, TicketStatus status)
+    public static IHtmlContent RenderTickets(this IHtmlHelper htmlHelper, List<Ticket> tickets, TicketStatus status, string username)
     {
         var ticketByStatus = tickets.Where(t => t.Status == status);
         var result = new StringBuilder();
 
         foreach (var ticket in ticketByStatus)
         {
+
+            var assignedToUser = "false";
+            if (username != null && username == ticket.Assignee)
+            {
+                assignedToUser = "true";
+            }
             var color = GetPriorityColor(ticket.Priority);
             var ticketHtml = new TagBuilder("div");
             ticketHtml.AddCssClass("card");
             ticketHtml.MergeAttribute("draggable", "true");
             ticketHtml.MergeAttribute("ondragstart", $"drag(event, this)");
             string ticketJson = JsonConvert.SerializeObject(ticket);
-            ticketHtml.MergeAttribute("onclick", $"showTicket({ticketJson})");
+            ticketHtml.MergeAttribute("onclick", $"showTicket({ticketJson}, {assignedToUser.ToString().ToLower()})");
 
             var ticketId = new TagBuilder("div");
             ticketId.GenerateId("draggedTicketId");

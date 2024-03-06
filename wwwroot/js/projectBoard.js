@@ -99,7 +99,30 @@ var getTicketStatus =  async function (ticketId) {
     return ticketStatus;
 }
 
-var showTicket = async function (ticket) {
+var loadComments = async function (projectId, ticketId) {
+
+    let comments = undefined;
+    await fetch(`/Projects/LoadComments?projectId=${projectId}&ticketId=${ticketId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if (data.success === true) {
+                comments = data.commentsData;
+            }
+        })
+        .catch(error => {
+            console.error(error.message);
+        });
+
+    return comments;
+}
+
+var showTicket = async function (ticket, assignedToUser) {
     const popup = document.getElementById("editTicketPopup");
     let popupTitle = popup.querySelector("#popupTitle");
     let ticketTitle = popup.querySelector("#ticketTitleInput").querySelector("input");
@@ -107,6 +130,10 @@ var showTicket = async function (ticket) {
     let ticketStatusDropdown = popup.querySelector("#ticketStatus");
     let ticketDescription = popup.querySelector("#ticketDescriptionInput");
     let ticketId = popup.querySelector("#changeTicketId");
+    let projectId = popup.querySelector("input[name='projectId']").value;
+    let assignMeButton = popup.querySelector("#assignToMeButton");
+    let assigneeName = popup.querySelector("#assigneeName");
+    let reporterName = popup.querySelector("#reporterName");
 
     if (ticketDescription !== undefined) {
         if (ticket.Description !== undefined || ticket.Description !== "") {
@@ -146,10 +173,72 @@ var showTicket = async function (ticket) {
         i++;
     });
 
+    assignedToUser === true ? assignMeButton.style.display = 'none' : assignMeButton.style.display = 'block';
+
+    assigneeName.innerHTML = ticket.Assignee;
+    reporterName.innerHTML = ticket.Reporter;
+
     let currentURL = window.location.href;
     let newURL = currentURL + "&ticket=" + ticket.StringId
 
     // KHALIL please don't forget to change that so it can load a popup with this ticket ID
+
+    let comments = await loadComments(projectId, ticket.Id);
+    let commentsBox = popup.querySelector("#existingCommentsBox");
+    commentsBox.innerHTML = '';
+    console.log(comments);
+    if (comments !== undefined) {
+        comments.forEach(comment => {
+            // Create separator line
+            const separator = document.createElement('hr');
+            separator.classList.add('comment-separator');
+            commentsBox.appendChild(separator);
+
+            // Create comment container
+            const commentContainer = document.createElement('div');
+            commentContainer.classList.add('comment-container');
+
+            // Create username element
+            const userName = document.createElement('strong');
+            userName.textContent = comment.username;
+
+            // Format timestamp
+            const timestampDate = new Date(comment.timestamp);
+            const formattedDate = `${(timestampDate.getMonth() + 1).toString().padStart(2, '0')}/${timestampDate.getDate().toString().padStart(2, '0')}/${timestampDate.getFullYear()}`;
+            const formattedTime = `${timestampDate.getHours().toString().padStart(2, '0')}:${timestampDate.getMinutes().toString().padStart(2, '0')}`;
+
+            // Create timestamp element
+            const timestamp = document.createElement('span');
+            timestamp.textContent = `${formattedDate} ${formattedTime}`;
+            timestamp.classList.add('timestamp');
+
+            // Append username and timestamp to comment container
+            commentContainer.appendChild(userName);
+            commentContainer.appendChild(timestamp);
+
+            // Create comment content
+            const commentContent = document.createElement('div');
+            commentContent.classList.add('comment-content');
+
+             //Initialize Quill
+            const quill = new Quill(commentContent, {
+                theme: 'snow',
+                modules: {
+                    syntax: true, // Enable syntax highlighting module
+                    toolbar: false, // Disable toolbar
+                },
+            });
+
+            commentContent.classList.remove('ql-container');
+
+            // Insert comment text into Quill editor
+            quill.root.innerHTML = comment.text;
+
+            // Append comment container to comments box
+            commentsBox.appendChild(commentContainer);
+            commentsBox.appendChild(commentContent);
+        });
+    }
 
     popup.style.display = 'flex';
 }
@@ -263,6 +352,7 @@ var handleServerMessage = function (form, formData) {
     
     .then(response => response.json())
     .then(data => {
+            console.log(data)
         if (data.success === false) {
             let errorMessage = document.getElementById('errorMessage');
             if (!errorMessage) {
@@ -283,7 +373,6 @@ var handleServerMessage = function (form, formData) {
 }
 
 var handleServerMessageDeleteTicket = function(projectId, ticketId) {
-
 
     fetch(`/Projects/DeleteTicket?projectId=${projectId}&ticketId=${ticketId}`, {
         method: 'POST',
@@ -338,6 +427,15 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         handleServerMessage(this, new FormData(this));
     });
+
+    const addCommentButton = editTicketForm.querySelector('#addCommentButton');
+
+    addCommentButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        let projectId = editTicketForm.querySelector("input[name='projectId']").value;
+        let ticketId = editTicketForm.querySelector("input[name='ticketId']").value;
+        addComment(projectId, ticketId, addCommentButton);
+    })
 
     const deleteButton = editTicketForm.querySelector("#deleteButton");
 
@@ -403,6 +501,80 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+var addCommentToTicket = async function (projectId, ticketId, text) {
+    if (text === null || text === '<p><br></p>') return;
+
+    await fetch(`/Projects/AddCommentToTicket?projectId=${projectId}&ticketId=${ticketId}&comment=${encodeURIComponent(text)}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        if (data.success === true) {
+            console.log("Changed ticket status");
+        }
+    })
+    .catch(error => {
+        console.error(error.message);
+    });
+}
+
+var addComment = function (projectId, ticketId, button) {
+
+    console.log(projectId, ticketId);
+    let parent = button.parentNode;
+    let addCommentTextBox = parent.querySelector("#addCommentTextBox");
+
+    button.style.display = 'none';
+
+    let buttonsContainer = parent.querySelector('#buttonsContainer');
+    buttonsContainer.style.display = 'flex';
+
+    let saveCommentButton = parent.querySelector("#saveCommentButton");
+    let cancelCommentButton = parent.querySelector("#cancelCommentButton");
+
+    saveCommentButton.addEventListener('click', async function (e) {
+        e.preventDefault();
+        let commentInput = parent.querySelector("input[name='commentInput']")
+        commentInput.value = addCommentTextBox.quill.root.innerHTML;
+        await addCommentToTicket(projectId, ticketId, commentInput.value);
+    })
+
+    cancelCommentButton.addEventListener('click', function (e) {
+        e.preventDefault();
+        addCommentTextBox.style.display = 'none';
+        addCommentTextBox.previousSibling.style.display = 'none';
+        buttonsContainer.style.display = 'none';
+        button.style.display = 'flex';
+    })
+
+    if (!addCommentTextBox.quill) {
+        const quill = new Quill(addCommentTextBox, {
+            theme: 'snow',
+            placeholder: 'Add comment...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'header': 1 }, { 'header': 2 }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['blockquote', 'code-block'],
+                    [{ 'color': [] }],
+                    ['clean']
+                ]
+            }
+        });
+        addCommentTextBox.quill = quill;
+    } else {
+        addCommentTextBox.style.display = 'block';
+        addCommentTextBox.previousSibling.style.display = 'block';
+    }
+;    
+
+}
 
 var fetchAndDisplayNotifications = function(projectId) {
     fetch(`/Projects/GetNotifications?projectId=${projectId}`, {

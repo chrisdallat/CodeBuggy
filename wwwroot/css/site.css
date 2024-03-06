@@ -391,3 +391,105 @@ h2 {
     position: absolute;
     left: -1em;
 }
+
+.comment-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.user-name {
+    font-weight: bold;
+}
+
+.timestamp {
+    margin-left: auto;
+    color: #999; /* Faded color */
+}
+
+.comment-content {
+    margin-left: 10px;
+}
+
+.ql-syntax {
+    background-color: #f0f0f0 !important;
+    color: black !important;
+}
+
+@media only screen and (max-width: 1920px) {
+    .popup {
+        max-width: 90%;
+    }
+}
+
+@media only screen and (max-height: 1080px) {
+    .popup {
+        max-height: 80%;
+    }
+}
+
+#upperContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#assignmentContainer {
+    float: right;
+    max-width: 300px;
+    width: -webkit-fill-available;
+    margin-right: 40px;
+}
+
+#ticketStatusesContainer {
+    float: left;
+    max-width: 600px;
+    width: -webkit-fill-available;
+    display: flex;
+}
+
+#assigneeContainer, #reporterContainer {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#assigneeLabel, #reporterLabel{
+    display: inline-block;
+    float: left;
+    font-weight: bold;
+}
+
+#assigneeName, #reporterName {
+    display: inline-block;
+    float: right;
+}
+
+#ticketDetailsContainer {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 600px;
+    width: -webkit-fill-available;
+    align-content: stretch;
+}
+
+#ticketTitleInput {
+    flex: 0 0 100%;
+}
+
+#ticketPriority,
+#ticketStatus {
+    flex: 0 0 calc(50% - 5px); /* Adjust width as needed */
+    margin-right: 10px; /* Add some space between the priority and status */
+}
+
+#assignToMeButton {
+    color: blue;
+    background: none;
+    border: 0;
+}
+
+#assignToMeButton:hover {
+    text-decoration: underline;
+}

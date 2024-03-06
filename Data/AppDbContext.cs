@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Reflection.Emit;
 
 namespace CodeBuggy.Data;
 
@@ -16,6 +17,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<BurndownData> BurndownData { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<Comment> Comments { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

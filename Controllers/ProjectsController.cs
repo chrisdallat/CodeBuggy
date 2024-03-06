@@ -111,6 +111,7 @@ public class ProjectsController : Controller
             ViewBag.ProjectTitle = _projectBoardModel?.GetProjectName(projectId);
             ViewBag.DeniedAccess = false;
             ViewBag.ProjectId = projectId;
+            ViewBag.Username = _projectBoardModel?.GetUsername(User);
 
             return View(_projectBoardModel);
         }
@@ -122,12 +123,6 @@ public class ProjectsController : Controller
     [HttpPost]
     public async Task<IActionResult> AddTicket(ProjectBoardModel.InputModel input, int projectId)
     {
-
-        if (string.IsNullOrWhiteSpace(input.TicketTitle))
-        {
-            return Json(new { success = false, message = "Ticket title must be provided" });
-        }
-
         OperationResult result = await _projectBoardModel.AddTicketToProject(User, input, projectId);
 
         return Json(new { success = result.Success, message = result.Message });
@@ -186,7 +181,6 @@ public class ProjectsController : Controller
             return RedirectToAction("Login", "Account");
         }
 
-
         OperationResult result = await _projectBoardModel.DeleteTicket(User, projectId, ticketId);
 
         return Json(new { success = result.Success, message = result.Message });
@@ -198,6 +192,34 @@ public class ProjectsController : Controller
         List<Notification> data = _notificationModel.GetNotificationData(_context, projectId);
         
         return data;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddCommentToTicket(int projectId, int ticketId, string comment)
+    {
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        OperationResult result = await _projectBoardModel.AddCommentToTicket(User, projectId, ticketId, comment);
+
+        return Json(new { success = result.Success, message = result.Message });
+    }
+
+    [HttpPost]
+    public IActionResult LoadComments(int projectId, int ticketId)
+    {
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var comments = new List<Comment>();
+
+        OperationResult result = _projectBoardModel.LoadComments(User, projectId, ticketId, ref comments);
+
+        return Json(new { success = result.Success, message = result.Message, commentsData = comments });
     }
 
     // ******************************************************************************* //
