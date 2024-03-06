@@ -11,7 +11,8 @@
         public TicketPriority Priority { get; set; }
         public TicketStatus Status { get; set; }
         public DateTime CreationDate { get; set; }
-        public string CreatedBy { get; set; } = string.Empty;
+        public string Reporter { get; set; } = string.Empty;
+        public string Assignee { get; set; } = string.Empty;
         public string ResolvedBy { get; set; } = string.Empty;
         public string? Description { get; set; }
         public List<int>? CommentsIds { get; set; }

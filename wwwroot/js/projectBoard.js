@@ -122,7 +122,7 @@ var loadComments = async function (projectId, ticketId) {
     return comments;
 }
 
-var showTicket = async function (ticket) {
+var showTicket = async function (ticket, assignedToUser) {
     const popup = document.getElementById("editTicketPopup");
     let popupTitle = popup.querySelector("#popupTitle");
     let ticketTitle = popup.querySelector("#ticketTitleInput").querySelector("input");
@@ -131,6 +131,9 @@ var showTicket = async function (ticket) {
     let ticketDescription = popup.querySelector("#ticketDescriptionInput");
     let ticketId = popup.querySelector("#changeTicketId");
     let projectId = popup.querySelector("input[name='projectId']").value;
+    let assignMeButton = popup.querySelector("#assignToMeButton");
+    let assigneeName = popup.querySelector("#assigneeName");
+    let reporterName = popup.querySelector("#reporterName");
 
     if (ticketDescription !== undefined) {
         if (ticket.Description !== undefined || ticket.Description !== "") {
@@ -170,11 +173,16 @@ var showTicket = async function (ticket) {
         i++;
     });
 
+    assignedToUser === true ? assignMeButton.style.display = 'none' : assignMeButton.style.display = 'block';
+
+    assigneeName.innerHTML = ticket.Assignee;
+    reporterName.innerHTML = ticket.Reporter;
+
     let currentURL = window.location.href;
     let newURL = currentURL + "&ticket=" + ticket.StringId
 
     // KHALIL please don't forget to change that so it can load a popup with this ticket ID
-    console.log(projectId);
+
     let comments = await loadComments(projectId, ticket.Id);
     let commentsBox = popup.querySelector("#existingCommentsBox");
     commentsBox.innerHTML = '';

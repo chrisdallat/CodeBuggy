@@ -111,6 +111,7 @@ public class ProjectsController : Controller
             ViewBag.ProjectTitle = _projectBoardModel?.GetProjectName(projectId);
             ViewBag.DeniedAccess = false;
             ViewBag.ProjectId = projectId;
+            ViewBag.Username = _projectBoardModel?.GetUsername(User);
 
             return View(_projectBoardModel);
         }

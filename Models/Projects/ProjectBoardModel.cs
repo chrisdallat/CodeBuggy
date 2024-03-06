@@ -105,8 +105,9 @@ public class ProjectBoardModel
                 Title = input.TicketTitle,
                 Priority = input.TicketPriorityValue >= TicketPriority.None ? input.TicketPriorityValue : TicketPriority.None,
                 Status = input.TicketStatusValue >= TicketStatus.ToDo ? input.TicketStatusValue : TicketStatus.ToDo,
-                CreatedBy = username,
+                Reporter = username,
                 CreationDate = DateTime.UtcNow,
+                Assignee = username,
                 ResolvedBy = "",
                 Description = input.TicketDescription,
                 CommentsIds = new List<int>(),
@@ -476,5 +477,16 @@ public class ProjectBoardModel
                 .ToList();
 
         return new OperationResult { Success = true, Message = "Found comments"};
+    }
+
+    public string? GetUsername(ClaimsPrincipal user)
+    {
+        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        if (username == null)
+        {
+            return null;
+        }
+
+        return username;
     }
 }
