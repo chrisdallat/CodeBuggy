@@ -585,14 +585,14 @@ var fetchAndDisplayNotifications = function(projectId) {
     .then(data => {
         const filteredNotifications = filterNotifications(data);
         var notificationHTML = generateNotificationHTML(filteredNotifications);
-        displayPopupOverlay(notificationHTML);
+        displayNotificationPopup(notificationHTML);
     })
     .catch(error => console.error('Error fetching notifications:', error));
 }
 
 var generateNotificationHTML = function(notifications) {
     return `
-    <div class="popup-notification-container">
+    <div class="notification-list-container">
         <div class="notification-list">${notifications.map(notification => `<div class="notification-item">${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</div>`).join('')}</div>
     </div>`;
 }
@@ -622,40 +622,33 @@ function filterNotifications(notifications) {
 }
 
 // NOTIFICATIONS POPUP
-var displayPopupOverlay = function(content) {
-    var popupOverlay = document.createElement('div');
-    popupOverlay.className = 'popup-overlay';
+var displayNotificationPopup = function(content) {
+    var notificationPopup = document.createElement('div');
+    notificationPopup.className = 'notification-popup-parent';
 
-    var popupContent = document.createElement('div');
-    popupContent.className = 'popup-content';
-    popupContent.innerHTML = content;
+    var notificationContent = document.createElement('div');
+    notificationContent.className = 'notification-popup-content';
+    notificationContent.innerHTML = content;
 
-    //TODO maybe remove this, as I like the click outside 
-    //to close functionality with the event listener below
-    // var closeButton = document.createElement('button');
-    // closeButton.innerText = 'Close';
-    // closeButton.onclick = closePopupOverlay;
-    // popupContent.appendChild(closeButton);
+    notificationPopup.appendChild(notificationContent);
+    document.body.appendChild(notificationPopup);
 
-    popupOverlay.appendChild(popupContent);
-    document.body.appendChild(popupOverlay);
-
-    var notificationContainer = document.querySelector('.popup-notification-container');
+    var notificationContainer = document.querySelector('.notification-popup-container');
     if (notificationContainer) {
         notificationContainer.scrollTop = notificationContainer.scrollHeight;
     }
 
-    popupOverlay.addEventListener('click', function(event) {
-        if (!popupContent.contains(event.target)) {
-            closePopupOverlay();
+    notificationPopup.addEventListener('click', function(event) {
+        if (!notificationContent.contains(event.target)) {
+            closeNotificationPopup();
         }
     });
 }
 
-var closePopupOverlay = function() {
-    var overlay = document.querySelector('.popup-overlay');
-    if (overlay) {
-        document.body.removeChild(overlay);
+var closeNotificationPopup = function() {
+    var popup = document.querySelector('.notification-popup-parent');
+    if (popup) {
+        document.body.removeChild(popup);
     }
 }
 

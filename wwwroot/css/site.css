@@ -363,35 +363,6 @@ h2 {
     width: -moz-fit-content;
 }
 
-.fixed-notification-container {
-    margin-top: 30px;
-    margin-bottom: 30px;
-    height: 200px; 
-    border: 1px solid #ccc;
-    overflow: hidden;
-}
-
-.notification-container {
-    overflow-y: auto;
-    height: 100%;
-    padding: 10px;
-}
-
-.notification-list {
-    margin-left: 1em; /* Adjust the margin to control the indentation */
-}
-
-.notification-item {
-    margin-bottom: 5px; 
-    position: relative; 
-}
-
-.notification-item::before {
-    content: '\003E'; 
-    position: absolute;
-    left: -1em;
-}
-
 .comment-container {
     display: flex;
     flex-direction: row;
@@ -494,7 +465,7 @@ h2 {
     text-decoration: underline;
 }
 
-.popup-overlay {
+.notification-popup-parent {
     position: fixed;
     top: 0;
     left: 0;
@@ -506,7 +477,7 @@ h2 {
     justify-content: center;
 }
 
-.popup-content {
+.notification-popup-content {
     background: white;
     padding: 20px;
     border-radius: 5px;
@@ -516,6 +487,17 @@ h2 {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
-.popup-content button {
-    margin-top: 10px;
+.notification-list {
+    margin-left: 1em; /* Adjust the margin to control the indentation */
+}
+
+.notification-item {
+    margin-bottom: 5px; 
+    position: relative; 
+}
+
+.notification-item::before {
+    content: '\003E'; 
+    position: absolute;
+    left: -1em;
 }
