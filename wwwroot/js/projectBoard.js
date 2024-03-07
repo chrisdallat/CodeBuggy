@@ -571,9 +571,7 @@ var addComment = function (projectId, ticketId, button) {
     } else {
         addCommentTextBox.style.display = 'block';
         addCommentTextBox.previousSibling.style.display = 'block';
-    }
-;    
-
+    }    
 }
 
 var fetchAndDisplayNotifications = function(projectId) {
@@ -585,24 +583,80 @@ var fetchAndDisplayNotifications = function(projectId) {
     })
     .then(response => response.json())
     .then(data => {
-        var notificationContainer = document.getElementById("notificationContainer");
-        if (notificationContainer) {
-            notificationContainer.innerHTML = generateNotificationHTML(data);
-            notificationContainer.scrollTop = notificationContainer.scrollHeight;
-        }
-        return data;
+        const filteredNotifications = filterNotifications(data);
+        var notificationHTML = generateNotificationHTML(filteredNotifications);
+        displayPopupOverlay(notificationHTML);
     })
     .catch(error => console.error('Error fetching notifications:', error));
 }
 
 var generateNotificationHTML = function(notifications) {
-    return `<div class="notification-list">${notifications.map(notification => `<div class="notification-item">${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</div>`).join('')}</div>`;
+    return `
+    <div class="popup-notification-container">
+        <div class="notification-list">${notifications.map(notification => `<div class="notification-item">${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</div>`).join('')}</div>
+    </div>`;
 }
 
 function formatTimestamp(timestamp) {
     const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
     const formattedDate = new Date(timestamp).toLocaleString('en-GB', options);
     return formattedDate;
+}
+
+// FILTER NOTIFICATIONS(Can change later to agreed amount)
+function filterNotifications(notifications) {
+    const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
+    const currentDate = new Date();
+    const maxNotifications = 30;
+
+    notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Filter notifications for the last 7 days or max 30 notifications? can discuss tuning this
+    const filteredNotifications = notifications.filter((notification, index) => {
+        const notificationDate = new Date(notification.timestamp);
+        const daysDifference = Math.floor((currentDate - notificationDate) / oneDayInMilliseconds);
+
+        return daysDifference <= 7 && index < maxNotifications;
+    });
+    return filteredNotifications;
+}
+
+// NOTIFICATIONS POPUP
+var displayPopupOverlay = function(content) {
+    var popupOverlay = document.createElement('div');
+    popupOverlay.className = 'popup-overlay';
+
+    var popupContent = document.createElement('div');
+    popupContent.className = 'popup-content';
+    popupContent.innerHTML = content;
+
+    //TODO maybe remove this, as I like the click outside 
+    //to close functionality with the event listener below
+    // var closeButton = document.createElement('button');
+    // closeButton.innerText = 'Close';
+    // closeButton.onclick = closePopupOverlay;
+    // popupContent.appendChild(closeButton);
+
+    popupOverlay.appendChild(popupContent);
+    document.body.appendChild(popupOverlay);
+
+    var notificationContainer = document.querySelector('.popup-notification-container');
+    if (notificationContainer) {
+        notificationContainer.scrollTop = notificationContainer.scrollHeight;
+    }
+
+    popupOverlay.addEventListener('click', function(event) {
+        if (!popupContent.contains(event.target)) {
+            closePopupOverlay();
+        }
+    });
+}
+
+var closePopupOverlay = function() {
+    var overlay = document.querySelector('.popup-overlay');
+    if (overlay) {
+        document.body.removeChild(overlay);
+    }
 }
 
 
