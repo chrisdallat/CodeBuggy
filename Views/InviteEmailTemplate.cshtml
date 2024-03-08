@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang='en'>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            font-size: 16px
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .important-text {
+            font-weight: bold;
+            font-size: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class='container'>
+        <p>Hi <b>{{Email}}</b>,</p>
+        <p>You have been invited to join our project <b><i style="font-size: 18px;"></>{{ProjectName}}</i></b> by <b style="font-size: 18px;">{{Username}}</b>, below is your
+            AccessCode:</p>
+        <p class='important-text' style='justify-content: center'>{{AccessCode}}</p>
+        <p>You can log in to your account and add the project by entering the Project Name and Access Code provided. If
+            you do not have an account on CodeBuggy, you can create one on the website!</p>
+        <p>Thank You,</p>
+        <p><b><i style="font-size: 18px;">CodeBuggy Team</i></b></p>
+    </div>
+</body>
+
+</html>

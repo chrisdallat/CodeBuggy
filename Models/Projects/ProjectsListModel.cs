@@ -281,43 +281,7 @@ public class ProjectsListModel
             mailMessage.To.Add(input.Email);
             mailMessage.Subject = "Invite Access Code to CodeBuggy Project";
             mailMessage.IsBodyHtml = true;
-            mailMessage.IsBodyHtml = true;
-            mailMessage.Body = $@"
-            <!DOCTYPE html>
-            <html lang='en'>
-            <head>
-                <meta charset='UTF-8'>
-                <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                <style>
-                    body {{
-                        font-family: 'Arial', sans-serif;
-                        line-height: 1.6;
-                        font-size: 16px
-                    }}
-                    .container {{
-                        max-width: 600px;
-                        margin: 0 auto;
-                    }}
-                    .important-text {{
-                        font-weight: bold;
-                        font-size: 26px;
-                    }}
-                </style>
-            </head>
-            <body>
-                <div class='container'>
-                    <p>Hi <b>{input.Email}</b>,</p>
-                    <p>You have been invited to join our project <b><i>{input.Name}</i></b> by <b>{username}</b>, below is your AccessCode:</p>
-                    <p class='important-text' style='justify-content: center'>{input.AccessCode}</p>
-                    <p>You can log in to your account and add the project by entering the project name and access code provided. If you do not have an account on CodeBuggy, you can create one on the website!</p>
-                    <p>Thank You,</p>
-                    <p>CodeBuggy Team</p>
-                </div>
-            </body>
-            </html>";
-
-
+            mailMessage.Body = getEmailTemplate(input, username);
             smtpClient.Send(mailMessage);
 
         }
@@ -329,6 +293,20 @@ public class ProjectsListModel
 
         return new OperationResult { Success = true, Message = "Invite Sent Successfully" };
     }
+
+    public string getEmailTemplate(InputModel input, string username)
+    {
+        var templatePath = "Views/InviteEmailTemplate.cshtml";
+        var templateContent = File.ReadAllText(templatePath);
+
+        templateContent = templateContent.Replace("{{Email}}", input.Email)
+                                        .Replace("{{ProjectName}}", input.Name)
+                                        .Replace("{{Username}}", username)
+                                        .Replace("{{AccessCode}}", input.AccessCode);
+
+        return templateContent;
+    }
+
 
 
     // ******************************************************************************* //

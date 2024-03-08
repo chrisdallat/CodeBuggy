@@ -204,7 +204,7 @@ function OnSuccessResult(data) {
 }
 
 function OnError(err) {
-    console.log("COULD NOT FETCH DATA");
+    console.log("COULD NOT FETCH BURNDOWN DATA");
 }
 
 function fetchDataAndRenderChart(projectId) {

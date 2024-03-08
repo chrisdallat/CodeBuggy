@@ -82,9 +82,6 @@ var goBack = function () {
 }
 
 var handleServerMessage = function (form, formData) {
-    for (var entry of formData.entries()) {
-        console.log(entry[0], entry[1]);
-    }
     fetch(form.action, {
         method: 'POST',
         body: formData

@@ -110,7 +110,6 @@ var loadComments = async function (projectId, ticketId) {
     })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
             if (data.success === true) {
                 comments = data.commentsData;
             }
@@ -186,7 +185,6 @@ var showTicket = async function (ticket, assignedToUser) {
     let comments = await loadComments(projectId, ticket.Id);
     let commentsBox = popup.querySelector("#existingCommentsBox");
     commentsBox.innerHTML = '';
-    console.log(comments);
     if (comments !== undefined) {
         comments.forEach(comment => {
             // Create separator line
@@ -339,17 +337,11 @@ var drag = function(dragEvent, ticket) {
 }
 
 var handleServerMessage = function (form, formData) {
-
-    for (var entry of formData.entries()) {
-        console.log(entry[0], entry[1]);
-    }
-
     fetch(form.action, {
         method: 'POST',
         body: formData
     })
 
-    
     .then(response => response.json())
     .then(data => {
             console.log(data)
@@ -524,8 +516,7 @@ var addCommentToTicket = async function (projectId, ticketId, text) {
 }
 
 var addComment = function (projectId, ticketId, button) {
-
-    console.log(projectId, ticketId);
+    
     let parent = button.parentNode;
     let addCommentTextBox = parent.querySelector("#addCommentTextBox");
 
