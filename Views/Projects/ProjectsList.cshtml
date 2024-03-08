@@ -79,9 +79,11 @@ else
         <form id='inviteEmail' action='InviteEmail' method='post'>
         <div style='text-align: center; font-size: 17px; margin-bottom: 20px;'>Enter Email Address</div>
         <div class='form-floating mb-3' style='max-width: 380px; margin: 0 auto;'>
-            <input name='EmailInput.Email' class='form-control' aria-required='true' placeholder='' />
-            <label name='EmailInput.Email'>Email</label>
-        </div>";
+            <input name='Input.Email' class='form-control' aria-required='true' placeholder=''/>
+            <label name='Input.Email'>Email</label>
+        </div>
+        <input type='hidden' name='Input.AccessCode' id='accessCodeInput' />
+        <input type='hidden' name='Input.Name' id='nameInput'/>";
     
     string sendButton = @"
         <button id='submitButton' type='submit' class='button-general mb-3 mt-5'

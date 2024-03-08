@@ -90,14 +90,14 @@ public class ProjectsController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> InviteEmail(ProjectsListModel.EmailInputModel input)
+    public IActionResult InviteEmail(ProjectsListModel.InputModel input)
     {
         if (string.IsNullOrWhiteSpace(input.Email))
         {
             return Json(new { success = false, message = "User could not be invited" });
         }
 
-        OperationResult result = await _projectsListModel.InviteEmailAsync(input, User);
+        OperationResult result = _projectsListModel.InviteEmail(input, User);
 
         return Json(new { success = result.Success, message = result.Message });
     }

@@ -40,10 +40,14 @@ var toggleDeletePopup = function () {
     }
 }
 
-var toggleInviteEmailPopup = function () {
-    console.log("ToggleEmail");
+var toggleInviteEmailPopup = function (accessCode, projectName) {
     const popup = document.getElementById('inviteEmailPopup');
     popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+    let accessCodeInput = popup.querySelector('input[name="Input.AccessCode"]');
+    let projectNameInput = popup.querySelector('input[name="Input.Name"]');
+
+    accessCodeInput.value = accessCode;
+    projectNameInput.value = projectName;
 
     if (popup.style.display === 'none') {
         let errorMessage = document.getElementById("errorMessage");
@@ -78,6 +82,9 @@ var goBack = function () {
 }
 
 var handleServerMessage = function (form, formData) {
+    for (var entry of formData.entries()) {
+        console.log(entry[0], entry[1]);
+    }
     fetch(form.action, {
         method: 'POST',
         body: formData
