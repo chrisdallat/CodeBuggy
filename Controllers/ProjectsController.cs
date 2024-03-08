@@ -89,6 +89,19 @@ public class ProjectsController : Controller
         return Json(new { success = result.Success, message = result.Message });
     }
 
+    [HttpPost]
+    public async Task<IActionResult> InviteEmail(ProjectsListModel.EmailInputModel input)
+    {
+        if (string.IsNullOrWhiteSpace(input.Email))
+        {
+            return Json(new { success = false, message = "User could not be invited" });
+        }
+
+        OperationResult result = await _projectsListModel.InviteEmailAsync(input, User);
+
+        return Json(new { success = result.Success, message = result.Message });
+    }
+
     // ******************************************************************************* //
     // ******************************** Project Board ******************************** // 
     // ******************************************************************************* //
@@ -136,9 +149,9 @@ public class ProjectsController : Controller
             return RedirectToAction("Login", "Account");
         }
 
-        OperationResult result = await _projectBoardModel.ChangeTicketStatus(User ,projectId, ticketId, status);
+        OperationResult result = await _projectBoardModel.ChangeTicketStatus(User, projectId, ticketId, status);
 
-        return Json(new { success = result.Success, message = result.Message});
+        return Json(new { success = result.Success, message = result.Message });
     }
 
     [HttpPost]
@@ -186,11 +199,12 @@ public class ProjectsController : Controller
         return Json(new { success = result.Success, message = result.Message });
     }
 
+
     [HttpPost]
     public List<Notification> GetNotifications(int projectId)
     {
         List<Notification> data = _notificationModel.GetNotificationData(_context, projectId);
-        
+
         return data;
     }
 

@@ -33,6 +33,7 @@ public static class HtmlHelpers
                             $"<td style='width: 600px;'><span class='blurred-text' onclick='toggleBlur(this)'><span>{project.AccessCode}</span></span>" +
                             $"<button class='gg-copy' onclick='copyText(this, \"{project.AccessCode}\")'></button>" +
                             $"<span style='display: none; float: right; margin-right: 20px'>Copied!</span></td>" +
+                            $"<td><button class='gg-comment' onclick='toggleInviteEmailPopup()'></button></td>" +
                             $"<td>{project.Owner}</td>" +
                             $"<td><button class='gg-trash' onclick='toggleDeletePopup()'></button></td>";
             tbody.InnerHtml += row;
