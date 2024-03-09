@@ -476,7 +476,7 @@ public class ProjectBoardModel
                 .Where(t => ticket.CommentsIds.Contains(t.Id))
                 .ToList();
 
-        return new OperationResult { Success = true, Message = "Found comments"};
+        return new OperationResult { Success = true, Message = "Found comments" };
     }
 
     public string? GetUsername(ClaimsPrincipal user)
@@ -488,5 +488,31 @@ public class ProjectBoardModel
         }
 
         return username;
+    }
+
+
+
+    // TODO: Implement the return properly
+    public OperationResult GetSearchResults(ClaimsPrincipal user, int projectId, string query)
+    {
+        if (!ValidUserClaim(user, projectId))
+        {
+            return new OperationResult { Success = false, Message = "User doesn't have access" };
+        }
+
+        var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
+        if (project == null)
+        {
+            return new OperationResult { Success = false, Message = "Project not found" };
+        }
+
+        var searchResults = _context.Tickets
+            .Where(t => project.TicketsId.Contains(t.Id) &&
+                        (t.StringId.Contains(query) ||
+                        t.Title.Contains(query) ||
+                         (t.Description != null && t.Description.Contains(query))))
+            .ToList();
+
+        return new OperationResult { Success = true, Message = "Search completed"};
     }
 }

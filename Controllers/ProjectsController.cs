@@ -244,4 +244,21 @@ public class ProjectsController : Controller
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
+
+    [HttpGet]
+    public IActionResult Search(int projectId, string query) {
+        // Implement logic to search tickets based on the query
+        // Return a JSON result with the matching tickets
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+        
+        _logger.LogInformation("List of Tickets Matching Search: ");
+
+        OperationResult result = _projectBoardModel.GetSearchResults(User, projectId, query);
+
+        return Json(new { success = result.Success, message = result.Message});
+    }
 }
+
