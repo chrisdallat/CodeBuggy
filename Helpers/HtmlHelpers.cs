@@ -19,7 +19,7 @@ public static class HtmlHelpers
         table.AddCssClass("content-table");
 
         var thead = new TagBuilder("thead");
-        thead.InnerHtml += "<tr><th>Title</th><th>Access Code</th><th></th><th></th><th>Owner</th><th></th><th></th></tr>";
+        thead.InnerHtml += "<tr><th>Title</th><th>Access Code</th><th></th><th></th><th style='width: 200px;'>Owner</th></tr>";
         table.InnerHtml += thead;
 
         var tbody = new TagBuilder("tbody");
