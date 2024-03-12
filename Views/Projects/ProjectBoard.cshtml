@@ -37,10 +37,14 @@
 {
 
     <div style="display: flex; justify-content: space-between; align-items: center;">
-    <form id="searchForm">
-    <input type="text" id="searchInput" placeholder="Search by Title, Description, or ID">
-</form>
-    <div id="searchResultsDropdown"></div>
+    <div id="searchContainer" style="position: relative;">
+        <form id="searchForm">
+            <input type="text" id="searchInput" placeholder="Search by Title, Description, or ID">
+            <input type="hidden" id="projectId" value="@ViewBag.ProjectId" />
+        </form>
+        <div id="searchResultsDropdown"></div>
+    </div>
+
     <h2 style="text-align: center; flex: 1; margin-left: 150px;">@ViewBag.ProjectTitle</h2>
     <a class="create-button" style="text-align: right; margin-right: 10px;"
         onclick="fetchAndDisplayNotifications(@ViewBag.ProjectId)">

@@ -643,4 +643,62 @@ var closeNotificationPopup = function() {
     }
 }
 
+$(document).ready(function() {
+    $("#searchInput").on("input", function() {
+        var searchQuery = $(this).val();
+        if (searchQuery.length >= 3) {
+            var projectId = $("#projectId").val();
+            updateSearchResults(projectId, searchQuery);
+        } else {
+            clearSearchResults();
+        }
+    });
+});
+
+function updateSearchResults(projectId, query) {
+    $.ajax({
+        url: '/Projects/Search',
+        data: { projectId: projectId, query: query },
+        success: function(data) {
+            displaySearchResults(data);
+        },
+        error: function(error) {
+            console.error("Error fetching search results:", error);
+        }
+    });
+}
+
+function displaySearchResults(results) {
+    console.log(results);
+    var dropdown = $("#searchResultsDropdown");
+    dropdown.empty();
+
+    if (results.length === 0) {
+        dropdown.append("<div>No results found</div>");
+    } else {
+        $.each(results, function(index, result) {
+            var truncatedDescription = result.description ? (result.description.length > 20 ? result.description.substring(0, 20) + '...' : result.description) : 'N/A';
+            var listItem = $('<div class="search-result-item">' + 
+                             '<div><strong>ID:</strong> ' + result.stringId + '</div>' + 
+                             '<div><strong>Title:</strong> ' + result.title + '</div>' + 
+                             '<div><strong>Description:</strong> ' + truncatedDescription + '</div>' + 
+                             '</div>');
+            listItem.click(function() {
+                openTicketPopup(result.id);
+            });
+            dropdown.append(listItem);
+        });
+    }
+    dropdown.show();
+}
+
+
+
+function clearSearchResults() {
+    $("#searchResultsDropdown").empty().hide();
+}
+
+function openTicketPopup(ticketId) {
+    console.log("Open Ticket Popup from Link: " + ticketId);
+}
 

@@ -493,26 +493,27 @@ public class ProjectBoardModel
 
 
     // TODO: Implement the return properly
-    public OperationResult GetSearchResults(ClaimsPrincipal user, int projectId, string query)
+    public List<Ticket> GetSearchResults(ClaimsPrincipal user, int projectId, string query)
     {
         if (!ValidUserClaim(user, projectId))
         {
-            return new OperationResult { Success = false, Message = "User doesn't have access" };
+            return new List<Ticket>();
         }
 
         var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
         {
-            return new OperationResult { Success = false, Message = "Project not found" };
+            return new List<Ticket>(); // or return null/exception maybe??
         }
 
         var searchResults = _context.Tickets
             .Where(t => project.TicketsId.Contains(t.Id) &&
                         (t.StringId.Contains(query) ||
                         t.Title.Contains(query) ||
-                         (t.Description != null && t.Description.Contains(query))))
+                        (t.Description != null && t.Description.Contains(query))))
             .ToList();
 
-        return new OperationResult { Success = true, Message = "Search completed"};
+        return searchResults;
     }
+
 }

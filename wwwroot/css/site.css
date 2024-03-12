@@ -501,3 +501,30 @@ h2 {
     position: absolute;
     left: -1em;
 }
+
+#searchContainer {
+    position: relative;
+}
+
+#searchInput {
+    width: 200px; 
+}
+
+#searchResultsDropdown {
+    width: 500px;
+    position: absolute;
+    top: 100%; 
+    left: 0; 
+    z-index: 1000; 
+    background-color: #fff; 
+    border: 1px solid #040404; 
+    padding: 5px; 
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 4px; 
+}
+
+.search-result-item {
+    border-bottom: 1px solid black;
+    padding: 5px;
+}
+
