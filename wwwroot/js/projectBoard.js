@@ -187,38 +187,30 @@ var showTicket = async function (ticket, assignedToUser) {
     commentsBox.innerHTML = '';
     if (comments !== undefined) {
         comments.forEach(comment => {
-            // Create separator line
             const separator = document.createElement('hr');
             separator.classList.add('comment-separator');
             commentsBox.appendChild(separator);
 
-            // Create comment container
             const commentContainer = document.createElement('div');
             commentContainer.classList.add('comment-container');
 
-            // Create username element
             const userName = document.createElement('strong');
             userName.textContent = comment.username;
 
-            // Format timestamp
             const timestampDate = new Date(comment.timestamp);
             const formattedDate = `${(timestampDate.getMonth() + 1).toString().padStart(2, '0')}/${timestampDate.getDate().toString().padStart(2, '0')}/${timestampDate.getFullYear()}`;
             const formattedTime = `${timestampDate.getHours().toString().padStart(2, '0')}:${timestampDate.getMinutes().toString().padStart(2, '0')}`;
 
-            // Create timestamp element
             const timestamp = document.createElement('span');
             timestamp.textContent = `${formattedDate} ${formattedTime}`;
             timestamp.classList.add('timestamp');
 
-            // Append username and timestamp to comment container
             commentContainer.appendChild(userName);
             commentContainer.appendChild(timestamp);
 
-            // Create comment content
             const commentContent = document.createElement('div');
             commentContent.classList.add('comment-content');
 
-             //Initialize Quill
             const quill = new Quill(commentContent, {
                 theme: 'snow',
                 modules: {
@@ -229,15 +221,12 @@ var showTicket = async function (ticket, assignedToUser) {
 
             commentContent.classList.remove('ql-container');
 
-            // Insert comment text into Quill editor
             quill.root.innerHTML = comment.text;
 
-            // Append comment container to comments box
             commentsBox.appendChild(commentContainer);
             commentsBox.appendChild(commentContent);
         });
     }
-
     popup.style.display = 'flex';
 }
 
@@ -623,7 +612,8 @@ var displayNotificationPopup = function(content) {
 
     notificationContent.addEventListener('click', function(event) {
         // ACTION TO SEND TICKETID TO FUNCTION
-        openTicketPopup(clickedTicketId);
+        // openTicketPopup(clickedTicketId);
+        console.log("TODO: ADD FUNCTIONALITY TO OPEN TICKET HERE");
     });
 
     notificationPopup.appendChild(notificationContent);
@@ -658,6 +648,13 @@ $(document).ready(function() {
             clearSearchResults();
         }
     });
+
+    $(document.body).on('click', function(event) {
+        var target = $(event.target);
+        if (!target.closest('#searchResultsDropdown').length) {
+            clearSearchResults();
+        }
+    });
 });
 
 function updateSearchResults(projectId, query) {
@@ -682,14 +679,15 @@ function displaySearchResults(results) {
         dropdown.append("<div>No results found</div>");
     } else {
         $.each(results, function(index, result) {
-            var truncatedDescription = result.description ? (result.description.length > 20 ? result.description.substring(0, 20) + '...' : result.description) : 'N/A';
+            var truncatedDescription = result.description ? (result.description.length > 70 ? result.description.substring(0, 70) + '...' : result.description) : 'N/A';
             var listItem = $('<div class="search-result-item">' + 
                              '<div><strong>ID:</strong> ' + result.stringId + '</div>' + 
                              '<div><strong>Title:</strong> ' + result.title + '</div>' + 
-                             '<div><strong>Description:</strong> ' + truncatedDescription + '</div>' + 
+                             '<div><strong>Description:</strong> ' + truncatedDescription + '...'  + '</div>' + 
                              '</div>');
             listItem.click(function() {
                 openTicketPopup(result.id);
+
             });
             dropdown.append(listItem);
         });
@@ -703,5 +701,8 @@ function clearSearchResults() {
 
 function openTicketPopup(ticketId) {
     console.log("Open Ticket Popup from Link: " + ticketId);
+    // TODO:FIGURE HOW TO SHOW TICKET FROM THIS TICKETID
+    // showTicket(ticketId, false);
+    clearSearchResults();
 }
 
