@@ -490,8 +490,6 @@ public class ProjectBoardModel
         return username;
     }
 
-
-
     // TODO: Implement the return properly
     public List<Ticket> GetSearchResults(ClaimsPrincipal user, int projectId, string query)
     {
@@ -507,11 +505,11 @@ public class ProjectBoardModel
         }
 
         var searchResults = _context.Tickets
-            .Where(t => project.TicketsId.Contains(t.Id) &&
-                        (t.StringId.Contains(query) ||
-                        t.Title.Contains(query) ||
-                        (t.Description != null && t.Description.Contains(query))))
-            .ToList();
+        .Where(t => project.TicketsId.Contains(t.Id) &&
+                    (t.StringId.ToLower().Contains(query.ToLower()) ||
+                    t.Title.ToLower().Contains(query.ToLower()) ||
+                    (t.Description != null && t.Description.ToLower().Contains(query.ToLower()))))
+        .ToList();
 
         return searchResults;
     }

@@ -621,6 +621,11 @@ var displayNotificationPopup = function(content) {
     notificationContent.className = 'notification-popup-content';
     notificationContent.innerHTML = content;
 
+    notificationContent.addEventListener('click', function(event) {
+        // ACTION TO SEND TICKETID TO FUNCTION
+        openTicketPopup(clickedTicketId);
+    });
+
     notificationPopup.appendChild(notificationContent);
     document.body.appendChild(notificationPopup);
 
@@ -691,8 +696,6 @@ function displaySearchResults(results) {
     }
     dropdown.show();
 }
-
-
 
 function clearSearchResults() {
     $("#searchResultsDropdown").empty().hide();

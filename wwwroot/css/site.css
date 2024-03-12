@@ -511,6 +511,7 @@ h2 {
 }
 
 #searchResultsDropdown {
+    display: none;
     width: 500px;
     position: absolute;
     top: 100%; 
