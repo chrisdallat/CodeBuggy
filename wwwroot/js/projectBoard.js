@@ -571,10 +571,18 @@ var fetchAndDisplayNotifications = function(projectId) {
 }
 
 var generateNotificationHTML = function(notifications) {
-    return `
+    if (notifications.length === 0) {
+        console.log("here:: " + notifications.length);
+        return `
+        <div class="notification-list-container">
+            <div class="notification-list">NO NOTIFICATIONS CURRENTLY</div>
+        </div>`;
+    } else {
+        return `
     <div class="notification-list-container">
         <div class="notification-list">${notifications.map(notification => `<div class="notification-item">${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</div>`).join('')}</div>
     </div>`;
+    }
 }
 
 function formatTimestamp(timestamp) {
@@ -583,20 +591,13 @@ function formatTimestamp(timestamp) {
     return formattedDate;
 }
 
-// FILTER NOTIFICATIONS(Can change later to agreed amount)
 function filterNotifications(notifications) {
-    const oneDayInMilliseconds = 24 * 60 * 60 * 1000;
-    const currentDate = new Date();
     const maxNotifications = 30;
 
     notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    // Filter notifications for the last 7 days or max 30 notifications? can discuss tuning this
-    const filteredNotifications = notifications.filter((notification, index) => {
-        const notificationDate = new Date(notification.timestamp);
-        const daysDifference = Math.floor((currentDate - notificationDate) / oneDayInMilliseconds);
-
-        return daysDifference <= 7 && index < maxNotifications;
+    const filteredNotifications = notifications.filter((_, index) => {
+        return index <= maxNotifications;
     });
     return filteredNotifications;
 }
