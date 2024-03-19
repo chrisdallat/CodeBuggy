@@ -333,7 +333,6 @@ var handleServerMessage = function (form, formData) {
 
     .then(response => response.json())
     .then(data => {
-            console.log(data)
         if (data.success === false) {
             let errorMessage = document.getElementById('errorMessage');
             if (!errorMessage) {
@@ -494,7 +493,6 @@ var addCommentToTicket = async function (projectId, ticketId, text) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
         if (data.success === true) {
             console.log("Changed ticket status");
         }
@@ -572,7 +570,6 @@ var fetchAndDisplayNotifications = function(projectId) {
 
 var generateNotificationHTML = function(notifications) {
     if (notifications.length === 0) {
-        console.log("here:: " + notifications.length);
         return `
         <div class="notification-list-container">
             <div class="notification-list">NO NOTIFICATIONS CURRENTLY</div>
@@ -672,7 +669,6 @@ function updateSearchResults(projectId, query) {
 }
 
 function displaySearchResults(results) {
-    console.log(results);
     var dropdown = $("#searchResultsDropdown");
     dropdown.empty();
 
@@ -680,11 +676,12 @@ function displaySearchResults(results) {
         dropdown.append("<div>No results found</div>");
     } else {
         $.each(results, function(index, result) {
-            var truncatedDescription = result.description ? (result.description.length > 70 ? result.description.substring(0, 70) + '...' : result.description) : 'N/A';
+            var html = result.description ? result.description.match(/<p>(.*?)<\/p>/)[1] : null;
+            var truncatedDescription = html ? (html.length > 70 ? html.substring(0, 70) + '...' : html) : 'N/A';
             var listItem = $('<div class="search-result-item">' + 
                              '<div><strong>ID:</strong> ' + result.stringId + '</div>' + 
                              '<div><strong>Title:</strong> ' + result.title + '</div>' + 
-                             '<div><strong>Description:</strong> ' + truncatedDescription + '...'  + '</div>' + 
+                             '<div><strong>Description:</strong> ' + truncatedDescription.trimEnd() + '...'  + '</div>' + 
                              '</div>');
             listItem.click(function() {
                 openTicketPopup(result.id);
