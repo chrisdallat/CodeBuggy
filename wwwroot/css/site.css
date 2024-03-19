@@ -497,9 +497,14 @@ h2 {
 }
 
 .notification-item::before {
-    content: '\003E'; 
-    position: absolute;
-    left: -1em;
+    content: ''; 
+    position: relative;
+    display: inline-block;
+    width: 0.5em;
+    height: 0.5em;
+    background-color: #cacaca;
+    border-radius: 50%;
+    margin-right: 0.5em;
 }
 
 #searchContainer {
@@ -524,6 +529,11 @@ h2 {
     border-radius: 4px; 
 }
 
+#searchResultsDropdown:hover,
+.search-result-item:hover {
+    cursor: pointer;
+}
+
 .search-result-item {
     border-bottom: 1px solid black;
     padding: 5px;
@@ -532,9 +542,10 @@ h2 {
 #ticketStringId {
     display: -webkit-inline-box;
     margin: 0px;
-    color: blue;
+    color: rgb(130, 167, 255);
 }
 
 #ticketStringId:hover {
     text-decoration: underline;
+    cursor: pointer;
 }

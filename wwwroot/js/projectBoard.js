@@ -584,12 +584,13 @@ var generateNotificationHTML = function(notifications) {
     if (notifications.length === 0) {
         return `
         <div class="notification-list-container">
-            <div class="notification-list">NO NOTIFICATIONS CURRENTLY</div>
+            <div class="notification-list" style="font-style: italic; color: #999;">NO NOTIFICATIONS CURRENTLY</div>
         </div>`;
     } else {
         return `
+    <div style="display: flex; justify-content: center; align-items: center; font-style: italic; color: #999;">Most Recent Activity</div>
     <div class="notification-list-container">
-        <div class="notification-list">${notifications.map(notification => `<div class="notification-item">${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</div>`).join('')}</div>
+       <div class="notification-list">${notifications.map(notification => `<div class="notification-item"><span style="font-style: italic;">${formatTimestamp(notification.timestamp)}</span>: ${notification.message || 'No Message'}</div>`).join('')}</div>
     </div>`;
     }
 }
@@ -611,7 +612,6 @@ function filterNotifications(notifications) {
     return filteredNotifications;
 }
 
-// NOTIFICATIONS POPUP
 var displayNotificationPopup = function(content) {
     var notificationPopup = document.createElement('div');
     notificationPopup.className = 'notification-popup-parent';
