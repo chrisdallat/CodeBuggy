@@ -13,6 +13,11 @@ namespace CodeBuggy.Helpers;
 
 public static class HtmlHelpers
 {
+    public class TicketInfo
+    {
+        public string TicketJson { get; set; } = string.Empty;
+        public string AssignedToUser { get; set; } = string.Empty;
+    }
     public static IHtmlContent RenderProjectTable(IEnumerable<Project> projects, IUrlHelper url)
     {
         var table = new TagBuilder("table");
@@ -141,6 +146,36 @@ public static class HtmlHelpers
         }
 
         return new HtmlString(result.ToString());
+    }
+
+    public static TicketInfo? GetTicketInfo(this IHtmlHelper htmlHelper, List<Ticket> tickets, string ticketStringId, string username)
+    {
+        var ticket = tickets.FirstOrDefault(t => t.StringId == ticketStringId);
+
+        if (ticket == null)
+        {
+            return null;
+        }
+
+        var result = new StringBuilder();
+
+        var assignedToUser = "false";
+        if (username != null && username == ticket.Assignee)
+        {
+            assignedToUser = "true";
+        }
+        string ticketJson = JsonConvert.SerializeObject(ticket);
+        if (ticketJson == null)
+        {
+            return null;
+        }
+
+
+        return new TicketInfo
+        {
+            TicketJson = ticketJson,
+            AssignedToUser = assignedToUser.ToLower()
+        };
     }
 
 

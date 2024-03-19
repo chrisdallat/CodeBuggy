@@ -5,9 +5,14 @@
 @using System.Text.Json
 @using System.Web.Helpers
 @using Microsoft.AspNetCore.Html
+@using Newtonsoft.Json
 
 <script type="text/javascript" src="~/js/projectBoard.js"></script>
-
+<style>
+    .container {
+        max-width: fit-content !important;
+    }
+</style>
 @model ProjectBoardModel
 
 @{
@@ -39,18 +44,16 @@
     <div style="display: flex; justify-content: space-between; align-items: center;">
     <div id="searchContainer" style="position: relative;">
         <form id="searchForm">
-            <input type="text" id="searchInput" placeholder="Search by Title, Description, or ID">
+            <input type="text" id="searchInput" placeholder="Search by Title, Description, or ID" autocomplete="off">
             <input type="hidden" id="projectId" value="@ViewBag.ProjectId" />
         </form>
         <div id="searchResultsDropdown"></div>
     </div>
 
-    <h2 style="text-align: center; flex: 1; margin-left: 150px;">@ViewBag.ProjectTitle</h2>
+    <h2 style="text-align: center; flex: 1;">@ViewBag.ProjectTitle</h2>
     <a class="create-button" style="text-align: right; margin-right: 10px;"
         onclick="fetchAndDisplayNotifications(@ViewBag.ProjectId)">
-        <span class="material-symbols-outlined">
-            add
-        </span>
+            <span class="material-symbols-outlined">notifications</span>
     </a>
     <a class="create-button" style="text-align: left; margin-right: 10px;" asp-controller="Burndown"
         asp-action="Burndown" asp-route-projectId="@ViewBag.ProjectId">
@@ -92,19 +95,12 @@
             </div>
         </div>
     </div>
-</div>
-
-
-}
-else
-{
-    <div>Access Denied: This page does not exist</div>
-}
+    </div>
 
 @****************************************************************@
 @************************* Dynamic Code *************************@
 @****************************************************************@
-@{
+
     string addTicketForm = $@"
 <form id='addTicketForm' action='AddTicket' method='post' style='text-align: left;'>";
 
@@ -226,4 +222,31 @@ style='text-align: center; max-width: 200px'>Cancel</button>
     var deleteTicketConfirmHTML = deleteTicketConfirmPopup.CreatePopup("confirmDeletePopup", "", new string[] {
 confirmTicketDelete });
     @Html.Raw(deleteTicketConfirmHTML)
+
+    if (ViewBag.TicketId != null)
+    {
+        var ticketDetailsPopup = @Html.GetTicketInfo(Model.Tickets, (string)ViewBag.TicketId, (string)@ViewBag.Username);
+        if (ticketDetailsPopup != null)
+        {
+            <script>
+                var ticketJson = JSON.parse(@Html.Raw(JsonConvert.SerializeObject(ticketDetailsPopup.TicketJson)));
+                showTicket(ticketJson, '@ticketDetailsPopup.AssignedToUser');
+            </script>
+        }
+        else
+        {
+            <script>
+                var currentURL = new URL(window.location.href);
+                if (currentURL.searchParams.has('ticket')) {
+                    currentURL.searchParams.delete('ticket');
+                    history.pushState({}, '', currentURL.href);
+                }
+            </script>
+        }
+    }
 }
+else
+{
+    <div>Access Denied: This page does not exist</div>
+}
+

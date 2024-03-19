@@ -68,6 +68,12 @@ var closePopup = function (popupId) {
         if (errorMessage) {
             errorMessage.remove();
         }
+
+        var currentURL = new URL(window.location.href);
+        if (currentURL.searchParams.has('ticket')) {
+            currentURL.searchParams.delete('ticket');
+            history.pushState({}, '', currentURL.href);
+        }
     } catch (e) {
         console.error(e);
     }
@@ -122,6 +128,7 @@ var loadComments = async function (projectId, ticketId) {
 }
 
 var showTicket = async function (ticket, assignedToUser) {
+
     const popup = document.getElementById("editTicketPopup");
     let popupTitle = popup.querySelector("#popupTitle");
     let ticketTitle = popup.querySelector("#ticketTitleInput").querySelector("input");
@@ -177,9 +184,14 @@ var showTicket = async function (ticket, assignedToUser) {
     assigneeName.innerHTML = ticket.Assignee;
     reporterName.innerHTML = ticket.Reporter;
 
-    let currentURL = window.location.href;
-    let newURL = currentURL + "&ticket=" + ticket.StringId
+    var currentURL = new URL(window.location.href);
+    if (currentURL.searchParams.has('ticket')) {
+        currentURL.searchParams.set('ticket', ticket.StringId);
+    } else {
+        currentURL.searchParams.append('ticket', ticket.StringId);
+    }
 
+    history.pushState({}, '', currentURL.href);
     // KHALIL please don't forget to change that so it can load a popup with this ticket ID
 
     let comments = await loadComments(projectId, ticket.Id);
@@ -608,12 +620,6 @@ var displayNotificationPopup = function(content) {
     notificationContent.className = 'notification-popup-content';
     notificationContent.innerHTML = content;
 
-    notificationContent.addEventListener('click', function(event) {
-        // ACTION TO SEND TICKETID TO FUNCTION
-        // openTicketPopup(clickedTicketId);
-        console.log("TODO: ADD FUNCTIONALITY TO OPEN TICKET HERE");
-    });
-
     notificationPopup.appendChild(notificationContent);
     document.body.appendChild(notificationPopup);
 
@@ -697,10 +703,30 @@ function clearSearchResults() {
     $("#searchResultsDropdown").empty().hide();
 }
 
-function openTicketPopup(ticketId) {
-    console.log("Open Ticket Popup from Link: " + ticketId);
-    // TODO:FIGURE HOW TO SHOW TICKET FROM THIS TICKETID
-    // showTicket(ticketId, false);
-    clearSearchResults();
+var openTicketPopup  = async function(ticketId) {
+    let currentUrl = window.location.href;
+    let params = new URLSearchParams(currentUrl.substring(currentUrl.indexOf('?')));
+    let projectId = params.get('projectId');
+
+   await fetch(`/Projects/GetTicketInfo?projectId=${projectId}&searchTicketId=${ticketId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+       .then(data => {
+        if (data.success == true) {
+            let getTicket = async function () {
+                closeNotificationPopup();
+                await showTicket(JSON.parse(data.ticketJson), data.assignedToUser);
+                clearSearchResults();
+            }
+            getTicket();
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching ticket', error);
+    })
 }
 

@@ -529,3 +529,12 @@ h2 {
     padding: 5px;
 }
 
+#ticketStringId {
+    display: -webkit-inline-box;
+    margin: 0px;
+    color: blue;
+}
+
+#ticketStringId:hover {
+    text-decoration: underline;
+}
