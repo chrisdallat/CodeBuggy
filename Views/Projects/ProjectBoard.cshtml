@@ -5,9 +5,16 @@
 @using System.Text.Json
 @using System.Web.Helpers
 @using Microsoft.AspNetCore.Html
+@using Newtonsoft.Json
 
 <script type="text/javascript" src="~/js/projectBoard.js"></script>
-
+<style>
+    .container {
+        max-width: fit-content !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+</style>
 @model ProjectBoardModel
 
 @{
@@ -16,9 +23,9 @@
         var enumValues = Enum.GetValues(typeof(TicketStatus)).Cast<TicketStatus>();
         var options = enumValues.Select(e => $"<option value='{e}'>{e}</option>");
         var dropdownHtml = $@"
-            <select id='statusSelect' name='Input.TicketStatusValue' class='form-control'>
-            {string.Join("", options)}
-            </select>";
+<select id='statusSelect' name='Input.TicketStatusValue' class='form-control'>
+{string.Join("", options)}
+</select>";
         return new HtmlString(dropdownHtml);
     };
 
@@ -27,17 +34,29 @@
         var enumValues = Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>();
         var options = enumValues.Select(e => $"<option value='{e}'>{e}</option>");
         var dropdownHtml = $@"
-            <select id='prioritySelect' name='Input.TicketPriorityValue' class='form-control'>
-            {string.Join("", options)}
-            </select>";
+<select id='prioritySelect' name='Input.TicketPriorityValue' class='form-control'>
+{string.Join("", options)}
+</select>";
         return new HtmlString(dropdownHtml);
     };
 }
 @if (ViewBag.DeniedAccess == false)
 {
 
-<div style="display: flex; justify-content: space-between; align-items: center;">
-    <h2 style="text-align: center; flex: 1; margin-left: 200px;">@ViewBag.ProjectTitle</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div id="searchContainer" style="position: relative;">
+        <form id="searchForm">
+            <input type="text" id="searchInput" placeholder="Search by Title, Description, or ID" autocomplete="off">
+            <input type="hidden" id="projectId" value="@ViewBag.ProjectId" />
+        </form>
+        <div id="searchResultsDropdown"></div>
+    </div>
+
+    <h2 style="text-align: center; flex: 1;">@ViewBag.ProjectTitle</h2>
+    <a class="create-button" style="text-align: right; margin-right: 10px;"
+        onclick="fetchAndDisplayNotifications(@ViewBag.ProjectId)">
+            <span class="material-symbols-outlined">notifications</span>
+    </a>
     <a class="create-button" style="text-align: left; margin-right: 10px;" asp-controller="Burndown"
         asp-action="Burndown" asp-route-projectId="@ViewBag.ProjectId">
         <span class="material-symbols-outlined" style="margin-right: 5px;">
@@ -51,7 +70,7 @@
     </a>
 </div>
 
-<div class="board-container">
+    <div class="board-container">
     <div class="board">
         <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
             <h3 class="column-title">To Do</h3>
@@ -78,138 +97,158 @@
             </div>
         </div>
     </div>
-
-    <div class="fixed-notification-container">
-        <div class="notification-container" id="notificationContainer"></div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            fetchAndDisplayNotifications(@ViewBag.ProjectId);
-        });
-    </script>
-</div>
-
-
-}
-else
-{
-    <div>Access Denied: This page does not exist</div>
-}
 
 @****************************************************************@
 @************************* Dynamic Code *************************@
 @****************************************************************@
-@{
+
     string addTicketForm = $@"
-        <form id='addTicketForm' action='AddTicket' method='post' style='text-align: left;'>";
+<form id='addTicketForm' action='AddTicket' method='post' style='text-align: left;'>";
 
     string editTicketForm = $@"
-        <form id='editTicketForm' action='SaveTicketChanges' method='post' style='text-align: left;'>";
+<form id='editTicketForm' action='SaveTicketChanges' method='post' style='text-align: left;'>";
 
     string ticketId = $@"<input type='hidden' name='ticketId' id='changeTicketId' style='display: none'></input>";
 
     string upperContainer = $@"<div id='upperContainer'>";
 
     string assignmentContainer = $@"
-        <div id='assignmentContainer'>
-            <div id='assigneeContainer'>
-                <div id='assigneeLabel'>Assigned To</div>
-                <div id='assigneeName'></div>
-            </div>
-            <div style='display: flex; justify-content: flex-end;'>
-                <button id='assignToMeButton'>Assign me</button>
-            </div>
-            <div id='reporterContainer'>
-                <div id='reporterLabel'>Reporter</div>
-                <div id='reporterName'></div>
-            </div>
-        </div>";
+<div id='assignmentContainer'>
+<div id='assigneeContainer'>
+<div id='assigneeLabel'>Assigned To</div>
+<div id='assigneeName'></div>
+</div>
+<div style='display: flex; justify-content: flex-end;'>
+<button id='assignToMeButton'>Assign me</button>
+</div>
+<div id='reporterContainer'>
+<div id='reporterLabel'>Reporter</div>
+<div id='reporterName'></div>
+</div>
+</div>";
 
     string ticketDetailsContainer = $@"<div id='ticketDetailsContainer' style='float: left;'>";
     string ticketStatusesContainer = $@"<div id='ticketStatusesContainer'>";
 
     string ticketTitleInput = @"
-        <div id='ticketTitleInput' class='form-floating mb-3' style='max-width: 605px'>
-        <input name='Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true'
-        placeholder=''/>
-        <label name='Input.TicketTitle'>Title</label>
-        </div>";
+<div id='ticketTitleInput' class='form-floating mb-3' style='max-width: 605px'>
+<input name='Input.TicketTitle' class='form-control' autocomplete='TicketTitle' aria-required='true'
+placeholder=''/>
+<label name='Input.TicketTitle'>Title</label>
+</div>";
 
     string ticketPriorityDropdown = $@"
-        <div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 300px; display: inline-block;width: -webkit-fill-available;'>
-        {RenderProjectTicketPriorityDropdownList()}
-        <label name='Input.TicketPriorityValue'>Priority</label>
-        <div class='dropdown-arrow'>▼</div>
-        </div>";
+<div id='ticketPriority' class='form-floating mb-3 position-relative' style='max-width: 300px; display:
+inline-block;width: -webkit-fill-available;'>
+{RenderProjectTicketPriorityDropdownList()}
+<label name='Input.TicketPriorityValue'>Priority</label>
+<div class='dropdown-arrow'>▼</div>
+</div>";
 
     string ticketStatusDropdown = $@"
-        <div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 300px; display: inline-block;width: -webkit-fill-available;'>
-        {RenderProjectTicketStatusDropdownList()}
-        <label name='Input.TicketStatusValue'>Status</label>
-        <div class='dropdown-arrow'>▼</div>
-        </div>";
+<div id='ticketStatus' class='form-floating mb-3 position-relative' style='max-width: 300px; display:
+inline-block;width: -webkit-fill-available;'>
+{RenderProjectTicketStatusDropdownList()}
+<label name='Input.TicketStatusValue'>Status</label>
+<div class='dropdown-arrow'>▼</div>
+</div>";
 
     string ticketDescriptionInput = @"
-        <div id='ticketDescriptionInput' class='form-floating mb-3'>
-            <input name='Input.TicketDescription' type='hidden'>
-        </div>
-        <input type='hidden' id='ticketDescription' name='Input.TicketDescription'>";
+<div id='ticketDescriptionInput' class='form-floating mb-3'>
+<input name='Input.TicketDescription' type='hidden'>
+</div>
+<input type='hidden' id='ticketDescription' name='Input.TicketDescription'>";
 
     string projectIdDOM = $@"<input type='hidden' name='projectId' value='{@ViewBag.ProjectId}' />";
 
     string formButtons = @"
-        <div style='display: flex; flex-wrap: wrap; justify-content: center;'>
-        ";
+<div style='display: flex; flex-wrap: wrap; justify-content: center;'>
+";
 
     string submitButton = @"
-        <button id='submitButton' type='submit' class='button-general btn-primary mb-3 mt-5'
-        style='margin-right: 20px; text-align: center; max-width: 200px'>
-        ";
+<button id='submitButton' type='submit' class='button-general btn-primary mb-3 mt-5'
+style='margin-right: 20px; text-align: center; max-width: 200px'>
+";
 
     string deleteButton = @"
-        <button id='deleteButton' type='button' class='button-general btn-danger mb-3 mt-5'
-        style='text-align: center; max-width: 160px'>
-        ";
+<button id='deleteButton' type='button' class='button-general btn-danger mb-3 mt-5'
+style='text-align: center; max-width: 160px'>
+";
 
     string confirmTicketDelete = $@"
-        <div style='display: flex; flex-wrap: wrap; justify-content: center;'>
-            <input type='hidden' name='projectId' value='{@ViewBag.ProjectId}' />
-            <input type='hidden' name='ticketId'></input>
-            <button id='confirmDeleteButton' type='button' class='button-general btn-danger mb-3 mt-5'
-            style='margin-right: 20px; text-align: center; max-width: 160px'>Confirm</button>
-            <button id='cancelDeleteButton' type='button' class='button-general btn-primary mb-3 mt-5'
-            style='text-align: center; max-width: 200px'>Cancel</button>
-        </div>
-        ";
+<div style='display: flex; flex-wrap: wrap; justify-content: center;'>
+<input type='hidden' name='projectId' value='{@ViewBag.ProjectId}' />
+<input type='hidden' name='ticketId'></input>
+<button id='confirmDeleteButton' type='button' class='button-general btn-danger mb-3 mt-5'
+style='margin-right: 20px; text-align: center; max-width: 160px'>Confirm</button>
+<button id='cancelDeleteButton' type='button' class='button-general btn-primary mb-3 mt-5'
+style='text-align: center; max-width: 200px'>Cancel</button>
+</div>
+";
 
     string addCommentDom = $@"
-            <div id='addCommentBox' class='comment-box' style='max-width: 900px;'>
-                <h3>Comments</h3>
-                <div id='addCommentTextBox' class='form-floating mb-3'></div>
-                <button id='addCommentButton' class='button-general' style='font-size: 15px;'>Add Comment</button>
-                <div id='buttonsContainer' style='display: none; flex-wrap: wrap; justify-content: left'>
-                    <button id='saveCommentButton' class='button-general btn-primary mb-3 mt-5' style='width: 80px; height: 40px; padding: 0px; margin: 2px;'>Save</button>
-                    <button id='cancelCommentButton' class='button-general btn-danger mb-3 mt-5' style='width: 80px; height: 40px; padding: 0px; margin: 2px;'>Cancel</button>
-                </div>
-                <input name='commentInput' type='hidden'></input>
-            </div>";
+<div id='addCommentBox' class='comment-box' style='max-width: 900px;'>
+<h3>Comments</h3>
+<div id='addCommentTextBox' class='form-floating mb-3'></div>
+<button id='addCommentButton' class='button-general' style='font-size: 15px;'>Add Comment</button>
+<div id='buttonsContainer' style='display: none; flex-wrap: wrap; justify-content: left'>
+<button id='saveCommentButton' class='button-general btn-primary mb-3 mt-5' style='width: 80px; height: 40px; padding:
+0px; margin: 2px;'>Save</button>
+<button id='cancelCommentButton' class='button-general btn-danger mb-3 mt-5' style='width: 80px; height: 40px; padding:
+0px; margin: 2px;'>Cancel</button>
+</div>
+<input name='commentInput' type='hidden'></input>
+</div>";
 
     string existingComments = $@"<div id='existingCommentsBox' class='comment-box' style='max-width: 900px'></div>";
 
     var addTicketFormDOM = addTicketForm + ticketTitleInput + @Html.Raw(ticketPriorityDropdown) +
-    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + submitButton + "Create Ticket</button>" +  "</form>";
+    @Html.Raw(ticketStatusDropdown) + ticketDescriptionInput + projectIdDOM + submitButton + "Create Ticket</button>" +
+    "</form>";
     var addTicketPopup = new Popup();
     var addTicketPopupHTML = addTicketPopup.CreatePopup("addTicketPopup", "Add Ticket", new string[] { addTicketFormDOM });
     @Html.Raw(addTicketPopupHTML)
 
-    var upperDOM = upperContainer + ticketDetailsContainer + ticketTitleInput + ticketStatusesContainer + @Html.Raw(ticketPriorityDropdown) + @Html.Raw(ticketStatusDropdown) + "</div></div>" + assignmentContainer + "</div>";
-    var editTicketDOM = editTicketForm + ticketId + upperDOM + ticketDescriptionInput + projectIdDOM + formButtons + submitButton + "Save Changes</button>" + deleteButton + "Delete Ticket</button></div>" + addCommentDom + existingComments + "</form>";
+    var upperDOM = upperContainer + ticketDetailsContainer + ticketTitleInput + ticketStatusesContainer +
+    @Html.Raw(ticketPriorityDropdown) + @Html.Raw(ticketStatusDropdown) + "</div></div>" + assignmentContainer + "</div>";
+    var editTicketDOM = editTicketForm + ticketId + upperDOM + ticketDescriptionInput + projectIdDOM + formButtons +
+    submitButton + "Save Changes</button>" + deleteButton + "Delete Ticket</button></div>" + addCommentDom +
+    existingComments + "</form>";
     var editTicketPopup = new Popup();
     var editTicketPopupHTML = editTicketPopup.CreatePopup("editTicketPopup", "", new string[] { editTicketDOM });
     @Html.Raw(editTicketPopupHTML)
 
     var deleteTicketConfirmDOM = confirmTicketDelete;
     var deleteTicketConfirmPopup = new Popup();
-    var deleteTicketConfirmHTML = deleteTicketConfirmPopup.CreatePopup("confirmDeletePopup", "", new string[] { confirmTicketDelete });
+    var deleteTicketConfirmHTML = deleteTicketConfirmPopup.CreatePopup("confirmDeletePopup", "", new string[] {
+confirmTicketDelete });
     @Html.Raw(deleteTicketConfirmHTML)
+
+    if (ViewBag.TicketId != null)
+    {
+        var ticketDetailsPopup = @Html.GetTicketInfo(Model.Tickets, (string)ViewBag.TicketId, (string)@ViewBag.Username);
+        if (ticketDetailsPopup != null)
+        {
+            <script>
+                var ticketJson = JSON.parse(@Html.Raw(JsonConvert.SerializeObject(ticketDetailsPopup.TicketJson)));
+                showTicket(ticketJson, '@ticketDetailsPopup.AssignedToUser');
+            </script>
+        }
+        else
+        {
+            <script>
+                var currentURL = new URL(window.location.href);
+                if (currentURL.searchParams.has('ticket')) {
+                    currentURL.searchParams.delete('ticket');
+                    history.pushState({}, '', currentURL.href);
+                }
+            </script>
+        }
+    }
 }
+else
+{
+    <div>Access Denied: This page does not exist</div>
+}
+

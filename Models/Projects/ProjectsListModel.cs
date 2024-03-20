@@ -7,6 +7,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Net.Mail;
 
 namespace CodeBuggy.Models.Projects;
 
@@ -22,15 +24,17 @@ public class ProjectsListModel
 
     public class InputModel
     {
-        [Required]
         [StringLength(20, ErrorMessage = "The Project Name must be maximum 255 characters.")]
         [Display(Name = "Project name")]
         public string Name { get; set; } = string.Empty;
 
-        [Required]
         [StringLength(64, ErrorMessage = "The Access Code must be maximum 255 characters.")]
         [Display(Name = "Access code")]
         public string AccessCode { get; set; } = string.Empty;
+
+        [StringLength(30, ErrorMessage = "The Email must be maximum 255 characters.")]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = string.Empty;
     }
 
     public ProjectsListModel(ILogger<ProjectsController> logger, AppDbContext context, UserManager<AppUser> userManager)
@@ -256,6 +260,53 @@ public class ProjectsListModel
 
         return new OperationResult { Success = true, Message = "Project deleted" };
     }
+
+    public OperationResult InviteEmail(InputModel input, ClaimsPrincipal user)
+    {
+        try
+        {
+            var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+            if (username == null)
+            {
+                return new OperationResult { Success = false, Message = "User is not authenticated" };
+            }
+
+            SmtpClient smtpClient = new SmtpClient("smtp.gmail.com");
+            smtpClient.Port = 587;
+            smtpClient.Credentials = new NetworkCredential("appcodebuggy@gmail.com", "iksw plht cdzd iqmv"); //Prob Needs some Encryptionhere
+            smtpClient.EnableSsl = true;
+
+            MailMessage mailMessage = new MailMessage();
+            mailMessage.From = new MailAddress("appcodebuggy@gmail.com", "CodeBuggy");
+            mailMessage.To.Add(input.Email);
+            mailMessage.Subject = "Invite Access Code to CodeBuggy Project";
+            mailMessage.IsBodyHtml = true;
+            mailMessage.Body = getEmailTemplate(input, username);
+            smtpClient.Send(mailMessage);
+
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error: " + ex);
+            return new OperationResult { Success = false, Message = "Error: " + ex.Message };
+        }
+
+        return new OperationResult { Success = true, Message = "Invite Sent Successfully" };
+    }
+
+    public string getEmailTemplate(InputModel input, string username)
+    {
+        var templatePath = "Views/InviteEmailTemplate.cshtml";
+        var templateContent = File.ReadAllText(templatePath);
+
+        templateContent = templateContent.Replace("{{Email}}", input.Email)
+                                        .Replace("{{ProjectName}}", input.Name)
+                                        .Replace("{{Username}}", username)
+                                        .Replace("{{AccessCode}}", input.AccessCode);
+
+        return templateContent;
+    }
+
 
 
     // ******************************************************************************* //

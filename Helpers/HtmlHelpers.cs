@@ -13,13 +13,18 @@ namespace CodeBuggy.Helpers;
 
 public static class HtmlHelpers
 {
+    public class TicketInfo
+    {
+        public string TicketJson { get; set; } = string.Empty;
+        public string AssignedToUser { get; set; } = string.Empty;
+    }
     public static IHtmlContent RenderProjectTable(IEnumerable<Project> projects, IUrlHelper url)
     {
         var table = new TagBuilder("table");
         table.AddCssClass("content-table");
 
         var thead = new TagBuilder("thead");
-        thead.InnerHtml += "<tr><th>Title</th><th>Access Code</th><th>Owner</th><th></th></tr>";
+        thead.InnerHtml += "<tr><th>Title</th><th>Access Code</th><th></th><th></th><th style='width: 200px;'>Owner</th></tr>";
         table.InnerHtml += thead;
 
         var tbody = new TagBuilder("tbody");
@@ -33,8 +38,9 @@ public static class HtmlHelpers
                             $"<td style='width: 600px;'><span class='blurred-text' onclick='toggleBlur(this)'><span>{project.AccessCode}</span></span>" +
                             $"<button class='gg-copy' onclick='copyText(this, \"{project.AccessCode}\")'></button>" +
                             $"<span style='display: none; float: right; margin-right: 20px'>Copied!</span></td>" +
-                            $"<td>{project.Owner}</td>" +
-                            $"<td><button class='gg-trash' onclick='toggleDeletePopup()'></button></td>";
+                            $"<td><button class='gg-comment' onclick='toggleInviteEmailPopup(\"{project.AccessCode}\", \"{project.Name}\")'></button></td>" +
+                            $"<td><button class='gg-trash' onclick='toggleDeletePopup()'></button></td>" +
+                            $"<td style='width: 150px;'>{project.Owner}</td>";
             tbody.InnerHtml += row;
         }
         table.InnerHtml += tbody;
@@ -140,6 +146,36 @@ public static class HtmlHelpers
         }
 
         return new HtmlString(result.ToString());
+    }
+
+    public static TicketInfo? GetTicketInfo(this IHtmlHelper htmlHelper, List<Ticket> tickets, string ticketStringId, string username)
+    {
+        var ticket = tickets.FirstOrDefault(t => t.StringId == ticketStringId);
+
+        if (ticket == null)
+        {
+            return null;
+        }
+
+        var result = new StringBuilder();
+
+        var assignedToUser = "false";
+        if (username != null && username == ticket.Assignee)
+        {
+            assignedToUser = "true";
+        }
+        string ticketJson = JsonConvert.SerializeObject(ticket);
+        if (ticketJson == null)
+        {
+            return null;
+        }
+
+
+        return new TicketInfo
+        {
+            TicketJson = ticketJson,
+            AssignedToUser = assignedToUser.ToLower()
+        };
     }
 
 

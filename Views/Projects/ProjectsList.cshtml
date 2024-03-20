@@ -55,6 +55,7 @@ else
             <input name='Input.AccessCode' class='form-control' aria-required='true' placeholder='' />
             <label name='Input.AccessCode'>Project Access Code</label>
         </div>";
+    
 
     string projectNameInput = @"
         <div id='projectNameInput' class='form-floating mb-3' style='max-width: 380px'>
@@ -74,6 +75,20 @@ else
         <button id='submitButton' type='submit' class='button-general mb-3 mt-5'
             style='text-align: center; max-width: 160px'>";
 
+    string inviteEmailForm = @"
+        <form id='inviteEmail' action='InviteEmail' method='post'>
+        <div style='text-align: center; font-size: 17px; margin-bottom: 20px;'>Enter Email Address</div>
+        <div class='form-floating mb-3' style='max-width: 380px; margin: 0 auto;'>
+            <input name='Input.Email' class='form-control' aria-required='true' placeholder=''/>
+            <label name='Input.Email'>Email</label>
+        </div>
+        <input type='hidden' name='Input.AccessCode' id='accessCodeInput' />
+        <input type='hidden' name='Input.Name' id='nameInput'/>";
+    
+    string sendButton = @"
+        <button id='submitButton' type='submit' class='button-general mb-3 mt-5'
+            style='text-align: center; max-width: 160px'>";
+
     // New Project Popup Creation
     var addProjectPopup = new Popup();
     var addExistingProjectDOM = addExistingProjectForm + projectNameInput + projectAccessCodeInput + submitButton + "Add Project" + "</button>" + "</form>";
@@ -87,5 +102,11 @@ else
     var deleteProjectDom = deleteProjectForm + submitButton + "Delete Project" + "</button>" + "</form>";
     var deleteProjectPopupHTML = deleteProjectPopup.CreatePopup("deleteProjectPopup", "Delete Project", new string[] { deleteProjectDom });
     @Html.Raw(deleteProjectPopupHTML)
+
+    // Send Invite Email Popup creation
+    var inviteEmailPopup = new Popup();
+    var inviteEmailDom = inviteEmailForm + sendButton + "Send Invite" + "</button>" + "</form>";
+    var inviteEmailPopupHTML = inviteEmailPopup.CreatePopup("inviteEmailPopup", "Project Invite", new string[] { inviteEmailDom });
+    @Html.Raw(inviteEmailPopupHTML)
 }
 

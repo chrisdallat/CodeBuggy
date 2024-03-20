@@ -40,6 +40,23 @@ var toggleDeletePopup = function () {
     }
 }
 
+var toggleInviteEmailPopup = function (accessCode, projectName) {
+    const popup = document.getElementById('inviteEmailPopup');
+    popup.style.display = popup.style.display === 'flex' ? 'none' : 'flex';
+    let accessCodeInput = popup.querySelector('input[name="Input.AccessCode"]');
+    let projectNameInput = popup.querySelector('input[name="Input.Name"]');
+
+    accessCodeInput.value = accessCode;
+    projectNameInput.value = projectName;
+
+    if (popup.style.display === 'none') {
+        let errorMessage = document.getElementById("errorMessage");
+        if (errorMessage) {
+            errorMessage.remove();
+        }
+    }
+}
+
 var showExistingProject = function () {
     addExistingProjectForm.style.display = 'block';
     addNewProjectForm.style.display = 'none';
@@ -71,23 +88,24 @@ var handleServerMessage = function (form, formData) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
-        if (data.success === false) {
-                let errorMessage = document.getElementById('errorMessage');
-            if (!errorMessage) {
-                errorMessage = document.createElement('span');
-                errorMessage.id = "errorMessage";
-                form.insertAdjacentElement('afterend', errorMessage);
-            }
-            errorMessage.innerHTML = data.message;
+        console.log("data: " + data);
+    if (data.success === false) {
+            let errorMessage = document.getElementById('errorMessage');
+        if (!errorMessage) {
+            errorMessage = document.createElement('span');
+            errorMessage.id = "errorMessage";
+            form.insertAdjacentElement('afterend', errorMessage);
         }
-        else {
-            window.location.reload();
-        }
-    })
-    .catch(error => {
-        console.error(error.message);
-    });
+        console.log("err: " + data);
+        errorMessage.innerHTML = data.message;
+    }
+    else {
+        window.location.reload();
+    }
+})
+.catch(error => {
+    console.error(error.message);
+});
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -109,6 +127,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     document.getElementById('deleteProject').addEventListener('submit', function (e) {
+        e.preventDefault();
+        handleServerMessage(this, new FormData(this));
+    });
+
+    document.getElementById('inviteEmail').addEventListener('submit', function (e) {
         e.preventDefault();
         handleServerMessage(this, new FormData(this));
     });

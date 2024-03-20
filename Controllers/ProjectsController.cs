@@ -6,6 +6,7 @@ using CodeBuggy.Models.Projects;
 using CodeBuggy.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
+using System.Net.Sockets;
 namespace CodeBuggy.Controllers;
 
 public class ProjectsController : Controller
@@ -89,10 +90,25 @@ public class ProjectsController : Controller
         return Json(new { success = result.Success, message = result.Message });
     }
 
+    [HttpPost]
+    public IActionResult InviteEmail(ProjectsListModel.InputModel input)
+    {
+        if (string.IsNullOrWhiteSpace(input.Email))
+        {
+            return Json(new { success = false, message = "User could not be invited" });
+        }
+
+        OperationResult result = _projectsListModel.InviteEmail(input, User);
+
+        return Json(new { success = result.Success, message = result.Message });
+    }
+
     // ******************************************************************************* //
     // ******************************** Project Board ******************************** // 
     // ******************************************************************************* //
-    public IActionResult ProjectBoard(int projectId)
+
+    [AcceptVerbs("GET", "POST")]
+    public IActionResult ProjectBoard(int projectId, string ticket)
     {
         if (User.Identity == null || User.Identity.IsAuthenticated == false)
         {
@@ -112,6 +128,15 @@ public class ProjectsController : Controller
             ViewBag.DeniedAccess = false;
             ViewBag.ProjectId = projectId;
             ViewBag.Username = _projectBoardModel?.GetUsername(User);
+
+            if (ticket != null)
+            {
+                ViewBag.TicketId = ticket;
+            }
+            else
+            {
+                ViewBag.TicketId = null;
+            }
 
             return View(_projectBoardModel);
         }
@@ -136,9 +161,9 @@ public class ProjectsController : Controller
             return RedirectToAction("Login", "Account");
         }
 
-        OperationResult result = await _projectBoardModel.ChangeTicketStatus(User ,projectId, ticketId, status);
+        OperationResult result = await _projectBoardModel.ChangeTicketStatus(User, projectId, ticketId, status);
 
-        return Json(new { success = result.Success, message = result.Message});
+        return Json(new { success = result.Success, message = result.Message });
     }
 
     [HttpPost]
@@ -186,13 +211,15 @@ public class ProjectsController : Controller
         return Json(new { success = result.Success, message = result.Message });
     }
 
+
     [HttpPost]
     public List<Notification> GetNotifications(int projectId)
     {
         List<Notification> data = _notificationModel.GetNotificationData(_context, projectId);
-        
+
         return data;
     }
+
 
     [HttpPost]
     public async Task<IActionResult> AddCommentToTicket(int projectId, int ticketId, string comment)
@@ -222,6 +249,29 @@ public class ProjectsController : Controller
         return Json(new { success = result.Success, message = result.Message, commentsData = comments });
     }
 
+    [HttpPost]
+    public async Task<IActionResult> GetTicketInfo(int projectId, int searchTicketId)
+    {
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var foundTicket = await _projectBoardModel?.GetTicketInfo(User, projectId, searchTicketId);
+
+        if (foundTicket != null)
+        {
+            var assigneeUser = "false";
+            var username = _projectBoardModel?.GetUsername(User);
+            if (username != null && username == foundTicket.Assignee)
+            {
+                assigneeUser = "true";
+            }
+            return Json(new { success = true, ticketJson = JsonConvert.SerializeObject(foundTicket), assignedToUser = assigneeUser.ToLower() });
+        }
+
+        return Json(new { success = false, message = "Ticket not found" }); ;
+    }
     // ******************************************************************************* //
     // ************************************ General ********************************** // 
     // ******************************************************************************* //
@@ -230,4 +280,14 @@ public class ProjectsController : Controller
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
+
+    [HttpGet]
+    public List<Ticket> Search(int projectId, string query)
+    {
+        _logger.LogInformation("ProjectsController/Search");
+        List<Ticket> data = _projectBoardModel.GetSearchResults(User, projectId, query);
+
+        return data;
+    }
 }
+

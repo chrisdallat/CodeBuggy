@@ -68,6 +68,12 @@ var closePopup = function (popupId) {
         if (errorMessage) {
             errorMessage.remove();
         }
+
+        var currentURL = new URL(window.location.href);
+        if (currentURL.searchParams.has('ticket')) {
+            currentURL.searchParams.delete('ticket');
+            history.pushState({}, '', currentURL.href);
+        }
     } catch (e) {
         console.error(e);
     }
@@ -110,7 +116,6 @@ var loadComments = async function (projectId, ticketId) {
     })
         .then(response => response.json())
         .then(data => {
-            console.log(data);
             if (data.success === true) {
                 comments = data.commentsData;
             }
@@ -123,6 +128,7 @@ var loadComments = async function (projectId, ticketId) {
 }
 
 var showTicket = async function (ticket, assignedToUser) {
+
     const popup = document.getElementById("editTicketPopup");
     let popupTitle = popup.querySelector("#popupTitle");
     let ticketTitle = popup.querySelector("#ticketTitleInput").querySelector("input");
@@ -178,49 +184,45 @@ var showTicket = async function (ticket, assignedToUser) {
     assigneeName.innerHTML = ticket.Assignee;
     reporterName.innerHTML = ticket.Reporter;
 
-    let currentURL = window.location.href;
-    let newURL = currentURL + "&ticket=" + ticket.StringId
+    var currentURL = new URL(window.location.href);
+    if (currentURL.searchParams.has('ticket')) {
+        currentURL.searchParams.set('ticket', ticket.StringId);
+    } else {
+        currentURL.searchParams.append('ticket', ticket.StringId);
+    }
 
+    history.pushState({}, '', currentURL.href);
     // KHALIL please don't forget to change that so it can load a popup with this ticket ID
 
     let comments = await loadComments(projectId, ticket.Id);
     let commentsBox = popup.querySelector("#existingCommentsBox");
     commentsBox.innerHTML = '';
-    console.log(comments);
     if (comments !== undefined) {
         comments.forEach(comment => {
-            // Create separator line
             const separator = document.createElement('hr');
             separator.classList.add('comment-separator');
             commentsBox.appendChild(separator);
 
-            // Create comment container
             const commentContainer = document.createElement('div');
             commentContainer.classList.add('comment-container');
 
-            // Create username element
             const userName = document.createElement('strong');
             userName.textContent = comment.username;
 
-            // Format timestamp
             const timestampDate = new Date(comment.timestamp);
             const formattedDate = `${(timestampDate.getMonth() + 1).toString().padStart(2, '0')}/${timestampDate.getDate().toString().padStart(2, '0')}/${timestampDate.getFullYear()}`;
             const formattedTime = `${timestampDate.getHours().toString().padStart(2, '0')}:${timestampDate.getMinutes().toString().padStart(2, '0')}`;
 
-            // Create timestamp element
             const timestamp = document.createElement('span');
             timestamp.textContent = `${formattedDate} ${formattedTime}`;
             timestamp.classList.add('timestamp');
 
-            // Append username and timestamp to comment container
             commentContainer.appendChild(userName);
             commentContainer.appendChild(timestamp);
 
-            // Create comment content
             const commentContent = document.createElement('div');
             commentContent.classList.add('comment-content');
 
-             //Initialize Quill
             const quill = new Quill(commentContent, {
                 theme: 'snow',
                 modules: {
@@ -231,15 +233,12 @@ var showTicket = async function (ticket, assignedToUser) {
 
             commentContent.classList.remove('ql-container');
 
-            // Insert comment text into Quill editor
             quill.root.innerHTML = comment.text;
 
-            // Append comment container to comments box
             commentsBox.appendChild(commentContainer);
             commentsBox.appendChild(commentContent);
         });
     }
-
     popup.style.display = 'flex';
 }
 
@@ -339,20 +338,13 @@ var drag = function(dragEvent, ticket) {
 }
 
 var handleServerMessage = function (form, formData) {
-
-    for (var entry of formData.entries()) {
-        console.log(entry[0], entry[1]);
-    }
-
     fetch(form.action, {
         method: 'POST',
         body: formData
     })
 
-    
     .then(response => response.json())
     .then(data => {
-            console.log(data)
         if (data.success === false) {
             let errorMessage = document.getElementById('errorMessage');
             if (!errorMessage) {
@@ -513,7 +505,6 @@ var addCommentToTicket = async function (projectId, ticketId, text) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data);
         if (data.success === true) {
             console.log("Changed ticket status");
         }
@@ -524,8 +515,7 @@ var addCommentToTicket = async function (projectId, ticketId, text) {
 }
 
 var addComment = function (projectId, ticketId, button) {
-
-    console.log(projectId, ticketId);
+    
     let parent = button.parentNode;
     let addCommentTextBox = parent.querySelector("#addCommentTextBox");
 
@@ -571,9 +561,7 @@ var addComment = function (projectId, ticketId, button) {
     } else {
         addCommentTextBox.style.display = 'block';
         addCommentTextBox.previousSibling.style.display = 'block';
-    }
-;    
-
+    }    
 }
 
 var fetchAndDisplayNotifications = function(projectId) {
@@ -585,18 +573,26 @@ var fetchAndDisplayNotifications = function(projectId) {
     })
     .then(response => response.json())
     .then(data => {
-        var notificationContainer = document.getElementById("notificationContainer");
-        if (notificationContainer) {
-            notificationContainer.innerHTML = generateNotificationHTML(data);
-            notificationContainer.scrollTop = notificationContainer.scrollHeight;
-        }
-        return data;
+        const filteredNotifications = filterNotifications(data);
+        var notificationHTML = generateNotificationHTML(filteredNotifications);
+        displayNotificationPopup(notificationHTML);
     })
     .catch(error => console.error('Error fetching notifications:', error));
 }
 
 var generateNotificationHTML = function(notifications) {
-    return `<div class="notification-list">${notifications.map(notification => `<div class="notification-item">${formatTimestamp(notification.timestamp)}: ${notification.message || 'No Message'}</div>`).join('')}</div>`;
+    if (notifications.length === 0) {
+        return `
+        <div class="notification-list-container">
+            <div class="notification-list" style="font-style: italic; color: #999;">NO NOTIFICATIONS CURRENTLY</div>
+        </div>`;
+    } else {
+        return `
+    <div style="display: flex; justify-content: center; align-items: center; font-style: italic; color: #999;">Most Recent Activity</div>
+    <div class="notification-list-container">
+       <div class="notification-list">${notifications.map(notification => `<div class="notification-item"><span style="font-style: italic;">${formatTimestamp(notification.timestamp)}</span>: ${notification.message || 'No Message'}</div>`).join('')}</div>
+    </div>`;
+    }
 }
 
 function formatTimestamp(timestamp) {
@@ -605,4 +601,132 @@ function formatTimestamp(timestamp) {
     return formattedDate;
 }
 
+function filterNotifications(notifications) {
+    const maxNotifications = 30;
+
+    notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    const filteredNotifications = notifications.filter((_, index) => {
+        return index <= maxNotifications;
+    });
+    return filteredNotifications;
+}
+
+var displayNotificationPopup = function(content) {
+    var notificationPopup = document.createElement('div');
+    notificationPopup.className = 'notification-popup-parent';
+
+    var notificationContent = document.createElement('div');
+    notificationContent.className = 'notification-popup-content';
+    notificationContent.innerHTML = content;
+
+    notificationPopup.appendChild(notificationContent);
+    document.body.appendChild(notificationPopup);
+
+    var notificationContainer = document.querySelector('.notification-popup-container');
+    if (notificationContainer) {
+        notificationContainer.scrollTop = notificationContainer.scrollHeight;
+    }
+
+    notificationPopup.addEventListener('click', function(event) {
+        if (!notificationContent.contains(event.target)) {
+            closeNotificationPopup();
+        }
+    });
+}
+
+var closeNotificationPopup = function() {
+    var popup = document.querySelector('.notification-popup-parent');
+    if (popup) {
+        document.body.removeChild(popup);
+    }
+}
+
+$(document).ready(function() {
+    $("#searchInput").on("input", function() {
+        var searchQuery = $(this).val();
+        if (searchQuery.length >= 3) {
+            var projectId = $("#projectId").val();
+            updateSearchResults(projectId, searchQuery);
+        } else {
+            clearSearchResults();
+        }
+    });
+
+    $(document.body).on('click', function(event) {
+        var target = $(event.target);
+        if (!target.closest('#searchResultsDropdown').length) {
+            clearSearchResults();
+        }
+    });
+});
+
+function updateSearchResults(projectId, query) {
+    $.ajax({
+        url: '/Projects/Search',
+        data: { projectId: projectId, query: query },
+        success: function(data) {
+            displaySearchResults(data);
+        },
+        error: function(error) {
+            console.error("Error fetching search results:", error);
+        }
+    });
+}
+
+function displaySearchResults(results) {
+    var dropdown = $("#searchResultsDropdown");
+    dropdown.empty();
+
+    if (results.length === 0) {
+        dropdown.append("<div>No results found</div>");
+    } else {
+        $.each(results, function(index, result) {
+            var html = result.description ? result.description.match(/<p>(.*?)<\/p>/)[1] : null;
+            var truncatedDescription = html ? (html.length > 70 ? html.substring(0, 70) + '...' : html) : 'N/A';
+            var listItem = $('<div class="search-result-item">' + 
+                             '<div><strong>ID:</strong> ' + result.stringId + '</div>' + 
+                             '<div><strong>Title:</strong> ' + result.title + '</div>' + 
+                             '<div><strong>Description:</strong> ' + truncatedDescription.trimEnd() + '...'  + '</div>' + 
+                             '</div>');
+            listItem.click(function() {
+                openTicketPopup(result.id);
+
+            });
+            dropdown.append(listItem);
+        });
+    }
+    dropdown.show();
+}
+
+function clearSearchResults() {
+    $("#searchResultsDropdown").empty().hide();
+}
+
+var openTicketPopup  = async function(ticketId) {
+    let currentUrl = window.location.href;
+    let params = new URLSearchParams(currentUrl.substring(currentUrl.indexOf('?')));
+    let projectId = params.get('projectId');
+
+   await fetch(`/Projects/GetTicketInfo?projectId=${projectId}&searchTicketId=${ticketId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+       .then(data => {
+        if (data.success == true) {
+            let getTicket = async function () {
+                closeNotificationPopup();
+                await showTicket(JSON.parse(data.ticketJson), data.assignedToUser);
+                clearSearchResults();
+            }
+            getTicket();
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching ticket', error);
+    })
+}
 

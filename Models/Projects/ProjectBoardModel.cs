@@ -117,7 +117,7 @@ public class ProjectBoardModel
             _context.Tickets.Add(ticketDetails);
             await _context.SaveChangesAsync();
 
-            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.AddTicket);
+            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.AddTicket, ticketDetails.Id);
 
             if (ticketDetails?.Id == null || ticketDetails.Id == 0)
             {
@@ -227,7 +227,7 @@ public class ProjectBoardModel
         {
             await _context.SaveChangesAsync();
 
-            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.MoveTicket);
+            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.MoveTicket, ticketDetails.Id);
             projectDetails.NotificationIds.Add(notificationId);
             projectDetails.NotificationCount += 1;
             _burndownModel.StoreBurndownData(_context, projectId);
@@ -289,14 +289,14 @@ public class ProjectBoardModel
 
             if (ticketChange == true)
             {
-                notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.EditTicket);
+                notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.EditTicket, ticketDetails.Id);
                 projectDetails.NotificationIds.Add(notificationId);
                 projectDetails.NotificationCount += 1;
             }
 
             if (statusChange == true)
             {
-                notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.MoveTicket);
+                notificationId = _notificationModel.StoreNotification(_context, projectId, ticketDetails.StringId, username, "", ticketDetails.Status, NotificationType.MoveTicket, ticketDetails.Id);
                 projectDetails.NotificationIds.Add(notificationId);
                 projectDetails.NotificationCount += 1;
             }
@@ -370,7 +370,7 @@ public class ProjectBoardModel
         {
             _context.Tickets.Remove(ticket);
             await _context.SaveChangesAsync();
-            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticket.StringId, username, "", ticket.Status, NotificationType.DeleteTicket);
+            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticket.StringId, username, "", ticket.Status, NotificationType.DeleteTicket, ticket.Id);
             projectDetails.NotificationIds.Add(notificationId);
             projectDetails.NotificationCount += 1;
             await _context.SaveChangesAsync();
@@ -400,6 +400,18 @@ public class ProjectBoardModel
         }
 
         return (int)ticketDetails.Status;
+    }
+
+    public async Task<Ticket>? GetTicketInfo(ClaimsPrincipal user, int projectId, int ticketId)
+    {
+        if (ValidUserClaim(user, projectId) == false)
+        {
+            return null;
+        }
+
+        var ticketDetails = await _context.Tickets.FirstOrDefaultAsync(p => p.Id == ticketId);
+        
+        return ticketDetails;
     }
 
     public async Task<OperationResult> AddCommentToTicket(ClaimsPrincipal user, int projectId, int ticketId, string comment)
@@ -442,7 +454,7 @@ public class ProjectBoardModel
             ticket.CommentsCount += 1;
             ticket.CommentsIds.Add(commentDetails.Id);
 
-            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticket.StringId, username, "", ticket.Status, NotificationType.CommentTicket);
+            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticket.StringId, username, "", ticket.Status, NotificationType.CommentTicket, ticket.Id);
 
             projectDetails.NotificationIds.Add(notificationId);
             projectDetails.NotificationCount += 1;
@@ -476,7 +488,7 @@ public class ProjectBoardModel
                 .Where(t => ticket.CommentsIds.Contains(t.Id))
                 .ToList();
 
-        return new OperationResult { Success = true, Message = "Found comments"};
+        return new OperationResult { Success = true, Message = "Found comments" };
     }
 
     public string? GetUsername(ClaimsPrincipal user)
@@ -489,4 +501,29 @@ public class ProjectBoardModel
 
         return username;
     }
+
+    // TODO: Implement the return properly
+    public List<Ticket> GetSearchResults(ClaimsPrincipal user, int projectId, string query)
+    {
+        if (!ValidUserClaim(user, projectId))
+        {
+            return new List<Ticket>();
+        }
+
+        var project = _context.Projects.FirstOrDefault(p => p.Id == projectId);
+        if (project == null)
+        {
+            return new List<Ticket>(); // or return null/exception maybe??
+        }
+
+        var searchResults = _context.Tickets
+        .Where(t => project.TicketsId.Contains(t.Id) &&
+                    (t.StringId.ToLower().Contains(query.ToLower()) ||
+                    t.Title.ToLower().Contains(query.ToLower()) ||
+                    (t.Description != null && t.Description.ToLower().Contains(query.ToLower()))))
+        .ToList();
+
+        return searchResults;
+    }
+
 }
