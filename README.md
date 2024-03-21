@@ -1,9 +1,9 @@
 # CodeBuggy
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/yourrepository.svg)](https://github.com/yourusername/yourrepository/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/yourusername/yourrepository.svg)](https://github.com/yourusername/yourrepository/network)
-[![GitHub issues](https://img.shields.io/github/issues/yourusername/yourrepository.svg)](https://github.com/yourusername/yourrepository/issues)
+[![GitHub stars](https://img.shields.io/github/stars/chrisdallat/CodeBuggy.svg)](https://github.com/chrisdallat/CodeBuggy/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/chrisdallat/CodeBuggy.svg)](https://github.com/chrisdallat/CodeBuggy/network)
+[![GitHub issues](https://img.shields.io/github/issues/chrisdallat/CodeBuggy.svg)](https://github.com/chrisdallat/CodeBuggy/issues)
 
 A bug tracking/ticketing software development and collaboration web application
 
@@ -28,8 +28,8 @@ This project was created and maintained by the following individuals:
 - [pgAdmin](https://www.pgadmin.org/download/pgadmin-4-macos/) installed
 - [Visual Studio](https://visualstudio.microsoft.com/downloads/) (optional, but recommended for development)
 
-### Clone the Repository
 
+### Clone the Repository
 ```
 git clone https://github.com/chrisdallat/CodeBuggy.git
 ```
@@ -61,9 +61,9 @@ brew link postgresql@15 --force
 
 [Documentation for terminal setup on MacOS](https://www.sqlshack.com/setting-up-a-postgresql-database-on-mac/)
 
-Create a database instance with preferred credentials.
-Recommended database name: CodeBuggyDB
-Recommended port: 5432
+Create a database instance with preferred credentials.<br>
+Recommended database name: CodeBuggyDB<br>
+Recommended port: 5432<br>
 
 ### Application Setup
 
