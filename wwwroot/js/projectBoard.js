@@ -70,12 +70,19 @@ var showPopup = function (popupId) {
     if (ticketDescription !== undefined) {
         renderQuill(ticketDescription, "");
     }
-
     
     addDisabledOption(ticketPriorityDropdown, "Priority"); 
     addDisabledOption(ticketStatusDropdown, "Status");
 
+    popup.addEventListener('click', closePopupOutside = function (event) {
+        if (!popup.querySelector('.popup').contains(event.target)) {
+            closePopup(popupId);
+            document.removeEventListener('click', closePopupOutside);
+        }
+    });
+
     popup.style.display = 'flex';
+
 }
 
 var closePopup = function (popupId) {
@@ -282,6 +289,13 @@ var showTicket = async function (ticket, assignedToUser) {
             commentsBox.appendChild(commentContent);
         });
     }
+
+    popup.addEventListener('click', closePopupOutside = function (event) {
+        if (!popup.querySelector('.popup').contains(event.target)) {
+            closePopup("editTicketPopup");
+            document.removeEventListener('click', closePopupOutside);
+        }
+    });
     popup.style.display = 'flex';
 }
 
@@ -300,7 +314,7 @@ var changeTicketStatus = async function (ticketId, newStatus) {
         .then(response => response.json())
         .then(data => {
             if (data.success === true) {
-                console.log("Changed ticket status");
+            //    console.log("Changed ticket status");
             }
         })
         .catch(error => {
@@ -497,7 +511,6 @@ document.addEventListener('DOMContentLoaded', function () {
         let formData = new FormData(editTicketForm);
 
         for (var entry of formData.entries()) {
-            console.log(entry[0], entry[1]);
             if (entry[0] === "ticketId") {
                 ticketId = entry[1];
             }
