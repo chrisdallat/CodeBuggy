@@ -549,3 +549,12 @@ h2 {
     text-decoration: underline;
     cursor: pointer;
 }
+
+#errorTooltip {
+    position: fixed;
+    background-color: #ff9999;
+    padding: 5px 10px;
+    border-radius: 5px;
+    display: none;
+    z-index: 1000;
+}

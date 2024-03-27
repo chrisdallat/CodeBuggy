@@ -35,13 +35,45 @@ var renderQuill = function (textBox, data) {
     });
 }
 
+function hasDisabledOption(dropdown) {
+    for (var i = 0; i < dropdown.options.length; i++) {
+        if (dropdown.options[i].disabled) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function addDisabledOption(dropdown, labelText) {
+    if (dropdown.options.length > 0 && dropdown.options[0].disabled) {
+        return;
+    }
+    var disabledOption = document.createElement('option');
+    disabledOption.disabled = true;
+    disabledOption.selected = true;
+    disabledOption.value = "";
+    disabledOption.textContent = labelText;
+
+    if (dropdown.options.length > 0) {
+        dropdown.insertBefore(disabledOption, dropdown.options[0]);
+    } else {
+        dropdown.appendChild(disabledOption);
+    }
+}
+
 var showPopup = function (popupId) {
     const popup = document.getElementById(popupId);
     let ticketDescription = popup.querySelector("#ticketDescriptionInput");
+    let ticketPriorityDropdown = popup.querySelector("#prioritySelect");
+    let ticketStatusDropdown = popup.querySelector("#statusSelect");
 
     if (ticketDescription !== undefined) {
         renderQuill(ticketDescription, "");
     }
+
+    
+    addDisabledOption(ticketPriorityDropdown, "Priority"); 
+    addDisabledOption(ticketStatusDropdown, "Status");
 
     popup.style.display = 'flex';
 }
@@ -57,9 +89,13 @@ var closePopup = function (popupId) {
         let ticketPriorityDropdown = popup.querySelector("#ticketPriority");
         let ticketStatusDropdown = popup.querySelector("#ticketStatus");
         let ticketDescription = popup.querySelector("#ticketDescriptionInput");
+        let ticketPrioritySelect = ticketPriorityDropdown.querySelector('#prioritySelect');
+        let ticketStatusSelect = ticketStatusDropdown.querySelector('#statusSelect');
 
         ticketTitle.value = "";
         ticketDescription.value = "";
+        ticketPrioritySelect.value = ticketPrioritySelect.options[0].value;
+        ticketStatusSelect.value = ticketStatusSelect.options[0].value;
         ticketPriorityDropdown.querySelector('label[name="Input.TicketPriorityValue"]').textContent = "Priority";
         ticketStatusDropdown.querySelector('label[name="Input.TicketStatusValue"]').textContent = "Status";
 
@@ -105,10 +141,10 @@ var getTicketStatus =  async function (ticketId) {
     return ticketStatus;
 }
 
-var loadComments = async function (projectId, ticketId) {
+var GetComments = async function (projectId, ticketId) {
 
     let comments = undefined;
-    await fetch(`/Projects/LoadComments?projectId=${projectId}&ticketId=${ticketId}`, {
+    await fetch(`/Projects/GetComments?projectId=${projectId}&ticketId=${ticketId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -180,6 +216,14 @@ var showTicket = async function (ticket, assignedToUser) {
     });
 
     assignedToUser === true ? assignMeButton.style.display = 'none' : assignMeButton.style.display = 'block';
+    assignMeButton.addEventListener('click', async function (e) {
+        e.preventDefault();
+        let data = await assignTicketToUser(projectId, ticket.Id);
+        if (data.success === true) {
+            assigneeName.innerHTML = data.message;
+            assignMeButton.style.display = 'none';
+        }
+    })
 
     assigneeName.innerHTML = ticket.Assignee;
     reporterName.innerHTML = ticket.Reporter;
@@ -192,9 +236,8 @@ var showTicket = async function (ticket, assignedToUser) {
     }
 
     history.pushState({}, '', currentURL.href);
-    // KHALIL please don't forget to change that so it can load a popup with this ticket ID
 
-    let comments = await loadComments(projectId, ticket.Id);
+    let comments = await GetComments(projectId, ticket.Id);
     let commentsBox = popup.querySelector("#existingCommentsBox");
     commentsBox.innerHTML = '';
     if (comments !== undefined) {
@@ -338,6 +381,28 @@ var drag = function(dragEvent, ticket) {
 }
 
 var handleServerMessage = function (form, formData) {
+    let errorMessage = document.getElementById('errorMessage');
+    if (!errorMessage) {
+        errorMessage = document.createElement('span');
+        errorMessage.id = "errorMessage";
+        form.insertAdjacentElement('afterend', errorMessage);
+    }
+    let ticketPrioritySelected = false;
+    let ticketStatusSelected = false;
+    for (var entry of formData.entries()) {
+        if (entry[0] === "Input.TicketPriorityValue") {
+            ticketPrioritySelected = true;
+        }
+        if (entry[0] === "Input.TicketStatusValue") {
+            ticketStatusSelected = true;
+        }
+    }
+
+    if (ticketPrioritySelected === false || ticketStatusSelected === false) {
+        errorMessage.innerHTML = "Ticket Status and Priority must be selected";
+        return;
+    }
+    
     fetch(form.action, {
         method: 'POST',
         body: formData
@@ -346,12 +411,6 @@ var handleServerMessage = function (form, formData) {
     .then(response => response.json())
     .then(data => {
         if (data.success === false) {
-            let errorMessage = document.getElementById('errorMessage');
-            if (!errorMessage) {
-                errorMessage = document.createElement('span');
-                errorMessage.id = "errorMessage";
-                form.insertAdjacentElement('afterend', errorMessage);
-            }
             errorMessage.innerHTML = data.message;
         }
         else {
@@ -506,7 +565,7 @@ var addCommentToTicket = async function (projectId, ticketId, text) {
     .then(response => response.json())
     .then(data => {
         if (data.success === true) {
-            console.log("Changed ticket status");
+            window.location.reload();
         }
     })
     .catch(error => {
@@ -730,3 +789,48 @@ var openTicketPopup  = async function(ticketId) {
     })
 }
 
+var assignTicketToUser = async function (projectId, ticketId) {
+    let resp = false;
+    await fetch(`/Projects/AssignTicketToUser?projectId=${projectId}&ticketId=${ticketId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success !== true) {
+            showErrorTooltip(data.message);
+        }
+        resp = data; 
+    })
+    .catch(error => {
+        console.error('Error fetching ticket', error);
+    })
+
+    return resp;
+}
+var showErrorTooltip = function(errorMessage) {
+    var errorTooltip = document.querySelector('#errorTooltip');
+    errorTooltip.textContent = errorMessage;
+
+    var tooltipX = (window.innerWidth - errorTooltip.offsetWidth) / 2;
+    var tooltipY = 10; 
+
+    errorTooltip.style.left = tooltipX + 'px';
+    errorTooltip.style.top = tooltipY + 'px';
+
+    errorTooltip.style.display = 'block';
+
+    let tooltipTimeout = setTimeout(function () {
+        errorTooltip.style.display = 'none';
+    }, 3000);
+
+    document.addEventListener('mousedown', function () {
+        if (!errorTooltip.contains(event.target)) {
+            errorTooltip.style.display = 'none';
+            document.removeEventListener('mousedown');
+            clearTimeout(tooltipTimeout);
+        }
+    });
+}

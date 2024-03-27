@@ -56,6 +56,10 @@ public class NotificationModel
                 formatted = $"{username} : {message}";
                 break;
 
+            case NotificationType.ChangeAssignee:
+                formatted = $"<p id='ticketStringId' onclick=openTicketPopup({ticketId})>{ticketStringId}</p> is assigned now to {username}";
+                break;
+
             default:
                 formatted = $"Unknown log type: {notificationType}";
                 break;

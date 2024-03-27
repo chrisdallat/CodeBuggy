@@ -15,5 +15,6 @@ namespace CodeBuggy.Data
         MoveTicket,
         CommentTicket, //TODO: add when commenting functionality implemented
         Message,
+        ChangeAssignee,
     }
 }

@@ -34,9 +34,9 @@
         var enumValues = Enum.GetValues(typeof(TicketPriority)).Cast<TicketPriority>();
         var options = enumValues.Select(e => $"<option value='{e}'>{e}</option>");
         var dropdownHtml = $@"
-<select id='prioritySelect' name='Input.TicketPriorityValue' class='form-control'>
-{string.Join("", options)}
-</select>";
+            <select id='prioritySelect' name='Input.TicketPriorityValue' class='form-control'>
+            {string.Join("", options)}
+            </select>";
         return new HtmlString(dropdownHtml);
     };
 }
@@ -96,6 +96,7 @@
                 @Html.RenderTickets(Model.Tickets, TicketStatus.Done, (string)@ViewBag.Username)
             </div>
         </div>
+        <div id="errorTooltip"></div>
     </div>
     </div>
 
@@ -194,9 +195,9 @@ style='text-align: center; max-width: 200px'>Cancel</button>
 <button id='addCommentButton' class='button-general' style='font-size: 15px;'>Add Comment</button>
 <div id='buttonsContainer' style='display: none; flex-wrap: wrap; justify-content: left'>
 <button id='saveCommentButton' class='button-general btn-primary mb-3 mt-5' style='width: 80px; height: 40px; padding:
-0px; margin: 2px;'>Save</button>
+0px; margin: 2px !important;'>Save</button>
 <button id='cancelCommentButton' class='button-general btn-danger mb-3 mt-5' style='width: 80px; height: 40px; padding:
-0px; margin: 2px;'>Cancel</button>
+0px; margin: 2px !important;'>Cancel</button>
 </div>
 <input name='commentInput' type='hidden'></input>
 </div>";

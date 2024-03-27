@@ -90,7 +90,7 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        var username = GetUsername(user);
         if (username == null)
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
@@ -211,7 +211,7 @@ public class ProjectBoardModel
         }
 
         ticketDetails.Status = Enum.Parse<TicketStatus>(status);
-        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        var username = GetUsername(user);
         if (username == null)
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
@@ -270,7 +270,7 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "No changes made to ticket" };
         }
 
-        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        var username = GetUsername(user);
         if (username == null)
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
@@ -354,7 +354,7 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        var username = GetUsername(user);
         if (username == null)
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
@@ -433,7 +433,7 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
-        var username = _userManager?.GetUserAsync(user)?.Result?.FirstName + " " + _userManager?.GetUserAsync(user)?.Result?.LastName;
+        var username = GetUsername(user);
         if (username == null)
         {
             return new OperationResult { Success = false, Message = "User is not authenticated" };
@@ -471,7 +471,7 @@ public class ProjectBoardModel
         return new OperationResult { Success = true, Message = "Comment added successfully!" };
     }
 
-    public OperationResult LoadComments(ClaimsPrincipal user, int projectId, int ticketId, ref List<Comment> comments)
+    public OperationResult GetComments(ClaimsPrincipal user, int projectId, int ticketId, ref List<Comment> comments)
     {
         if (ValidUserClaim(user, projectId) == false)
         {
@@ -486,6 +486,7 @@ public class ProjectBoardModel
 
         comments = _context.Comments
                 .Where(t => ticket.CommentsIds.Contains(t.Id))
+                .OrderByDescending(c => c.Timestamp)
                 .ToList();
 
         return new OperationResult { Success = true, Message = "Found comments" };
@@ -524,6 +525,51 @@ public class ProjectBoardModel
         .ToList();
 
         return searchResults;
+    }
+
+    public async Task<OperationResult> AssignTicketToUser(ClaimsPrincipal user, int projectId, int ticketId)
+    {
+        if (!ValidUserClaim(user, projectId))
+        {
+            return new OperationResult { Success = false, Message = "User Doesn't have access" };
+        }
+
+        var username = GetUsername(user);
+        if (username == null)
+        {
+            return new OperationResult { Success = false, Message = "Encountered an error!" }; 
+        }
+
+        var ticket = await _context.Tickets.FirstOrDefaultAsync(p => p.Id == ticketId);
+        if (ticket == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        var projectDetails = await _context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (projectDetails == null)
+        {
+            return new OperationResult { Success = false, Message = "User is not authenticated" };
+        }
+
+        ticket.Assignee = username;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            var notificationId = _notificationModel.StoreNotification(_context, projectId, ticket.StringId, username, "", ticket.Status, NotificationType.ChangeAssignee, ticket.Id);
+
+            projectDetails.NotificationIds.Add(notificationId);
+            projectDetails.NotificationCount += 1;
+            await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error: " + ex);
+            return new OperationResult { Success = false, Message = "Error: " + ex.Message };
+        }
+
+        return new OperationResult { Success = true, Message = username };
     }
 
 }

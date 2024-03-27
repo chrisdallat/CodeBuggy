@@ -235,7 +235,7 @@ public class ProjectsController : Controller
     }
 
     [HttpPost]
-    public IActionResult LoadComments(int projectId, int ticketId)
+    public IActionResult GetComments(int projectId, int ticketId)
     {
         if (User.Identity == null || User.Identity.IsAuthenticated == false)
         {
@@ -244,7 +244,7 @@ public class ProjectsController : Controller
 
         var comments = new List<Comment>();
 
-        OperationResult result = _projectBoardModel.LoadComments(User, projectId, ticketId, ref comments);
+        OperationResult result = _projectBoardModel.GetComments(User, projectId, ticketId, ref comments);
 
         return Json(new { success = result.Success, message = result.Message, commentsData = comments });
     }
@@ -272,10 +272,23 @@ public class ProjectsController : Controller
 
         return Json(new { success = false, message = "Ticket not found" }); ;
     }
-    // ******************************************************************************* //
-    // ************************************ General ********************************** // 
-    // ******************************************************************************* //
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+
+    [HttpPost]
+    public async Task<IActionResult> AssignTicketToUser(int projectId, int ticketId)
+    {
+        if (User.Identity == null || User.Identity.IsAuthenticated == false)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        OperationResult result = await _projectBoardModel.AssignTicketToUser(User, projectId, ticketId);
+        Console.WriteLine(result.Message);
+        return Json(new { success = result.Success, message = result.Message });
+    }
+        // ******************************************************************************* //
+        // ************************************ General ********************************** // 
+        // ******************************************************************************* //
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
