@@ -1,4 +1,5 @@
 ﻿using CodeBuggy.Data;
+using CodeBuggy.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CodeBuggy;
@@ -20,6 +21,8 @@ public class Startup
             .AddEntityFrameworkStores<AppDbContext>();
 
         services.AddControllersWithViews();
+
+        services.AddTransient<IEmailSender, EmailSender>();
 
         services.AddMvc()
             .AddRazorPagesOptions(options =>
