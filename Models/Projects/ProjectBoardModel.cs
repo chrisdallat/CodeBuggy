@@ -71,14 +71,11 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "Ticket title must be provided" };
         }
 
-        _logger.LogInformation((input.TicketPriorityValue >= TicketPriority.None && input.TicketPriorityValue <= TicketPriority.Urgent) ? "KHALIL Priority RIGHT " + input.TicketPriorityValue : "KHALIL Priority WRONG");
-
         if ((input.TicketPriorityValue >= TicketPriority.None && input.TicketPriorityValue <= TicketPriority.Urgent) == false)
         {
             return new OperationResult { Success = false, Message = "Priority is invalid!" };
         }
-        _logger.LogInformation((input.TicketStatusValue >= TicketStatus.ToDo && input.TicketStatusValue <= TicketStatus.Done) ? "KHALIL STATUS RIGHT " + input.TicketStatusValue : "KHALIL STATUS WRONG");
-        if ((input.TicketStatusValue >= TicketStatus.ToDo && input.TicketStatusValue <= TicketStatus.Done) == false)
+        if ((input.TicketStatusValue >= TicketStatus.ToDo && input.TicketStatusValue <= TicketStatus.Backlog) == false)
         {
             return new OperationResult { Success = false, Message = "Status is invalid!" };
         }

@@ -53,6 +53,11 @@
     </div>
 
     <h2 style="text-align: center; flex: 1;">@ViewBag.ProjectTitle</h2>
+    <a class="create-button" id="toggleBacklogButton" style="text-align: right; margin-right: 10px;" onclick="toggleBackLog()">
+        <span class="material-symbols-outlined">
+            stacks
+        </span>
+    </a>
     <a class="create-button" style="text-align: right; margin-right: 10px;"
         onclick="fetchAndDisplayNotifications(@ViewBag.ProjectId)">
             <span class="material-symbols-outlined">notifications</span>
@@ -72,6 +77,12 @@
 
     <div class="board-container">
     <div class="board">
+        <div class="column" id="backlogColumn" style="display: none;" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h3 class="column-title">Backlog</h3>
+            <div class="tickets-container">
+                @Html.RenderTickets(Model.Tickets, TicketStatus.Backlog, (string)@ViewBag.Username)
+            </div>
+        </div>
         <div class="column" id="todoColumn" ondrop="drop(event)" ondragover="allowDrop(event)">
             <h3 class="column-title">To Do</h3>
             <div class="tickets-container">

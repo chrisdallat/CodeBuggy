@@ -21,6 +21,10 @@ body {
   margin-bottom: 60px;
 }
 
+h1 {
+    text-align: center;
+}
+
 h2 {
     text-align: center;
 }
@@ -215,8 +219,9 @@ h2 {
     padding: 7px;
     background-color: #f5f5f5;
     color: grey;
-    max-height: 1050px;
-    overflow: hidden; 
+    max-height: 860px;
+    overflow: hidden;
+    width: 310px;
 }
 
 .column-title {
@@ -226,7 +231,7 @@ h2 {
 
 .tickets-container {
     overflow-x: hidden;
-    max-height: 1000px;
+    max-height: 820px;
     width:297px;
     overflow-y: auto;
     box-sizing: border-box; 
@@ -561,4 +566,8 @@ h2 {
 
 a#two-factor, form#download-data, a#email {
     display: none !important;
+}
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24
 }

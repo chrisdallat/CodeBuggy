@@ -23,7 +23,8 @@
         ToDo,
         InProgress,
         Review,
-        Done
+        Done,
+        Backlog
     }
 
     public enum TicketPriority

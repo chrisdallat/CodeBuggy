@@ -87,6 +87,9 @@ public class NotificationModel
             case TicketStatus.Done:
                 formattedStatus = "DONE";
                 break;
+            case TicketStatus.Backlog:
+                formattedStatus = "BACKLOG";
+                break;
             default:
                 formattedStatus = "UNKNOWN STATUS";
                 break;

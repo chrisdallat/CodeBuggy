@@ -356,6 +356,8 @@ var dropAction = async function (event, ticket) {
         case "doneColumn":
             status = "Done";
             break;
+        case "backlogColumn":
+            status = "Backlog";
         default:
             break;
     }
@@ -852,4 +854,22 @@ var showErrorTooltip = function(errorMessage) {
             clearTimeout(tooltipTimeout);
         }
     });
+}
+
+var toggleBackLog = function () {
+    let backlogColumn = document.querySelector("#backlogColumn");
+    let doneColumn = document.querySelector("#doneColumn");
+    let button = document.querySelector("#toggleBacklogButton");
+
+    if (backlogColumn.style.display === 'none') {
+        backlogColumn.style.display = '';
+        doneColumn.style.display = 'none';
+        button.style.background = '#1861ac'
+
+    }
+    else {
+        backlogColumn.style.display = 'none';
+        doneColumn.style.display = '';
+        button.style.background = '';
+    }
 }

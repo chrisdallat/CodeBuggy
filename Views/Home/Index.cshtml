@@ -10,6 +10,33 @@
     <meta name="viewport" content="width=device-width">
     <title>Welcome to CodeBuggy</title>
 </head>
+<style>
+    .tutorial {
+        max-width: 100%;
+        border-color: black;
+        border: solid;
+        margin-bottom: 50px;
+    }
+    
+    .stepText {
+        text-align: left;
+        margin-top: 20px;
+    }
+
+    section {
+        height: 500px; 
+        margin-bottom: 20px;
+    }
+
+    a.getStarted {
+        font-size: 30px;
+        margin-bottom: 700px;
+    }
+
+    main.pb-3 {
+        height: 7300px;
+    }
+</style>
 
 <body style="justify-content: center; align-items: center;">
     <div style="text-align: center;">
@@ -17,6 +44,29 @@
         <h1 style="font-size: 50px;">Welcome to CodeBuggy</h1>
         <p style="font-size: 24px;">Your Software Development Ticketing and Workflow Platform</p>
     </div>
+        <h1 style="margin-top: 100px;">New Here?</h1>
+    <div style="display: flex;justify-content: space-evenly;">
+        <a class="getStarted" href="#section1" sty>Get Started With CodeBuggy Here!</a>
+    </div>
+    <div style="margin-top: 50px;"></div>
+    <nav>
+        <section id="section1">
+            <h1>Usage Tutorial</h1>
+            <h2 class="stepText">Project Access</h2>
+            <img class="tutorial" src="~/Images/Tutorial/step1.png"/>
+            <h2 class="stepText">Create Project/Add Existing Project</h2>
+            <img class="tutorial" src="~/Images/Tutorial/step2.png" />
+            <img class="tutorial" src="~/Images/Tutorial/step3.png" />
+            <img class="tutorial" src="~/Images/Tutorial/step4.png"/>
+            <h2 class="stepText">Project List Usage</h2>
+            <img class="tutorial" src="~/Images/Tutorial/step6.png" />
+            <h2 class="stepText">Project Board Usage</h2>
+            <img class="tutorial" src="~/Images/Tutorial/step7.png" />
+            <img class="tutorial" src="~/Images/Tutorial/step8.png" />
+            <h2 class="stepText">Account Details</h2>
+            <img class="tutorial" src="~/Images/Tutorial/step8.png" />
+        </section>
+    </nav>
 </body>
 
 </html>
