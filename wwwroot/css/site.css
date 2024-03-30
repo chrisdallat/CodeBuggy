@@ -558,3 +558,7 @@ h2 {
     display: none;
     z-index: 1000;
 }
+
+a#two-factor, form#download-data, a#email {
+    display: none !important;
+}
