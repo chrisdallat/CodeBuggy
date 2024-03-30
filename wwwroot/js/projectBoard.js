@@ -222,14 +222,9 @@ var showTicket = async function (ticket, assignedToUser) {
         i++;
     });
 
-    assignedToUser === true ? assignMeButton.style.display = 'none' : assignMeButton.style.display = 'block';
     assignMeButton.addEventListener('click', async function (e) {
         e.preventDefault();
-        let data = await assignTicketToUser(projectId, ticket.Id);
-        if (data.success === true) {
-            assigneeName.innerHTML = data.message;
-            assignMeButton.style.display = 'none';
-        }
+        await assignTicketToUser(projectId, ticket.Id);
     })
 
     assigneeName.innerHTML = ticket.Assignee;
@@ -394,13 +389,14 @@ var drag = function(dragEvent, ticket) {
     }
 }
 
-var handleServerMessage = function (form, formData) {
+var handleAddTicketForm = function (form, formData) {
     let errorMessage = document.getElementById('errorMessage');
     if (!errorMessage) {
         errorMessage = document.createElement('span');
         errorMessage.id = "errorMessage";
         form.insertAdjacentElement('afterend', errorMessage);
     }
+
     let ticketPrioritySelected = false;
     let ticketStatusSelected = false;
     for (var entry of formData.entries()) {
@@ -415,6 +411,16 @@ var handleServerMessage = function (form, formData) {
     if (ticketPrioritySelected === false || ticketStatusSelected === false) {
         errorMessage.innerHTML = "Ticket Status and Priority must be selected";
         return;
+    }
+    handleServerMessage(form, formData);
+}
+
+var handleServerMessage = function (form, formData) {
+    let errorMessage = document.getElementById('errorMessage');
+    if (!errorMessage) {
+        errorMessage = document.createElement('span');
+        errorMessage.id = "errorMessage";
+        form.insertAdjacentElement('afterend', errorMessage);
     }
     
     fetch(form.action, {
@@ -483,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const addTicketForm = document.getElementById('addTicketForm');
     addTicketForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        handleServerMessage(this, new FormData(this));
+        handleAddTicketForm(this, new FormData(this));
     });
 
     const editTicketForm = document.getElementById('editTicketForm');
@@ -803,7 +809,6 @@ var openTicketPopup  = async function(ticketId) {
 }
 
 var assignTicketToUser = async function (projectId, ticketId) {
-    let resp = false;
     await fetch(`/Projects/AssignTicketToUser?projectId=${projectId}&ticketId=${ticketId}`, {
         method: 'POST',
         headers: {
@@ -815,13 +820,14 @@ var assignTicketToUser = async function (projectId, ticketId) {
         if (data.success !== true) {
             showErrorTooltip(data.message);
         }
-        resp = data; 
+        else {
+            window.location.reload();
+        }
     })
     .catch(error => {
         console.error('Error fetching ticket', error);
     })
 
-    return resp;
 }
 var showErrorTooltip = function(errorMessage) {
     var errorTooltip = document.querySelector('#errorTooltip');
