@@ -108,8 +108,9 @@ public class ProjectsController : Controller
     // ******************************************************************************* //
 
     [AcceptVerbs("GET", "POST")]
-    public IActionResult ProjectBoard(int projectId, string ticket)
+    public IActionResult ProjectBoard(int projectId, string ticket, bool userFilter)
     {
+        Console.WriteLine("Chris projectId: " + projectId + " Ticket: " + ticket + " userFilter: " + userFilter);
         if (User.Identity == null || User.Identity.IsAuthenticated == false)
         {
             return RedirectToAction("Login", "Account");
@@ -117,7 +118,7 @@ public class ProjectsController : Controller
 
         if (_projectBoardModel != null && _projectBoardModel.ValidUserClaim(User, projectId))
         {
-            bool result = _projectBoardModel.PopulateTickets(projectId);
+            bool result = _projectBoardModel.PopulateTickets(projectId, User, userFilter);
             if (result == false)
             {
                 ViewBag.DeniedAccess = true;
@@ -128,6 +129,7 @@ public class ProjectsController : Controller
             ViewBag.DeniedAccess = false;
             ViewBag.ProjectId = projectId;
             ViewBag.Username = _projectBoardModel?.GetUsername(User);
+            ViewBag.UserFilter = userFilter;
 
             if (ticket != null)
             {

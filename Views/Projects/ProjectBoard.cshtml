@@ -51,8 +51,19 @@
         </form>
         <div id="searchResultsDropdown"></div>
     </div>
-
     <h2 style="text-align: center; flex: 1;">@ViewBag.ProjectTitle</h2>
+    @{
+        var bg_color = "";
+        if (ViewBag.UserFilter == true)
+        {
+            bg_color = "background: #1861ac;";
+        }
+    }
+    <a class="create-button" id="toggleUserTickets" style="text-align: right; margin-right: 10px; @bg_color" onclick="toggleUserTickets()">
+        <span class="material-symbols-outlined">
+            person_search
+        </span>
+    </a>
     <a class="create-button" id="toggleBacklogButton" style="text-align: right; margin-right: 10px;" onclick="toggleBackLog()">
         <span class="material-symbols-outlined">
             stacks
