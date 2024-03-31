@@ -109,7 +109,33 @@ You can now navigate to the provided link to use the application.
 
 ## Usage
 
-TODO
+Below are some annotated screenshots of the various interfaces in our application.
+#### Home Page Landing with clickable and scrollable Tutorial for new users.
+<img src="./wwwroot/Images/Tutorial/step1.png" width="600" />
+
+#### Add a New Project or Access an Existing project with Access Code.
+<img src="./wwwroot/Images/Tutorial/step2.png" width="600" />
+
+#### Select New Or Existing Project popup
+<img src="./wwwroot/Images/Tutorial/step3.png" width="600" />
+
+#### Confirmation of new project. (For Existing you will be asked to input Name and Access Code)
+<img src="./wwwroot/Images/Tutorial/step4.png" width="600" />
+
+#### Project List Interface
+<img src="./wwwroot/Images/Tutorial/step6.png" width="600" />
+
+#### Project Board Interface
+<img src="./wwwroot/Images/Tutorial/step7.png" width="600" />
+
+#### Ticket Details Popup
+<img src="./wwwroot/Images/Tutorial/step8.png" width="600" />
+
+#### Pupulated Project Board, tickets can be dragged and dropped to columns or clicked on to open.
+<img src="./wwwroot/Images/Tutorial/step10.png" width="600" />
+
+#### Reporting Graph Views
+<img src="./wwwroot/Images/Tutorial/step9.png" width="600" />
 
 ## License
 
