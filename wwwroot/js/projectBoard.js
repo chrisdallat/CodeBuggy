@@ -856,6 +856,26 @@ var showErrorTooltip = function(errorMessage) {
     });
 }
 
+var toggleUserTickets = function () {
+    // let button = document.querySelector("#toggleUserTickets");
+    var currentURL = new URL(window.location.href);
+    if (currentURL.searchParams.has('userFilter')) {
+        let filter = currentURL.searchParams.get('userFilter');
+        if (filter == 'true')
+        {
+            currentURL.searchParams.set('userFilter', false);
+        }
+        else 
+        {
+            currentURL.searchParams.set('userFilter', true);
+        }
+    }
+    else {
+        currentURL.searchParams.set('userFilter', true);
+    }
+    window.location.href = currentURL;
+}
+
 var toggleBackLog = function () {
     let backlogColumn = document.querySelector("#backlogColumn");
     let doneColumn = document.querySelector("#doneColumn");

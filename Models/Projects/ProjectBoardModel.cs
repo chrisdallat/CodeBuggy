@@ -137,7 +137,7 @@ public class ProjectBoardModel
 
     }
 
-    public bool PopulateTickets(int projectId)
+    public bool PopulateTickets(int projectId, ClaimsPrincipal user, bool userFilter)
     {
         try
         {
@@ -148,9 +148,26 @@ public class ProjectBoardModel
                 return false;
             }
 
-            var tickets = _context.Tickets
+            var username = GetUsername(user);
+            if (username == null)
+            {
+                return false;
+            }
+
+            List<Ticket> tickets;
+
+            if (userFilter == true)
+            {
+                tickets = _context.Tickets
+                .Where(t => project.TicketsId.Contains(t.Id) && t.Assignee == username)
+                .ToList();
+            }
+            else 
+            {
+                tickets = _context.Tickets
                 .Where(t => project.TicketsId.Contains(t.Id))
                 .ToList();
+            }
 
             _burndownModel.StoreBurndownData(_context, projectId);
 
