@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+WORKDIR /src
+COPY ["CodeBuggy.csproj", "."]
+RUN dotnet restore "./CodeBuggy.csproj"
+COPY . .
+WORKDIR "/src/."
+RUN dotnet build "CodeBuggy.csproj" -c Release -o /app/build
+
+FROM build as publish
+RUN dotnet publish "CodeBuggy.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet",  "CodeBuggy.dll"]

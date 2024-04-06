@@ -22,6 +22,24 @@ This project was created and maintained by the following individuals:
 
 ## Installation
 
+### Docker container [for access to our hosted database]
+**NOTE:** This is only for limited review purposes, if not invited proceed to next installation section.
+
+Requires connection string `appsettings.json` - Can be requested from us.
+
+**NOTE:** Add `appsettings.json` to the project root directory before executing the following commands 
+```
+docker build -t codebuggy .
+```
+```
+docker run -d --name codebuggy_docker -p 54322:80 codebuggy:latest
+```
+
+Use following URL in browser
+```
+localhost:54322
+``` 
+
 ### Prerequisites
 
 - [.NET SDK](https://dotnet.microsoft.com/download) installed
