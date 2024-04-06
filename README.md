@@ -11,8 +11,8 @@ A bug tracking/ticketing software development and collaboration web application
 
 This project was created and maintained by the following individuals:
 
-- [Chris Dallat](https://github.com/chrisdallat) - Role/Responsibility
-- [Khalil Masree](https://github.com/khalilmasri) - Role/Responsibility
+- [Chris Dallat](https://github.com/chrisdallat) - Software Developer
+- [Khalil Masree](https://github.com/khalilmasri) - Software Developer
 
 ## Table of Contents
 
