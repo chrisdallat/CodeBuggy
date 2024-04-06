@@ -270,6 +270,11 @@ public class ProjectBoardModel
             return new OperationResult { Success = false, Message = "User is not authenticated" };
         }
 
+        if (string.IsNullOrWhiteSpace(input.TicketTitle))
+        {
+            return new OperationResult { Success = false, Message = "Title must be provided" };
+        }
+
         bool ticketChange = TicketChanges(ticketDetails, input);
         bool statusChange = false;
 
