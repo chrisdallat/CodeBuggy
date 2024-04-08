@@ -762,8 +762,8 @@ function displaySearchResults(results) {
         dropdown.append("<div>No results found</div>");
     } else {
         $.each(results, function(index, result) {
-            var html = result.description ? result.description.match(/<p>(.*?)<\/p>/)[1] : null;
-            var truncatedDescription = html ? (html.length > 70 ? html.substring(0, 70) + '...' : html) : 'N/A';
+            var html = result.description ? result.description.match(/<p>(.*?)<\/p>/) : null;
+            var truncatedDescription = html ? (html[1].length > 70 ? html[1].substring(0, 70) + '...' : html[1]) : 'N/A';
             var listItem = $('<div class="search-result-item">' + 
                              '<div><strong>ID:</strong> ' + result.stringId + '</div>' + 
                              '<div><strong>Title:</strong> ' + result.title + '</div>' + 
@@ -771,7 +771,6 @@ function displaySearchResults(results) {
                              '</div>');
             listItem.click(function() {
                 openTicketPopup(result.id);
-
             });
             dropdown.append(listItem);
         });
